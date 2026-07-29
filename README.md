@@ -47,13 +47,6 @@ pnpm desktop:build
 
 The output will be in `dist-desktop/`. Zip that folder and distribute it.
 
-### How it works
-
-- The app is a **Node.js Single Executable Application (SEA)**. The entire Node.js runtime is embedded in the `.exe`.
-- The web server starts automatically on launch.
-- Your data (database and downloads) is stored in `%APPDATA%\BetterBDSMLR`.
-- The server runs on **port 3000**.
-
 ## Running the app in Docker
 
 > **Not a developer?** Install [opencode desktop](https://opencode.ai) and use its free "**big pickle**" model — most of this repo was written with it, so it can handle setting everything up for you.

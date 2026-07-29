@@ -14,7 +14,6 @@ dist-desktop
 .output
 .nitro
 *.local
-sea-prep.blob
 
 # Editor directories and files
 .vscode/*

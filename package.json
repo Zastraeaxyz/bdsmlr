@@ -14,8 +14,7 @@
     "swagger:update": "npm run swagger:fetch && npm run swagger:generate",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
-    "prestart": "pnpm db:migrate",
-    "desktop:build": "node scripts/build-sea.js"
+    "prestart": "pnpm db:migrate"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
