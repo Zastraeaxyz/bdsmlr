@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [
     solidStart(),
     nitro({
+      preset: process.env.VERCEL === "1" ? "vercel" : "node-server",
       plugins: ["src/server/plugins/request-logger.ts"],
     }),
   ],

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Vercel deployments now serve the app** — The build now emits a Vercel-compatible serverless output when built on Vercel (`VERCEL=1`), so deployments respond with the app instead of a `404 NOT_FOUND`. Docker and local builds are unchanged.
 - **Lightbox close button now always visible** — The close button uses `position: fixed` instead of `position: absolute` so it stays pinned to the viewport's top-right corner, even when the image is taller than the screen.
 
 - **Login session cookies now persist correctly** — The API proxy now strips the `Domain` attribute from `Set-Cookie` headers returned by BDSMLR's login endpoint. Previously, the cookie was rejected by the browser because its domain (`bdsmlr.com`) didn't match the app domain. You can now sign in and access protected blogs that require authentication.
