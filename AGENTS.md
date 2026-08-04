@@ -13,4 +13,5 @@ If a new API quirk has been discovered, please document it here in #API Quirks s
 - `resolveIdentifier` returns **camelCase** (`blogId`, `blogName`).
 - `listBlogActivity` request fields are **snake_case**; `page` is an integer, not `{ page_size }`; `activity_kinds` uses `['post', 'reblog']`; the search query is `q`.
 - `searchPostsByTag` request field is **snake_case** `tag_name` (same query syntax as `listBlogActivity`'s `q`).
+- `getBlog` for a **private** blog when unauthenticated returns **HTTP 404** with `{"error":"blog not found"}` (not a 200 with an empty blog). The `rssApi` client surfaces this as a thrown `Error`, and callers must treat a failed/anonymous `getBlog` for a resolvable `blogId` as "private".
 - `.gif` files may be served as `video/mp4`. Render each URL in a `.media-shell` (CSS grid overlapping) with both `<img>` and `<video muted controls>`. Each hides on `onError`. For `.gif`-as-video, the `<video>` gets `autoplay loop playsinline`; for other videos, `autoplay`/`loop`/`playsinline` are omitted so the video starts muted but does not autoplay.

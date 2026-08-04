@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **RSS feeds for every profile** — Every profile page now has an RSS icon next to the BDSMLR/Feed/Following links. Clicking it opens `/<user>/rss` in a new tab: an XML feed of the blog's recent posts (with media enclosures) that you can paste straight into any RSS reader, such as imaglr.
+- **RSS feeds for private blogs** — If a profile is private and you're signed in, the RSS icon automatically embeds your session token in the feed URL so the feed can pull protected content. A warning triangle next to the icon explains that the feed URL contains your session token and should not be shared, since it could let someone else take over your account. Saving the feed in an RSS reader you trust or using it with the imaglr importer is fine.
+- **"Hide reblogs" reflected in RSS** — The RSS feed URL honors the profile's "Hide reblogs" setting: it sends `include_reblogs=1` when reblogs are shown and `include_reblogs=0` when they're hidden, so the feed matches what you see on the profile.
+
+### Added
+
 - **Infinite scroll on all feeds** — Feeds now automatically load the next page as you scroll toward the bottom. The **Load more** button still appears at the end as a fallback, so you can manually trigger another load if the auto-load fails or the API incorrectly reports there are no more posts.
 - **Smarter API response caching** — The API proxy now sets different `Cache-Control` durations per endpoint. Stable lookups like `resolve-identifier` are cached for up to a day, blog metadata and top tags for 30 minutes, and feed/search endpoints for 60 seconds. Auth and signed-URL requests are never cached, and `list-blog-activity` responses are explicitly `no-store` since they change constantly.
 - **Following graph cached in localStorage** — When you log in, all blog IDs you follow are fetched (all pages) and cached locally. The home feed now uses this cache instead of re-fetching the graph, and the cache refreshes when you visit your own following page.

@@ -31,6 +31,7 @@ import {
 import SearchHelp from "~/components/SearchHelp";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { LightBox } from "~/components/LightBox";
+import { useFeedSettings } from "~/lib/feedSettings";
 import {
   HeartIcon,
   ChatIcon,
@@ -60,7 +61,7 @@ export default function UserFeed() {
   const [showAllTags, setShowAllTags] = createSignal(false);
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
-  const [hideReblogs, setHideReblogs] = createSignal(false);
+  const { hideReblogs, setHideReblogs } = useFeedSettings();
   const [showSettings, setShowSettings] = createSignal(false);
   let settingsRef: HTMLDivElement | undefined;
 

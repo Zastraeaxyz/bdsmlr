@@ -82,12 +82,23 @@ export function blogFollowGraph(blogId: number, pageToken?: string) {
   })
 }
 
-async function request<T>(base: string, path: string, body: unknown): Promise<T> {
+export class FetchError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+  }
+}
+
+async function request<T>(base: string, path: string, body: unknown, v2session?: string): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (v2session) headers['Cookie'] = `v2_session=${v2session}`
+
   const res = await fetch(`${base}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
-    credentials: 'include',
+    credentials: v2session ? 'omit' : 'include',
   })
 
   if (!res.ok) {

@@ -10,6 +10,7 @@
   --accent-hover: #79b8ff;
   --danger: #f85149;
   --danger-bg: rgba(248, 81, 73, 0.1);
+  --warning: #d29922;
   --input-bg: #0d1117;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, 'SF Mono', Consolas, monospace;
@@ -903,6 +904,13 @@ button:disabled {
 .download-btn-active {
   font-weight: 700;
   color: var(--text-heading);
+}
+
+.rss-token-warning {
+  display: inline-flex;
+  align-items: center;
+  color: var(--warning);
+  cursor: help;
 }
 
 .lightbox-backdrop {

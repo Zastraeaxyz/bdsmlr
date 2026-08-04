@@ -111,3 +111,29 @@ export function DownloadIcon(props: { class?: string }) {
     </svg>
   )
 }
+
+export function RssIcon(props: { class?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      class={props.class ?? "icon"}
+    >
+      <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20 5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18ZM4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44Zm0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1Z" />
+    </svg>
+  )
+}
+
+export function WarningIcon(props: { class?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      class={props.class ?? "icon"}
+    >
+      <path d="M12 2.25c.59 0 1.135.312 1.436.824l8.25 14.25a1.636 1.636 0 0 1-1.436 2.426H3.75a1.636 1.636 0 0 1-1.436-2.426l8.25-14.25A1.642 1.642 0 0 1 12 2.25Zm.75 6.5a.75.75 0 0 0-1.5 0v4.5a.75.75 0 0 0 1.5 0v-4.5Zm-.75 8.25a.938.938 0 1 0 0-1.876.938.938 0 0 0 0 1.876Z" />
+    </svg>
+  )
+}
