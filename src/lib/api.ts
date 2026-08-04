@@ -194,8 +194,8 @@ export interface PostContent {
 
 export interface MediaRepresentationItem {
   kind?: number
-  original?: { url?: string }
-  alternates?: { url?: string }[]
+  original?: { url?: string; mimeType?: string | null }
+  alternates?: { url?: string; mimeType?: string | null }[]
 }
 
 export interface MediaRepresentation {
