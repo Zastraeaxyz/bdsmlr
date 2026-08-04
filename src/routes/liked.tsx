@@ -275,10 +275,7 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
           innerHTML={contentHtml()!}
           onClick={(e) => {
             const target = e.target as HTMLElement;
-            if (
-              (target.tagName === "IMG" || target.tagName === "VIDEO") &&
-              target.getAttribute("src")
-            ) {
+            if (target.tagName === "IMG" && target.getAttribute("src")) {
               props.onImageClick?.(target.getAttribute("src")!);
             }
           }}
@@ -296,7 +293,6 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
                     muted
                     controls
                     preload="metadata"
-                    onClick={() => props.onImageClick?.(item.url)}
                   />
                 }
               >

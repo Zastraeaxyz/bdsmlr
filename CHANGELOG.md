@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Videos no longer open in the lightbox** — Clicking a video on the home feed, liked page, profiles, or post detail used to launch the full-screen lightbox, which just showed a small muted player. Videos now ignore those clicks and keep their native fullscreen button and controls instead; only images open the lightbox.
 - **Home feed infinite scroll now works by default** — The home page's auto-load was set up before the auth-gated feed rendered, so scrolling never triggered the next page and you had to click **Load more** manually. The scroll watcher now attaches once you're signed in, so the feed loads pages automatically as you scroll toward the bottom.
 - **GIFs with no original mime type now render** — When a post's `mediaRepresentation` item has an `original` URL whose `mimeType` is missing (common for older GIFs served as `video/mp4`), the app now falls back to the item's `alternates` and renders the first one that declares a mime type instead of showing a broken image.
 - **Vercel deployments now serve the app** — The build now emits a Vercel-compatible serverless output when built on Vercel (`VERCEL=1`), so deployments respond with the app instead of a `404 NOT_FOUND`. Docker and local builds are unchanged.
