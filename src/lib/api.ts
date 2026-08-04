@@ -253,13 +253,14 @@ export interface SearchPostsByTagRequest {
   order?: number
   post_types?: number[]
   variants?: number[]
-  page?: number | { page_size?: number; page_token?: string }
+  page?: number
   page_size?: number
+  session?: string
 }
 
 export interface SearchPostsByTagResponse {
   posts?: Post[]
-  page?: { nextPageToken?: string }
+  sessionId?: string
   error?: string
 }
 

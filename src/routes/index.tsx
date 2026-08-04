@@ -42,6 +42,7 @@ import {
 } from "~/lib/searchHistory";
 
 const HISTORY_KEY = "bdsmlr:searchHistory:home";
+const PAGE_SIZE = 20;
 
 export default function Home() {
   const navigate = useNavigate();
@@ -68,6 +69,8 @@ export default function Home() {
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
   let nextPageToken: string | null = searchParams.page_token || null;
+  let searchPage = 1;
+  let searchSession: string | null = null;
   let followedBlogIds: number[] = [];
   let loadMoreRef: HTMLButtonElement | undefined;
 
@@ -93,6 +96,8 @@ export default function Home() {
     try {
       const q = activeQuery();
       if (q) {
+        searchPage = 1;
+        searchSession = null;
         const data = await searchPostsByTag({
           tag_name: q,
           sort_field: sortField(),
@@ -107,14 +112,14 @@ export default function Home() {
             PostType.Quote,
           ],
           variants: [1],
-          page: nextPageToken
-            ? { page_size: 20, page_token: nextPageToken }
-            : { page_size: 20 },
+          page: 1,
+          page_size: PAGE_SIZE,
         });
         const incoming = data.posts ?? [];
         setPosts(incoming);
-        nextPageToken = data.page?.nextPageToken ?? null;
-        if (!nextPageToken) setHasMore(false);
+        searchSession = data.sessionId ?? null;
+        if (incoming.length < PAGE_SIZE || !searchSession) setHasMore(false);
+        searchPage++;
       } else {
         followedBlogIds = getCachedFollowingIds();
         if (followedBlogIds.length === 0) {
@@ -140,13 +145,17 @@ export default function Home() {
   });
 
   const loadMore = async () => {
-    if (!hasMore() || loadingMore() || !nextPageToken) return;
+    if (!hasMore() || loadingMore()) return;
     setLoadingMore(true);
     const token = nextPageToken;
     nextPageToken = null;
     try {
       const q = activeQuery();
       if (q) {
+        if (!searchSession) {
+          setHasMore(false);
+          return;
+        }
         const data = await searchPostsByTag({
           tag_name: q,
           sort_field: sortField(),
@@ -161,16 +170,22 @@ export default function Home() {
             PostType.Quote,
           ],
           variants: [1],
-          page: { page_size: 20, page_token: token },
+          page: searchPage,
+          session: searchSession,
+          page_size: PAGE_SIZE,
         });
         const incoming = data.posts ?? [];
         setPosts((prev) => [...prev, ...incoming]);
-        nextPageToken = data.page?.nextPageToken ?? null;
-        if (!nextPageToken) setHasMore(false);
-        syncUrl();
+        searchSession = data.sessionId ?? null;
+        searchPage++;
+        if (incoming.length < PAGE_SIZE || !searchSession) setHasMore(false);
       } else {
-        if (followedBlogIds.length === 0) return;
-        const data = await listBlogsRecentActivity(followedBlogIds, 20, token);
+        if (followedBlogIds.length === 0 || !token) return;
+        const data = await listBlogsRecentActivity(
+          followedBlogIds,
+          PAGE_SIZE,
+          token,
+        );
         const incoming = data.posts ?? [];
         setPosts((prev) => [...prev, ...incoming]);
         nextPageToken = data.page?.nextPageToken ?? null;

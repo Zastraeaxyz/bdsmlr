@@ -145,7 +145,11 @@ function PostDetailView(props: {
         />
         <Show
           when={!props.blogGone}
-          fallback={<span class="post-detail-blog">{props.post.blogName}</span>}
+          fallback={
+            <span class="post-detail-blog post-detail-blog-gone">
+              {props.post.blogName}
+            </span>
+          }
         >
           <A href={`/${props.post.blogName}`} class="post-detail-blog">
             {props.post.blogName}

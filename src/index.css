@@ -976,6 +976,14 @@ button:disabled {
   text-decoration: underline;
 }
 
+.post-detail-blog-gone {
+  color: var(--text-muted);
+}
+
+.post-detail-blog-gone:hover {
+  text-decoration: none;
+}
+
 .post-detail-time {
   margin-left: auto;
   color: var(--text-muted);

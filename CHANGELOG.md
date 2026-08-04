@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Search pagination uses sessions** — BDSMLR replaced page tokens for tag searches with an opaque session ID, so the home-feed search now sends an incrementing page number and re-sends the session returned by the previous page. Search now keeps loading subsequent pages correctly instead of stalling after the first page.
 - **Videos no longer open in the lightbox** — Clicking a video on the home feed, liked page, profiles, or post detail used to launch the full-screen lightbox, which just showed a small muted player. Videos now ignore those clicks and keep their native fullscreen button and controls instead; only images open the lightbox.
 - **Home feed infinite scroll now works by default** — The home page's auto-load was set up before the auth-gated feed rendered, so scrolling never triggered the next page and you had to click **Load more** manually. The scroll watcher now attaches once you're signed in, so the feed loads pages automatically as you scroll toward the bottom.
 - **GIFs with no original mime type now render** — When a post's `mediaRepresentation` item has an `original` URL whose `mimeType` is missing (common for older GIFs served as `video/mp4`), the app now falls back to the item's `alternates` and renders the first one that declares a mime type. If there are no usable alternates, it still renders the `original` URL, guessing the type from the file extension.
