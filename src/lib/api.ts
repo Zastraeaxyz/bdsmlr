@@ -109,12 +109,41 @@ async function request<T>(base: string, path: string, body: unknown, v2session?:
   return res.json()
 }
 
+const inflightGet = new Map<string, Promise<unknown>>()
+
+async function requestGet<T>(base: string, path: string, params: Record<string, string | number>): Promise<T> {
+  const qs = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null) qs.set(key, String(value))
+  }
+  const url = `${base}${path}?${qs.toString()}`
+
+  const cached = inflightGet.get(url)
+  if (cached) return cached as Promise<T>
+
+  const promise = fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: res.statusText }))
+        throw new Error(err.message || err.error || `HTTP ${res.status}`)
+      }
+      return res.json()
+    })
+    .finally(() => inflightGet.delete(url))
+
+  inflightGet.set(url, promise)
+  return promise as Promise<T>
+}
+
 export function login(login: string, password: string, remember = false) {
   return request<AuthUser>(AUTH_BASE, '/login', { login, password, remember })
 }
 
 export function resolveIdentifier(blogName: string) {
-  return request<ResolveIdentifierResponse>(API_BASE, '/resolve-identifier', { blog_name: blogName })
+  return requestGet<ResolveIdentifierResponse>(API_BASE, '/resolve-identifier', { blog_name: blogName })
 }
 
 export function listBlogsRecentActivity(blogIds: number[], pageSize = 20, pageToken?: string) {
@@ -249,7 +278,7 @@ export interface GetPostDetailResponse {
 }
 
 export function getPostDetail(postId: number) {
-  return request<GetPostDetailResponse>(API_BASE, '/get-post-detail', { post_id: postId })
+  return requestGet<GetPostDetailResponse>(API_BASE, '/get-post-detail', { post_id: postId })
 }
 
 export interface TopTag {
@@ -263,7 +292,7 @@ export interface ListBlogTopTagsResponse {
 }
 
 export function listBlogTopTags(blogName: string, pageSize = 150) {
-  return request<ListBlogTopTagsResponse>(API_BASE, '/list-blog-top-tags', {
+  return requestGet<ListBlogTopTagsResponse>(API_BASE, '/list-blog-top-tags', {
     blog_name: blogName,
     page_size: pageSize,
   })
@@ -287,7 +316,7 @@ export interface GetBlogResponse {
 }
 
 export function getBlog(blogId: number) {
-  return request<GetBlogResponse>(API_BASE, '/get-blog', { blogId: String(blogId) })
+  return requestGet<GetBlogResponse>(API_BASE, '/get-blog', { blogId: String(blogId) })
 }
 
 
