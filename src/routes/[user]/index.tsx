@@ -579,7 +579,14 @@ function PostCard(props: {
           </a>
         </Show>
         <Show when={post.id}>
-          <A href={`/post/${post.id}`} class="feed-card-permalink">
+          <A
+            href={
+              post.blogName
+                ? `/${post.blogName}/post/${post.id}`
+                : `/post/${post.id}`
+            }
+            class="feed-card-permalink"
+          >
             Permalink
           </A>
         </Show>

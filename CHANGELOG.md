@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Infinite scroll on all feeds** — Feeds now automatically load the next page as you scroll toward the bottom. The **Load more** button still appears at the end as a fallback, so you can manually trigger another load if the auto-load fails or the API incorrectly reports there are no more posts.
 - **Smarter API response caching** — The API proxy now sets different `Cache-Control` durations per endpoint. Stable lookups like `resolve-identifier` are cached for up to a day, blog metadata for an hour, and feed/search endpoints for 60 seconds. Auth and signed-URL requests are never cached.
 - **Following graph cached in localStorage** — When you log in, all blog IDs you follow are fetched (all pages) and cached locally. The home feed now uses this cache instead of re-fetching the graph, and the cache refreshes when you visit your own following page.
+- **Permalink pages show the author's profile header** — The Permalink button now opens posts at `/blog/post/<id>` instead of `/post/<id>`. This new page renders the same post detail as before but also loads the author's profile header (avatar, title, description, and Feed/Following links) above it.
 
 ### Fixed
 
