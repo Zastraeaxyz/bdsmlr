@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Author avatars in feed cards** — Every post on the home feed, liked page, profile feeds, and post detail pages now shows the author's profile picture next to their name. Clicking the avatar jumps to that blog. Avatars without a profile picture fall back to a letter placeholder, and lookups are cached for the session so feeds scroll without repeated requests.
 - **RSS feeds for every profile** — Every profile page now has an RSS icon next to the BDSMLR/Feed/Following links. Clicking it opens `/<user>/rss` in a new tab: an XML feed of the blog's recent posts (with media enclosures) that you can paste straight into any RSS reader, such as imaglr.
 - **RSS feeds for private blogs** — If a profile is private and you're signed in, the RSS icon automatically embeds your session token in the feed URL so the feed can pull protected content. A warning triangle next to the icon explains that the feed URL contains your session token and should not be shared, since it could let someone else take over your account. Saving the feed in an RSS reader you trust or using it with the imaglr importer is fine.
 - **"Hide reblogs" reflected in RSS** — The RSS feed URL honors the profile's "Hide reblogs" setting: it sends `include_reblogs=1` when reblogs are shown and `include_reblogs=0` when they're hidden, so the feed matches what you see on the profile.

@@ -589,6 +589,32 @@ button:disabled {
   font-size: 13px;
 }
 
+.blog-avatar-link {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.blog-avatar-img {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.blog-avatar-placeholder {
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
 .reblog-attribution {
   font-size: 0.85em;
   color: var(--text-muted);

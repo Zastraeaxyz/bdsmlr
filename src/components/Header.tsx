@@ -1,9 +1,7 @@
-import { createSignal, createEffect, Show, onCleanup, onMount } from 'solid-js'
+import { createSignal, Show, onCleanup, onMount } from 'solid-js'
 import { useNavigate, A } from '@solidjs/router'
 import { useAuth } from '../lib/useAuth'
-import { getBlog } from '../lib/api'
-
-const avatarCache = new Map<number, string>()
+import { useBlogAvatar } from '../lib/blogAvatar'
 
 interface HeaderProps {
   info?: string
@@ -14,7 +12,7 @@ export default function Header(props: HeaderProps) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [showDropdown, setShowDropdown] = createSignal(false)
-  const [avatarUrl, setAvatarUrl] = createSignal<string | null>(null)
+  const avatarUrl = useBlogAvatar(() => user()?.blog_id ?? null)
 
   let containerRef: HTMLDivElement | undefined
 
@@ -23,23 +21,6 @@ export default function Header(props: HeaderProps) {
     logout()
     navigate('/login', { replace: true })
   }
-
-  createEffect(() => {
-    const u = user()
-    if (u?.blog_id) {
-      const cached = avatarCache.get(u.blog_id)
-      if (cached) {
-        setAvatarUrl(cached)
-      } else {
-        getBlog(u.blog_id).then((res) => {
-          if (res.blog?.avatarUrl) {
-            avatarCache.set(u.blog_id, res.blog.avatarUrl)
-            setAvatarUrl(res.blog.avatarUrl)
-          }
-        })
-      }
-    }
-  })
 
   const handleClickOutside = (e: MouseEvent) => {
     if (containerRef && !containerRef.contains(e.target as Node)) {

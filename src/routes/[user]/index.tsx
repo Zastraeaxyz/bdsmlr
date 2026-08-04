@@ -30,6 +30,7 @@ import {
 } from "~/lib/sanitize";
 import SearchHelp from "~/components/SearchHelp";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
+import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import { useFeedSettings } from "~/lib/feedSettings";
 import {
@@ -478,6 +479,7 @@ function PostCard(props: {
   return (
     <div class="feed-card">
       <div class="feed-card-header">
+        <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
         <A href={`/${post.blogName}`} class="feed-card-blog">
           {post.blogName}
         </A>

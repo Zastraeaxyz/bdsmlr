@@ -11,6 +11,7 @@ import {
   type MediaType,
 } from "~/lib/sanitize";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
+import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import {
   HeartIcon,
@@ -136,6 +137,7 @@ function PostDetailView(props: {
   return (
     <article class="post-detail">
       <div class="post-detail-header">
+        <BlogAvatar blogId={props.post.blogId} blogName={props.post.blogName} size={32} />
         <A href={`/${props.post.blogName}`} class="post-detail-blog">
           {props.post.blogName}
         </A>

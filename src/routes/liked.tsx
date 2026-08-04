@@ -21,6 +21,7 @@ import {
 } from "~/lib/sanitize";
 import Header from "~/components/Header";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
+import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import {
   HeartIcon,
@@ -248,6 +249,7 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
   return (
     <div class="feed-card">
       <div class="feed-card-header">
+        <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
         <A href={`/${post.blogName}`} class="feed-card-blog">
           {post.blogName}
         </A>
