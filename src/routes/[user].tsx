@@ -70,99 +70,107 @@ export default function UserLayout(props: ParentProps) {
 
   const rssIncludesToken = () => privateBlog() && !!v2session()
 
-  const feedActive = () =>
-    location.pathname === `/${slug()}` || location.pathname === `/${slug()}/`
-  const followingActive = () =>
-    location.pathname === `/${slug()}/following`
-
-  const actions = () => (
-    <>
-      <a
-        href={`https://bdsmlr.com/blog/${slug()}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="download-btn"
-        title="Open on BDSMLR"
-      >
-        <BdsmlrIcon />
-      </a>
-      <a
-        href={rssHref()}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="download-btn"
-        title="RSS feed"
-      >
-        <RssIcon />
-      </a>
-      <Show when={rssIncludesToken()}>
-        <span
-          class="rss-token-warning"
-          title="This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine."
-        >
-          <WarningIcon />
-        </span>
-      </Show>
-    </>
-  )
-
   return (
     <div class="home-page">
       <Title>{slug()} — bbdsmlr</Title>
-      <Header />
+      <Header info={`@${slug()}`} />
       {error() && <p class="error">{error()}</p>}
       <Show when={blog()}>
         {(b) => (
-          <section class="profile-header">
-            <div class="profile-banner">
-              {b().coverUrl && <img src={b().coverUrl} alt="" />}
-            </div>
-            <div class="profile-inner">
-              <div class="profile-top">
-                <Show when={b().avatarUrl}>
-                  <img
-                    class="profile-avatar"
-                    src={b().avatarUrl}
-                    alt=""
-                  />
-                </Show>
-                <div class="profile-actions">{actions()}</div>
-              </div>
-              <div class="profile-info">
-                {b().title && <h2 class="profile-title">{b().title}</h2>}
-                <p class="profile-handle">@{slug()}</p>
+          <section class="blog-header">
+            <div class="blog-header-inner">
+              {b().avatarUrl && (
+                <img class="blog-avatar" src={b().avatarUrl} alt="" />
+              )}
+              <div class="blog-header-info">
+                {b().title && <h2 class="blog-title">{b().title}</h2>}
                 {b().description && (
-                  <p class="profile-description">{b().description}</p>
+                  <p class="blog-description">{b().description}</p>
                 )}
+                <div class="blog-nav">
+                  <nav class="blog-nav-tabs">
+                    <A
+                      href={`/${slug()}`}
+                      class="blog-nav-tab"
+                      classList={{
+                        "blog-nav-tab-active":
+                          location.pathname === `/${slug()}` ||
+                          location.pathname === `/${slug()}/`,
+                      }}
+                    >
+                      Feed
+                    </A>
+                    <A
+                      href={`/${slug()}/following`}
+                      class="blog-nav-tab"
+                      classList={{
+                        "blog-nav-tab-active":
+                          location.pathname === `/${slug()}/following`,
+                      }}
+                    >
+                      Following
+                    </A>
+                  </nav>
+                  <div class="blog-nav-actions">
+                    <a
+                      href={`https://bdsmlr.com/blog/${slug()}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="download-btn"
+                      title="Open on BDSMLR"
+                    >
+                      <BdsmlrIcon />
+                    </a>
+                    <a
+                      href={rssHref()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="download-btn"
+                      title="RSS feed"
+                    >
+                      <RssIcon />
+                    </a>
+                    <Show when={rssIncludesToken()}>
+                      <span
+                        class="rss-token-warning"
+                        title="This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine."
+                      >
+                        <WarningIcon />
+                      </span>
+                    </Show>
+                  </div>
+                </div>
               </div>
             </div>
-            <nav class="profile-tabs">
-              <A
-                href={`/${slug()}`}
-                class="profile-tab"
-                classList={{ "profile-tab-active": feedActive() }}
-              >
-                Feed
-              </A>
-              <A
-                href={`/${slug()}/following`}
-                class="profile-tab"
-                classList={{ "profile-tab-active": followingActive() }}
-              >
-                Following
-              </A>
-            </nav>
           </section>
         )}
       </Show>
       <Show when={!loading() && !error() && !blog()}>
-        <section class="profile-header">
-          <div class="profile-inner">
-            <div class="profile-info">
-              <p class="profile-description">This blog is private.</p>
-            </div>
-            <div class="profile-actions" style="margin-top:12px">
-              {actions()}
+        <section class="blog-header">
+          <div class="blog-header-inner">
+            <div class="blog-header-info">
+              <p class="blog-description">This blog is private.</p>
+              <div class="blog-nav">
+                <div class="blog-nav-actions">
+                  <a
+                    href={rssHref()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="download-btn"
+                    title="RSS feed"
+                  >
+                    <RssIcon />
+                  </a>
+                  <Show when={rssIncludesToken()}>
+                    <span
+                      class="rss-token-warning"
+                      title="This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine."
+                    >
+                      <WarningIcon />
+                    </span>
+                  </Show>
+                </div>
+              </div>
             </div>
           </div>
         </section>

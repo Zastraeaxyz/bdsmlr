@@ -13,12 +13,6 @@ import {
 import { getCachedFollowingIds } from "~/lib/following";
 import { useAuth } from "~/lib/useAuth";
 import SortDropdown from "~/components/SortDropdown";
-import FeedLayoutToggle from "~/components/FeedLayoutToggle";
-import {
-  loadFeedLayout,
-  saveFeedLayout,
-  type FeedLayout,
-} from "~/lib/feedLayout";
 import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import {
   sanitizeHtml,
@@ -49,7 +43,6 @@ import {
 
 const HISTORY_KEY = "bdsmlr:searchHistory:home";
 const PAGE_SIZE = 20;
-const LAYOUT_KEY = "bdsmlr:feedLayout:home";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -75,9 +68,6 @@ export default function Home() {
   const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
-  const [layout, setLayout] = createSignal<FeedLayout>(
-    loadFeedLayout(LAYOUT_KEY),
-  );
   let nextPageToken: string | null = searchParams.page_token || null;
   let searchPage = 1;
   let searchSession: string | null = null;
@@ -272,13 +262,6 @@ export default function Home() {
                 mostReblogged: true,
               }}
             />
-            <FeedLayoutToggle
-              value={layout()}
-              onChange={(l) => {
-                setLayout(l);
-                saveFeedLayout(LAYOUT_KEY, l);
-              }}
-            />
             <div class="search-input-wrap">
               <input
                 type="text"
@@ -322,15 +305,11 @@ export default function Home() {
                 </p>
               }
             >
-              <div
-                class="feed"
-                classList={{ "feed-grid": layout() === "grid" }}
-              >
+              <div class="feed">
                 <For each={posts()}>
                   {(post) => (
                     <PostCard
                       post={post}
-                      layout={layout()}
                       onTagClick={handleTagClick}
                       onImageClick={(url) =>
                         setLightboxUrl(upgradeToLightbox(url))
@@ -360,7 +339,6 @@ export default function Home() {
 
 function PostCard(props: {
   post: Post;
-  layout?: FeedLayout;
   onTagClick?: (tag: string) => void;
   onImageClick?: (url: string) => void;
 }) {
@@ -403,29 +381,18 @@ function PostCard(props: {
     return sanitizeHtml(processed);
   };
 
-  const firstMedia = (): { url: string; type: MediaType } | null => {
-    const items = mediaItems();
-    return items.find((i) => i.type === "image") ?? items[0] ?? null;
-  };
-
-  const permalink = () =>
-    post.blogName ? `/${post.blogName}/post/${post.id}` : `/post/${post.id}`;
-
   return (
-    <Show
-      when={props.layout === "grid"}
-      fallback={
-        <div class="feed-card">
-          <div class="feed-card-header">
-            <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
-            <A href={`/${post.blogName}`} class="feed-card-blog">
-              {post.blogName}
-            </A>
-            <span class="feed-card-type">{postTypeLabel(post.type)}</span>
-            <Show when={!post.id}>
-              <span class="feed-card-type">DELETED</span>
-            </Show>
-            {post.createdAtUnix && (
+    <div class="feed-card">
+      <div class="feed-card-header">
+        <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
+        <A href={`/${post.blogName}`} class="feed-card-blog">
+          {post.blogName}
+        </A>
+        <span class="feed-card-type">{postTypeLabel(post.type)}</span>
+        <Show when={!post.id}>
+          <span class="feed-card-type">DELETED</span>
+        </Show>
+        {post.createdAtUnix && (
           <span class="feed-card-time">
             {formatRelativeDate(post.createdAtUnix)}
           </span>
@@ -515,37 +482,7 @@ function PostCard(props: {
             Permalink
           </A>
         </Show>
-          </div>
-        </div>
-      }
-    >
-      <div class="feed-card feed-card-grid">
-        <Show when={firstMedia()} fallback={<div class="feed-card-grid-media" />}>
-          <A href={permalink()} class="feed-card-grid-media">
-            <Show
-              when={firstMedia()!.type === "image"}
-              fallback={
-                <video
-                  src={firstMedia()!.url}
-                  muted
-                  preload="metadata"
-                  playsinline
-                />
-              }
-            >
-              <img src={firstMedia()!.url} alt="" />
-            </Show>
-          </A>
-        </Show>
-        <div class="feed-card-grid-footer">
-          <A href={`/${post.blogName}`} class="feed-card-grid-user">
-            {post.blogName}
-          </A>
-          <span class="feed-card-grid-likes">
-            <HeartIcon /> {post.likesCount ?? 0}
-          </span>
-        </div>
       </div>
-    </Show>
+    </div>
   );
 }
