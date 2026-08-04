@@ -28,11 +28,8 @@ import {
   HeartIcon,
   ChatIcon,
   ReblogIcon,
-  DownloadIcon,
   BdsmlrIcon,
 } from "~/components/Icons";
-import { DownloadModal } from "~/components/DownloadModal";
-import { downloadImages } from "~/lib/download";
 import { formatRelativeDate } from "~/lib/date";
 
 export default function LikedPosts() {
@@ -194,16 +191,6 @@ export default function LikedPosts() {
 
 function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
   const post = props.post;
-  const [showDownloadModal, setShowDownloadModal] = createSignal(false);
-
-  const handleDownloadClick = () => {
-    const urls = imageUrls();
-    if (urls.length === 1) {
-      downloadImages({ urls, blogName: post.blogName, postId: post.id });
-    } else {
-      setShowDownloadModal(true);
-    }
-  };
 
   const postTypeLabel = (type?: number) => {
     switch (type) {
@@ -231,11 +218,6 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
   const mediaItems = (): { url: string; type: MediaType }[] => {
     return getPostMediaUrls(post).map((url) => ({ url, type: getMediaType(url) }));
   };
-
-  const imageUrls = () =>
-    mediaItems()
-      .filter((i) => i.type === "image")
-      .map((i) => i.url);
 
   const contentHtml = () => {
     const c = post.content;
@@ -315,16 +297,6 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
         <span>
           <ReblogIcon /> {post.reblogsCount ?? 0}
         </span>
-        <Show when={imageUrls().length > 0}>
-          <button
-            type="button"
-            class="download-btn"
-            title="Download images"
-            onClick={handleDownloadClick}
-          >
-            <DownloadIcon />
-          </button>
-        </Show>
         <Show when={post.id}>
           <a
             href={`https://bdsmlr.com/post/${post.id}`}
@@ -349,14 +321,6 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
           </A>
         </Show>
       </div>
-      <Show when={showDownloadModal()}>
-        <DownloadModal
-          urls={imageUrls()}
-          blogName={post.blogName}
-          postId={post.id}
-          onClose={() => setShowDownloadModal(false)}
-        />
-      </Show>
     </div>
   );
 }
