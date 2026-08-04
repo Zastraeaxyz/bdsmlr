@@ -79,7 +79,8 @@ export function getPostMediaUrls(post: { mediaRepresentation?: MediaRepresentati
     .map((item) => {
       if (item.original?.url && item.original.mimeType) return item.original.url
       const alternate = item.alternates?.find((a) => a.url && a.mimeType)
-      return alternate?.url
+      if (alternate?.url) return alternate.url
+      return item.original?.url
     })
     .filter((url): url is string => !!url)
 }
