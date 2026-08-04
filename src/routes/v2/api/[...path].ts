@@ -7,17 +7,17 @@ const CACHE_CONFIG: Record<string, string> = {
 
   // Stable lookups — long cache
   "/v2/api/resolve-identifier": "public, max-age=86400",
-  "/v2/api/get-blog": "public, max-age=3600",
+  "/v2/api/get-blog": "public, max-age=1800",
 
   // Semi-stable — moderate cache
   "/v2/api/blog-follow-graph": "public, max-age=300",
-  "/v2/api/list-blog-top-tags": "public, max-age=300",
+  "/v2/api/list-blog-top-tags": "public, max-age=1800",
 
   // Post detail — short cache
   "/v2/api/get-post-detail": "public, max-age=60",
 
   // Feed/search — minimum 60s
-  "/v2/api/list-blog-activity": "public, max-age=60",
+  "/v2/api/list-blog-activity": "no-store",
   "/v2/api/search-posts-by-tag": "public, max-age=60",
   "/v2/api/list-blogs-recent-activity": "public, max-age=60",
 };
