@@ -97,10 +97,10 @@ export default function UserFeed() {
   });
 
   let resolvedId: number | null = null;
-  let page = 1;
+  let nextPageToken: string | null = null;
   let loadMoreRef: HTMLButtonElement | undefined;
 
-  const loadPage = async (name: string) => {
+  const loadPage = async (name: string, token?: string) => {
     if (!resolvedId) return;
     const q = activeQuery();
     const data = await listBlogActivity({
@@ -111,7 +111,9 @@ export default function UserFeed() {
       order: sortOrder(),
       post_types: [1, 2, 3, 4, 5, 6, 7],
       activity_kinds: hideReblogs() ? ["post"] : ["post", "reblog"],
-      page,
+      page: token
+        ? { page_size: PAGE_SIZE, page_token: token }
+        : { page_size: PAGE_SIZE },
       page_size: PAGE_SIZE,
     });
     if (data.error) {
@@ -124,7 +126,8 @@ export default function UserFeed() {
       incoming = incoming.filter((p) => p.variant !== PostVariant.Reblog);
     }
     setPosts((prev) => [...prev, ...incoming]);
-    if (incoming.length < PAGE_SIZE) setHasMore(false);
+    nextPageToken = data.page?.nextPageToken ?? null;
+    if (!nextPageToken) setHasMore(false);
   };
 
   const fetchFeed = async () => {
@@ -139,7 +142,7 @@ export default function UserFeed() {
     setPosts([]);
     setHasMore(true);
     resolvedId = null;
-    page = 1;
+    nextPageToken = null;
     try {
       const resolved = await resolveIdentifier(name);
       if (!resolved.blogId) {
@@ -164,13 +167,15 @@ export default function UserFeed() {
 
   const loadMore = async () => {
     const name = slug();
-    if (!name || !resolvedId || !hasMore() || loadingMore()) return;
+    if (!name || !resolvedId || !hasMore() || loadingMore() || !nextPageToken)
+      return;
     setLoadingMore(true);
-    page++;
+    const token = nextPageToken;
+    nextPageToken = null;
     try {
-      await loadPage(name);
+      await loadPage(name, token);
     } catch (err: unknown) {
-      page--;
+      nextPageToken = token;
       setError((err as Error)?.message || "Failed to load more");
     } finally {
       setLoadingMore(false);
@@ -193,7 +198,7 @@ export default function UserFeed() {
     const name = slug();
     if (!name) return;
     setActiveQuery(query());
-    page = 1;
+    nextPageToken = null;
     setPosts([]);
     setHasMore(true);
     loadPage(name);
@@ -204,7 +209,7 @@ export default function UserFeed() {
     if (!name) return;
     setQuery("");
     setActiveQuery("");
-    page = 1;
+    nextPageToken = null;
     setPosts([]);
     setHasMore(true);
     loadPage(name);
@@ -218,7 +223,7 @@ export default function UserFeed() {
       `tag:${tag.includes(" ") ? `"${tag}"` : tag}`;
     setQuery(q);
     setActiveQuery(q);
-    page = 1;
+    nextPageToken = null;
     setPosts([]);
     setHasMore(true);
     loadPage(name);
@@ -300,7 +305,7 @@ export default function UserFeed() {
             onChange={(sf, so) => {
               setSortField(sf);
               setSortOrder(so);
-              page = 1;
+              nextPageToken = null;
               setPosts([]);
               setHasMore(true);
               const name = slug();
@@ -340,7 +345,7 @@ export default function UserFeed() {
               if (!name) return;
               setQuery(q);
               setActiveQuery(q);
-              page = 1;
+              nextPageToken = null;
               setPosts([]);
               setHasMore(true);
               loadPage(name);
