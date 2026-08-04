@@ -1,4 +1,4 @@
-import { createSignal, createEffect, For, Show, onMount, onCleanup } from "solid-js";
+import { createSignal, createEffect, For, Show, onCleanup } from "solid-js";
 import { A, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import {
@@ -176,7 +176,8 @@ export default function Home() {
     }
   };
 
-  onMount(() => {
+  createEffect(() => {
+    if (authLoading() || !user()) return;
     if (!loadMoreRef) return;
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
