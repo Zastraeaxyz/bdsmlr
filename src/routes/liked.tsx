@@ -11,6 +11,12 @@ import {
 } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
 import SortDropdown from "~/components/SortDropdown";
+import FeedLayoutToggle from "~/components/FeedLayoutToggle";
+import {
+  loadFeedLayout,
+  saveFeedLayout,
+  type FeedLayout,
+} from "~/lib/feedLayout";
 import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import {
   sanitizeHtml,
@@ -44,6 +50,9 @@ export default function LikedPosts() {
   const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
+  const [layout, setLayout] = createSignal<FeedLayout>(
+    loadFeedLayout("bdsmlr:feedLayout:liked"),
+  );
   let nextPageToken: string | null = searchParams.page_token || null;
   let loadMoreRef: HTMLButtonElement | undefined;
 
@@ -148,6 +157,13 @@ export default function LikedPosts() {
               fetchLiked();
             }}
           />
+          <FeedLayoutToggle
+            value={layout()}
+            onChange={(l) => {
+              setLayout(l);
+              saveFeedLayout("bdsmlr:feedLayout:liked", l);
+            }}
+          />
         </div>
 
         {error() && <p class="error">{error()}</p>}
@@ -159,11 +175,12 @@ export default function LikedPosts() {
             when={posts().length > 0}
             fallback={<p class="empty">No liked posts yet.</p>}
           >
-            <div class="feed">
+            <div class="feed" classList={{ "feed-grid": layout() === "grid" }}>
               <For each={posts()}>
                 {(post) => (
                   <PostCard
                     post={post}
+                    layout={layout()}
                     onImageClick={(url) =>
                       setLightboxUrl(upgradeToLightbox(url))
                     }
@@ -189,7 +206,11 @@ export default function LikedPosts() {
   );
 }
 
-function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
+function PostCard(props: {
+  post: Post;
+  layout?: FeedLayout;
+  onImageClick?: (url: string) => void;
+}) {
   const post = props.post;
 
   const postTypeLabel = (type?: number) => {
@@ -229,30 +250,41 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
     return sanitizeHtml(processed);
   };
 
+  const firstMedia = (): { url: string; type: MediaType } | null => {
+    const items = mediaItems();
+    return items.find((i) => i.type === "image") ?? items[0] ?? null;
+  };
+
+  const permalink = () =>
+    post.blogName ? `/${post.blogName}/post/${post.id}` : `/post/${post.id}`;
+
   return (
-    <div class="feed-card">
-      <div class="feed-card-header">
-        <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
-        <A href={`/${post.blogName}`} class="feed-card-blog">
-          {post.blogName}
-        </A>
-        <span class="feed-card-type">{postTypeLabel(post.type)}</span>
-        <Show when={!post.id}>
-          <span class="feed-card-type">DELETED</span>
-        </Show>
-        {post.createdAtUnix && (
-          <span class="feed-card-time">
-            {formatRelativeDate(post.createdAtUnix)}
-          </span>
-        )}
-      </div>
-      <ReblogAttribution
-        originBlogName={post.originBlogName}
-        originPostId={post.originPostId}
-        variant={post.variant}
-      />
-      {post.title && <div class="feed-card-title">{post.title}</div>}
-      {contentHtml() && (
+    <Show
+      when={props.layout === "grid"}
+      fallback={
+        <div class="feed-card">
+          <div class="feed-card-header">
+            <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
+            <A href={`/${post.blogName}`} class="feed-card-blog">
+              {post.blogName}
+            </A>
+            <span class="feed-card-type">{postTypeLabel(post.type)}</span>
+            <Show when={!post.id}>
+              <span class="feed-card-type">DELETED</span>
+            </Show>
+            {post.createdAtUnix && (
+              <span class="feed-card-time">
+                {formatRelativeDate(post.createdAtUnix)}
+              </span>
+            )}
+          </div>
+          <ReblogAttribution
+            originBlogName={post.originBlogName}
+            originPostId={post.originPostId}
+            variant={post.variant}
+          />
+          {post.title && <div class="feed-card-title">{post.title}</div>}
+          {contentHtml() && (
         <div
           class="feed-card-body"
           innerHTML={contentHtml()!}
@@ -320,7 +352,37 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
             Permalink
           </A>
         </Show>
+          </div>
+        </div>
+      }
+    >
+      <div class="feed-card feed-card-grid">
+        <Show when={firstMedia()} fallback={<div class="feed-card-grid-media" />}>
+          <A href={permalink()} class="feed-card-grid-media">
+            <Show
+              when={firstMedia()!.type === "image"}
+              fallback={
+                <video
+                  src={firstMedia()!.url}
+                  muted
+                  preload="metadata"
+                  playsinline
+                />
+              }
+            >
+              <img src={firstMedia()!.url} alt="" />
+            </Show>
+          </A>
+        </Show>
+        <div class="feed-card-grid-footer">
+          <A href={`/${post.blogName}`} class="feed-card-grid-user">
+            {post.blogName}
+          </A>
+          <span class="feed-card-grid-likes">
+            <HeartIcon /> {post.likesCount ?? 0}
+          </span>
+        </div>
       </div>
-    </div>
+    </Show>
   );
 }

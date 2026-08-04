@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Deleted blogs on permalink pages** — When you open a post whose blog has been deleted, the page now shows a "Blog gone" notice and a chip next to the post type. The author's name and avatar are no longer clickable, but the post itself stays fully readable.
-- **Clearer profile navigation** — Profile pages now show **Feed** and **Following** as distinct tabs, with the active page highlighted. The BDSMLR and RSS icon buttons are grouped together in their own control, separate from the tabs.
+- **Redesigned profile headers** — Profile pages now use a Twitter-style header: a cover banner with the avatar overlapping it, the blog's title and handle, its description, and the BDSMLR/RSS buttons grouped in the top corner. **Feed** and **Following** are full-width tabs with an underline on the active page, so the profile's navigation feels like one header instead of a second navbar. Your logged-in account stays in the top right.
+- **List and grid feed layouts** — Every feed (home, profile, and liked pages) now has a layout dropdown next to the sort control. **List** is the default and shows posts in full as before; **Grid** turns the feed into a photo grid where each card shows just the first image (cropped), the author's name, and the like count. Your choice is remembered per page, so home and each profile can keep their own layout.
 
 ### Removed
 

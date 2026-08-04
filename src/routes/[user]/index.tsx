@@ -21,6 +21,12 @@ import {
 } from "~/lib/api";
 import { GearIcon } from "~/components/Icons";
 import SortDropdown from "~/components/SortDropdown";
+import FeedLayoutToggle from "~/components/FeedLayoutToggle";
+import {
+  loadFeedLayout,
+  saveFeedLayout,
+  type FeedLayout,
+} from "~/lib/feedLayout";
 import {
   sanitizeHtml,
   processContentHtml,
@@ -66,15 +72,21 @@ export default function UserFeed() {
   const [showAllTags, setShowAllTags] = createSignal(false);
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
+  const [layout, setLayout] = createSignal<FeedLayout>("list");
   const { hideReblogs, setHideReblogs } = useFeedSettings();
   const [showSettings, setShowSettings] = createSignal(false);
   let settingsRef: HTMLDivElement | undefined;
 
   const historyKey = () => `bdsmlr:searchHistory:profile:${slug()}`;
+  const layoutKey = () => `bdsmlr:feedLayout:profile:${slug()}`;
   const [history, setHistory] = createSignal<string[]>([]);
 
   createEffect(() => {
     setHistory(loadSearchHistory(historyKey()));
+  });
+
+  createEffect(() => {
+    setLayout(loadFeedLayout(layoutKey()));
   });
 
   const toggleHideReblogs = () => {
@@ -336,6 +348,13 @@ export default function UserFeed() {
               mostReblogged: true,
             }}
           />
+          <FeedLayoutToggle
+            value={layout()}
+            onChange={(l) => {
+              setLayout(l);
+              saveFeedLayout(layoutKey(), l);
+            }}
+          />
           <div class="search-input-wrap">
             <input
               type="text"
@@ -396,11 +415,12 @@ export default function UserFeed() {
             when={posts().length > 0}
             fallback={<p class="empty">No posts in feed.</p>}
           >
-            <div class="feed">
+            <div class="feed" classList={{ "feed-grid": layout() === "grid" }}>
               <For each={posts()}>
                 {(post) => (
                   <PostCard
                     post={post}
+                    layout={layout()}
                     onTagClick={handleTagClick}
                     onImageClick={(url) =>
                       setLightboxUrl(upgradeToLightbox(url))
@@ -429,6 +449,7 @@ export default function UserFeed() {
 
 function PostCard(props: {
   post: Post;
+  layout?: FeedLayout;
   onTagClick?: (tag: string) => void;
   onImageClick?: (url: string) => void;
 }) {
@@ -471,30 +492,41 @@ function PostCard(props: {
     return sanitizeHtml(processed);
   };
 
+  const firstMedia = (): { url: string; type: MediaType } | null => {
+    const items = mediaItems();
+    return items.find((i) => i.type === "image") ?? items[0] ?? null;
+  };
+
+  const permalink = () =>
+    post.blogName ? `/${post.blogName}/post/${post.id}` : `/post/${post.id}`;
+
   return (
-    <div class="feed-card">
-      <div class="feed-card-header">
-        <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
-        <A href={`/${post.blogName}`} class="feed-card-blog">
-          {post.blogName}
-        </A>
-        <span class="feed-card-type">{postTypeLabel(post.type)}</span>
-        <Show when={!post.id}>
-          <span class="feed-card-type">DELETED</span>
-        </Show>
-        {post.createdAtUnix && (
-          <span class="feed-card-time">
-            {formatRelativeDate(post.createdAtUnix)}
-          </span>
-        )}
-      </div>
-      <ReblogAttribution
-        originBlogName={post.originBlogName}
-        originPostId={post.originPostId}
-        variant={post.variant}
-      />
-      {post.title && <div class="feed-card-title">{post.title}</div>}
-      {contentHtml() && (
+    <Show
+      when={props.layout === "grid"}
+      fallback={
+        <div class="feed-card">
+          <div class="feed-card-header">
+            <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
+            <A href={`/${post.blogName}`} class="feed-card-blog">
+              {post.blogName}
+            </A>
+            <span class="feed-card-type">{postTypeLabel(post.type)}</span>
+            <Show when={!post.id}>
+              <span class="feed-card-type">DELETED</span>
+            </Show>
+            {post.createdAtUnix && (
+              <span class="feed-card-time">
+                {formatRelativeDate(post.createdAtUnix)}
+              </span>
+            )}
+          </div>
+          <ReblogAttribution
+            originBlogName={post.originBlogName}
+            originPostId={post.originPostId}
+            variant={post.variant}
+          />
+          {post.title && <div class="feed-card-title">{post.title}</div>}
+          {contentHtml() && (
         <div
           class="feed-card-body"
           innerHTML={contentHtml()!}
@@ -572,7 +604,37 @@ function PostCard(props: {
             Permalink
           </A>
         </Show>
+          </div>
+        </div>
+      }
+    >
+      <div class="feed-card feed-card-grid">
+        <Show when={firstMedia()} fallback={<div class="feed-card-grid-media" />}>
+          <A href={permalink()} class="feed-card-grid-media">
+            <Show
+              when={firstMedia()!.type === "image"}
+              fallback={
+                <video
+                  src={firstMedia()!.url}
+                  muted
+                  preload="metadata"
+                  playsinline
+                />
+              }
+            >
+              <img src={firstMedia()!.url} alt="" />
+            </Show>
+          </A>
+        </Show>
+        <div class="feed-card-grid-footer">
+          <A href={`/${post.blogName}`} class="feed-card-grid-user">
+            {post.blogName}
+          </A>
+          <span class="feed-card-grid-likes">
+            <HeartIcon /> {post.likesCount ?? 0}
+          </span>
+        </div>
       </div>
-    </div>
+    </Show>
   );
 }
