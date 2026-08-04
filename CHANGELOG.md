@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Profile navigation** — The Feed and Following links on profile pages are now tabs below the profile header, styled like Twitter/Bluesky, with the active tab highlighted by an underline. The BDSMLR and RSS icons are grouped together and right-aligned in the top-right corner of the profile header.
+
 ### Added
 
 - **Deleted blogs on permalink pages** — When you open a post whose blog has been deleted, the page now shows a "Blog gone" notice and a chip next to the post type. The author's name and avatar are no longer clickable, but the post itself stays fully readable.
