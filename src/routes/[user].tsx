@@ -87,38 +87,76 @@ export default function UserLayout(props: ParentProps) {
                 {b().description && (
                   <p class="blog-description">{b().description}</p>
                 )}
-                <div style="display:flex;gap:12px;margin-top:8px">
-                  <a
-                    href={`https://bdsmlr.com/blog/${slug()}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="download-btn"
-                    title="Open on BDSMLR"
-                  >
-                    <BdsmlrIcon />
-                  </a>
-                  <A
-                    href={`/${slug()}`}
-                    class="download-btn"
-                    classList={{ 'download-btn-active': location.pathname === `/${slug()}` }}
-                    title="Feed"
-                  >
-                    Feed
-                  </A>
-                  <A
-                    href={`/${slug()}/following`}
-                    class="download-btn"
-                    classList={{ 'download-btn-active': location.pathname === `/${slug()}/following` }}
-                    title="Following"
-                  >
-                    Following
-                  </A>
+                <div class="blog-nav">
+                  <nav class="blog-nav-tabs">
+                    <A
+                      href={`/${slug()}`}
+                      class="blog-nav-tab"
+                      classList={{
+                        "blog-nav-tab-active":
+                          location.pathname === `/${slug()}` ||
+                          location.pathname === `/${slug()}/`,
+                      }}
+                    >
+                      Feed
+                    </A>
+                    <A
+                      href={`/${slug()}/following`}
+                      class="blog-nav-tab"
+                      classList={{
+                        "blog-nav-tab-active":
+                          location.pathname === `/${slug()}/following`,
+                      }}
+                    >
+                      Following
+                    </A>
+                  </nav>
+                  <div class="blog-nav-actions">
+                    <a
+                      href={`https://bdsmlr.com/blog/${slug()}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="download-btn"
+                      title="Open on BDSMLR"
+                    >
+                      <BdsmlrIcon />
+                    </a>
+                    <a
+                      href={rssHref()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="download-btn"
+                      title="RSS feed"
+                    >
+                      <RssIcon />
+                    </a>
+                    <Show when={rssIncludesToken()}>
+                      <span
+                        class="rss-token-warning"
+                        title="This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine."
+                      >
+                        <WarningIcon />
+                      </span>
+                    </Show>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+      </Show>
+      <Show when={!loading() && !error() && !blog()}>
+        <section class="blog-header">
+          <div class="blog-header-inner">
+            <div class="blog-header-info">
+              <p class="blog-description">This blog is private.</p>
+              <div class="blog-nav">
+                <div class="blog-nav-actions">
                   <a
                     href={rssHref()}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="download-btn"
-                    classList={{ 'download-btn-active': location.pathname === `/${slug()}/rss` }}
                     title="RSS feed"
                   >
                     <RssIcon />
@@ -132,34 +170,6 @@ export default function UserLayout(props: ParentProps) {
                     </span>
                   </Show>
                 </div>
-              </div>
-            </div>
-          </section>
-        )}
-      </Show>
-      <Show when={!loading() && !error() && !blog()}>
-        <section class="blog-header">
-          <div class="blog-header-inner">
-            <div class="blog-header-info">
-              <p class="blog-description">This blog is private.</p>
-              <div style="display:flex;gap:12px;margin-top:8px">
-                <a
-                  href={rssHref()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="download-btn"
-                  title="RSS feed"
-                >
-                  <RssIcon />
-                </a>
-                <Show when={rssIncludesToken()}>
-                  <span
-                    class="rss-token-warning"
-                    title="This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine."
-                  >
-                    <WarningIcon />
-                  </span>
-                </Show>
               </div>
             </div>
           </div>

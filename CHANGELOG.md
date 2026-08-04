@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Deleted blogs on permalink pages** — When you open a post whose blog has been deleted, the page now shows a "Blog gone" notice and a chip next to the post type. The author's name and avatar are no longer clickable, but the post itself stays fully readable.
+- **Clearer profile navigation** — Profile pages now show **Feed** and **Following** as distinct tabs, with the active page highlighted. The BDSMLR and RSS icon buttons are grouped together in their own control, separate from the tabs.
 
 ### Removed
 
