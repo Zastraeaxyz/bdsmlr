@@ -43,6 +43,12 @@ import {
 import { DownloadModal } from "~/components/DownloadModal";
 import { downloadImages } from "~/lib/download";
 import { formatRelativeDate } from "~/lib/date";
+import SearchHistory from "~/components/SearchHistory";
+import {
+  loadSearchHistory,
+  addSearchHistory,
+  removeSearchHistory,
+} from "~/lib/searchHistory";
 
 const PAGE_SIZE = 20;
 
@@ -65,6 +71,13 @@ export default function UserFeed() {
   const { hideReblogs, setHideReblogs } = useFeedSettings();
   const [showSettings, setShowSettings] = createSignal(false);
   let settingsRef: HTMLDivElement | undefined;
+
+  const historyKey = () => `bdsmlr:searchHistory:profile:${slug()}`;
+  const [history, setHistory] = createSignal<string[]>([]);
+
+  createEffect(() => {
+    setHistory(loadSearchHistory(historyKey()));
+  });
 
   const toggleHideReblogs = () => {
     const name = slug();
@@ -194,15 +207,23 @@ export default function UserFeed() {
     onCleanup(() => observer.disconnect());
   });
 
+  const runSearch = (q: string) => {
+    const name = slug();
+    if (!name) return;
+    setQuery(q);
+    setActiveQuery(q);
+    nextPageToken = null;
+    setPosts([]);
+    setHasMore(true);
+    setHistory(addSearchHistory(historyKey(), q));
+    loadPage(name);
+  };
+
   const doSearch = (e: Event) => {
     e.preventDefault();
     const name = slug();
     if (!name) return;
-    setActiveQuery(query());
-    nextPageToken = null;
-    setPosts([]);
-    setHasMore(true);
-    loadPage(name);
+    runSearch(query());
   };
 
   const clearSearch = () => {
@@ -222,12 +243,7 @@ export default function UserFeed() {
     const q =
       (query() ? query() + " " : "") +
       `tag:${tag.includes(" ") ? `"${tag}"` : tag}`;
-    setQuery(q);
-    setActiveQuery(q);
-    nextPageToken = null;
-    setPosts([]);
-    setHasMore(true);
-    loadPage(name);
+    runSearch(q);
   };
 
   return (
@@ -338,20 +354,16 @@ export default function UserFeed() {
                 ×
               </button>
             )}
+            <SearchHistory
+              entries={history()}
+              onSelect={runSearch}
+              onDelete={(q) =>
+                setHistory(removeSearchHistory(historyKey(), q))
+              }
+            />
           </div>
           <button type="submit">Search</button>
-          <SearchHelp
-            onFill={(q) => {
-              const name = slug();
-              if (!name) return;
-              setQuery(q);
-              setActiveQuery(q);
-              nextPageToken = null;
-              setPosts([]);
-              setHasMore(true);
-              loadPage(name);
-            }}
-          />
+          <SearchHelp onFill={runSearch} />
           <div class="settings-dropdown" ref={settingsRef}>
             <button
               type="button"

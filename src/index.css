@@ -246,12 +246,12 @@ button:disabled {
 
 .search-input-wrap input {
   width: 100%;
-  padding-right: 36px;
+  padding-right: 70px;
 }
 
 .search-input-clear {
   position: absolute;
-  right: 4px;
+  right: 34px;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
@@ -265,6 +265,125 @@ button:disabled {
 
 .search-input-clear:hover {
   color: var(--text);
+}
+
+/* ---- Search history ---- */
+
+.search-history {
+  position: static;
+}
+
+.search-history-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.search-history-btn:hover {
+  color: var(--text-heading);
+  background: var(--bg-hover);
+}
+
+.search-history-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  max-height: 40vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.search-history-empty {
+  padding: 10px 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.search-history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.search-history-item:hover {
+  background: var(--bg-hover);
+}
+
+.search-history-query {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+
+.search-history-delete {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-history-delete:hover {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.search-history-item.armed {
+  background: linear-gradient(
+    90deg,
+    rgba(248, 81, 73, 0.25),
+    rgba(248, 81, 73, 0.05)
+  );
+  border: 1px solid rgba(248, 81, 73, 0.5);
+}
+
+.search-history-item.armed .search-history-delete {
+  width: auto;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--danger);
+}
+
+.search-history-item.armed .search-history-delete:hover {
+  background: var(--danger);
 }
 
 .sort-select {

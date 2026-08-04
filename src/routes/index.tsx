@@ -36,6 +36,14 @@ import {
 import { DownloadModal } from "~/components/DownloadModal";
 import { downloadImages } from "~/lib/download";
 import { formatRelativeDate } from "~/lib/date";
+import SearchHistory from "~/components/SearchHistory";
+import {
+  loadSearchHistory,
+  addSearchHistory,
+  removeSearchHistory,
+} from "~/lib/searchHistory";
+
+const HISTORY_KEY = "bdsmlr:searchHistory:home";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -55,6 +63,9 @@ export default function Home() {
   const [error, setError] = createSignal("");
   const [query, setQuery] = createSignal("");
   const [activeQuery, setActiveQuery] = createSignal("");
+  const [history, setHistory] = createSignal<string[]>(
+    loadSearchHistory(HISTORY_KEY),
+  );
   const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
@@ -188,11 +199,17 @@ export default function Home() {
     onCleanup(() => observer.disconnect());
   });
 
+  const runSearch = (q: string) => {
+    setQuery(q);
+    setActiveQuery(q);
+    nextPageToken = null;
+    setHistory(addSearchHistory(HISTORY_KEY, q));
+    fetchFeed();
+  };
+
   const doSearch = (e: Event) => {
     e.preventDefault();
-    setActiveQuery(query());
-    nextPageToken = null;
-    fetchFeed();
+    runSearch(query());
   };
 
   const clearSearch = () => {
@@ -204,10 +221,7 @@ export default function Home() {
 
   const handleTagClick = (tag: string) => {
     const q = (query() ? query() + " " : "") + `tag:${tag}`;
-    setQuery(q);
-    setActiveQuery(q);
-    nextPageToken = null;
-    fetchFeed();
+    runSearch(q);
   };
 
   return (
@@ -251,16 +265,16 @@ export default function Home() {
                   ×
                 </button>
               )}
+              <SearchHistory
+                entries={history()}
+                onSelect={runSearch}
+                onDelete={(q) =>
+                  setHistory(removeSearchHistory(HISTORY_KEY, q))
+                }
+              />
             </div>
             <button type="submit">Search</button>
-            <SearchHelp
-              onFill={(q) => {
-                setQuery(q);
-                setActiveQuery(q);
-                nextPageToken = null;
-                fetchFeed();
-              }}
-            />
+            <SearchHelp onFill={runSearch} />
           </form>
 
           {error() && <p class="error">{error()}</p>}
