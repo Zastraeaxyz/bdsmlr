@@ -6,6 +6,7 @@ interface BlogAvatarProps {
   blogId?: number | null
   blogName?: string | null
   size?: number
+  linkable?: boolean
 }
 
 export function BlogAvatar(props: BlogAvatarProps) {
@@ -38,8 +39,10 @@ export function BlogAvatar(props: BlogAvatarProps) {
     </Show>
   )
 
+  const linkable = () => props.linkable !== false && !!props.blogName
+
   return (
-    <Show when={props.blogName} fallback={<span class="blog-avatar-link">{content()}</span>}>
+    <Show when={linkable()} fallback={<span class="blog-avatar-link">{content()}</span>}>
       <A href={`/${props.blogName}`} class="blog-avatar-link">
         {content()}
       </A>

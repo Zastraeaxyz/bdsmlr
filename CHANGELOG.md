@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Deleted blogs on permalink pages** — When you open a post whose blog has been deleted, the page now shows a "Blog gone" notice and a chip next to the post type. The author's name and avatar are no longer clickable, but the post itself stays fully readable.
+- **Short videos loop automatically** — Videos shorter than 20 seconds now replay on a loop, so clips feel like GIFs. Longer videos still play once with normal controls.
 - **Search history dropdown** — The home feed and every profile page now remember the searches you've run. Click the arrow on the right side of the search box to open a floating list of past queries; clicking an entry re-runs that search instantly. Each entry has an × to remove it — clicking the × once turns the row red as a delete confirmation, and clicking again deletes it. Home-feed searches and each profile's searches are kept separate.
 - **Author avatars in feed cards** — Every post on the home feed, liked page, profile feeds, and post detail pages now shows the author's profile picture next to their name. Clicking the avatar jumps to that blog. Avatars without a profile picture fall back to a letter placeholder, and lookups are cached for the session so feeds scroll without repeated requests.
 - **RSS feeds for every profile** — Every profile page now has an RSS icon next to the BDSMLR/Feed/Following links. Clicking it opens `/<user>/rss` in a new tab: an XML feed of the blog's recent posts (with media enclosures) that you can paste straight into any RSS reader, such as imaglr.

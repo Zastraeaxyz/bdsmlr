@@ -6,7 +6,7 @@ export default function UserPostPage() {
 
   return (
     <main>
-      <PostDetail postId={Number(params.id)} />
+      <PostDetail postId={Number(params.id)} checkBlogGone />
     </main>
   );
 }

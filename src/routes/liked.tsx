@@ -11,6 +11,7 @@ import {
 } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
 import SortDropdown from "~/components/SortDropdown";
+import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import {
   sanitizeHtml,
   processContentHtml,
@@ -287,14 +288,7 @@ function PostCard(props: { post: Post; onImageClick?: (url: string) => void }) {
             {(item) => (
               <Show
                 when={item.type === "image"}
-                fallback={
-                  <video
-                    src={item.url}
-                    muted
-                    controls
-                    preload="metadata"
-                  />
-                }
+                fallback={<AutoLoopVideo src={item.url} />}
               >
                 <img
                   src={item.url}

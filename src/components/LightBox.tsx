@@ -1,5 +1,6 @@
 import { Show, createEffect, onCleanup } from 'solid-js'
 import { getMediaType } from '../lib/sanitize'
+import { AutoLoopVideo } from './AutoLoopVideo'
 
 interface LightBoxProps {
   url: string | null
@@ -26,7 +27,7 @@ export function LightBox(props: LightBoxProps) {
             ✕
           </button>
           <Show when={type() === 'image'} fallback={
-            <video src={props.url!} muted controls preload="metadata" />
+            <AutoLoopVideo src={props.url!} />
           }>
             <img src={props.url!} alt="" />
           </Show>

@@ -7,6 +7,7 @@ import {
   onMount,
 } from "solid-js";
 import { useParams, A } from "@solidjs/router";
+import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import {
   resolveIdentifier,
   listBlogActivity,
@@ -529,14 +530,7 @@ function PostCard(props: {
             {(item) => (
               <Show
                 when={item.type === "image"}
-                fallback={
-                  <video
-                    src={item.url}
-                    muted
-                    controls
-                    preload="metadata"
-                  />
-                }
+                fallback={<AutoLoopVideo src={item.url} />}
               >
                 <img
                   src={item.url}

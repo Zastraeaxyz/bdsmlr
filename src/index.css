@@ -982,6 +982,21 @@ button:disabled {
   font-size: 13px;
 }
 
+.post-detail-gone {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.blog-gone-chip {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
 .post-detail-title {
   font-size: 22px;
   margin-bottom: 12px;

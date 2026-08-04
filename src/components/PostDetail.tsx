@@ -1,7 +1,7 @@
 import { createSignal, createEffect, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import { getPostDetail, PostType, type Post } from "~/lib/api";
+import { getPostDetail, getBlog, PostType, type Post } from "~/lib/api";
 import {
   sanitizeHtml,
   processContentHtml,
@@ -13,6 +13,7 @@ import {
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
+import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import {
   HeartIcon,
   ChatIcon,
@@ -24,10 +25,14 @@ import { DownloadModal } from "~/components/DownloadModal";
 import { downloadImages } from "~/lib/download";
 import { formatRelativeDate } from "~/lib/date";
 
-export default function PostDetail(props: { postId: number }) {
+export default function PostDetail(props: {
+  postId: number;
+  checkBlogGone?: boolean;
+}) {
   const [post, setPost] = createSignal<Post | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal("");
+  const [blogGone, setBlogGone] = createSignal(false);
   const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
 
   createEffect(() => {
@@ -39,13 +44,24 @@ export default function PostDetail(props: { postId: number }) {
     }
     setLoading(true);
     setError("");
+    setBlogGone(false);
     getPostDetail(postId)
       .then((data) => {
         if (data.error) {
           setError(data.error);
           return;
         }
-        setPost(data.post ?? null);
+        const p = data.post ?? null;
+        setPost(p);
+        if (props.checkBlogGone && p?.blogId) {
+          getBlog(p.blogId)
+            .then((res) => {
+              if (res.error === "blog gone") setBlogGone(true);
+            })
+            .catch((err: unknown) => {
+              if ((err as Error)?.message === "blog gone") setBlogGone(true);
+            });
+        }
       })
       .catch((err: unknown) =>
         setError((err as Error)?.message || "Failed to load post"),
@@ -62,9 +78,15 @@ export default function PostDetail(props: { postId: number }) {
       </Title>
       {error() && <p class="error">{error()}</p>}
       {loading() && <p class="loading">Loading post…</p>}
+      <Show when={blogGone()}>
+        <p class="post-detail-gone">
+          Blog gone — this blog was deleted, but the post remains accessible.
+        </p>
+      </Show>
       <Show when={!loading() && post()}>
         <PostDetailView
           post={post()!}
+          blogGone={blogGone()}
           onImageClick={(url) => setLightboxUrl(upgradeToLightbox(url))}
         />
       </Show>
@@ -75,6 +97,7 @@ export default function PostDetail(props: { postId: number }) {
 
 function PostDetailView(props: {
   post: Post;
+  blogGone?: boolean;
   onImageClick?: (url: string) => void;
 }) {
   const [showDownloadModal, setShowDownloadModal] = createSignal(false);
@@ -137,11 +160,24 @@ function PostDetailView(props: {
   return (
     <article class="post-detail">
       <div class="post-detail-header">
-        <BlogAvatar blogId={props.post.blogId} blogName={props.post.blogName} size={32} />
-        <A href={`/${props.post.blogName}`} class="post-detail-blog">
-          {props.post.blogName}
-        </A>
+        <BlogAvatar
+          blogId={props.post.blogId}
+          blogName={props.post.blogName}
+          size={32}
+          linkable={!props.blogGone}
+        />
+        <Show
+          when={!props.blogGone}
+          fallback={<span class="post-detail-blog">{props.post.blogName}</span>}
+        >
+          <A href={`/${props.post.blogName}`} class="post-detail-blog">
+            {props.post.blogName}
+          </A>
+        </Show>
         <span class="feed-card-type">{postTypeLabel(props.post.type)}</span>
+        <Show when={props.blogGone}>
+          <span class="feed-card-type blog-gone-chip">Blog gone</span>
+        </Show>
         <Show when={!props.post.id}>
           <span class="feed-card-type">DELETED</span>
         </Show>
@@ -180,14 +216,7 @@ function PostDetailView(props: {
             {(item) => (
               <Show
                 when={item.type === "image"}
-                fallback={
-                  <video
-                    src={item.url}
-                    muted
-                    controls
-                    preload="metadata"
-                  />
-                }
+                fallback={<AutoLoopVideo src={item.url} />}
               >
                 <img
                   src={item.url}
