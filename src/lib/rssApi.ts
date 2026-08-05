@@ -65,6 +65,13 @@ export function getBlog(blogId: number, v2session?: string) {
   )
 }
 
+// NOTE: activity_kinds must include "like" or "comment". A request with only
+// ['post', 'reblog'] makes the server use offset-based pagination
+// (result_offset in the token) which loops forever on the same page.
+// Including like/comment switches it to the dual-cursor path that advances.
+// The like/comment activity clusters are filtered out below via timelineItems.
+const ACTIVITY_KINDS = ['post', 'reblog', 'like', 'comment'] as const
+
 export function listBlogActivity(
   blogId: number,
   blogName: string,
@@ -83,12 +90,26 @@ export function listBlogActivity(
       sort_field: 1,
       order: 2,
       post_types: [1, 2, 3, 4, 5, 6, 7],
-      activity_kinds: includeReblogs ? ['post', 'reblog'] : ['post'],
+      activity_kinds: [...ACTIVITY_KINDS],
       page: pageParam,
       page_size: 20,
     },
     v2session,
   )
+}
+
+function extractTimelinePosts(
+  activity: ListBlogActivityResponse,
+  includeReblogs: boolean,
+): Post[] {
+  const items = activity.timelineItems ?? []
+  let posts = items
+    .filter((item) => item.type === 1 && item.post)
+    .map((item) => item.post as Post)
+  if (!includeReblogs) {
+    posts = posts.filter((p) => p.variant !== 2)
+  }
+  return posts
 }
 
 const RESOLVE_CACHE_TTL = Number(process.env.RESOLVE_CACHE_TTL) || 3600
@@ -219,7 +240,11 @@ export async function fetchBlogFeed(params: {
       await setPageToken(blogId, page + 1, activity.page.nextPageToken)
     }
 
-    return { blog: blogData.blog, posts: activity.posts || [], page }
+    // The server keeps echoing a nextPageToken after the last page, so a page
+    // with no post/reblog timeline items means we've reached the end.
+    const posts = extractTimelinePosts(activity, includeReblogs)
+
+    return { blog: blogData.blog, posts, page }
   } catch (e) {
     if (e instanceof FetchError) throw e
     throw new FetchError(

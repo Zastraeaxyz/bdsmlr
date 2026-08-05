@@ -122,7 +122,9 @@ export default function UserFeed() {
       sort_field: sortField(),
       order: sortOrder(),
       post_types: [1, 2, 3, 4, 5, 6, 7],
-      activity_kinds: hideReblogs() ? ["post"] : ["post", "reblog"],
+      // "like"/"comment" are required: without them the server uses offset
+      // pagination (result_offset) which loops forever on the same page.
+      activity_kinds: ["post", "reblog", "like", "comment"],
       page: token
         ? { page_size: PAGE_SIZE, page_token: token }
         : { page_size: PAGE_SIZE },
@@ -133,13 +135,20 @@ export default function UserFeed() {
         data.error === "blog not found" ? "Blog was banned" : data.error;
       throw new Error(msg);
     }
-    let incoming = data.posts ?? [];
+    // timelineItems type 1 = the blog's own posts + reblogs; type 2 =
+    // like/comment activity clusters we don't show.
+    const timelinePosts = (data.timelineItems ?? [])
+      .filter((item) => item.type === 1 && item.post)
+      .map((item) => item.post as Post);
+    let incoming = timelinePosts;
     if (hideReblogs()) {
       incoming = incoming.filter((p) => p.variant !== PostVariant.Reblog);
     }
     setPosts((prev) => [...prev, ...incoming]);
     nextPageToken = data.page?.nextPageToken ?? null;
-    if (!nextPageToken) setHasMore(false);
+    // The server keeps echoing a token after the last page, so also stop when
+    // a page returns fewer posts than requested.
+    if (!nextPageToken || timelinePosts.length < PAGE_SIZE) setHasMore(false);
   };
 
   const fetchFeed = async () => {

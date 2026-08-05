@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Profile and RSS feeds no longer get stuck repeating the same posts** — BDSMLR's `list-blog-activity` endpoint loops forever (returns the same page and token) when a request includes reblogs but not likes/comments. The app now requests the full activity set and filters out like/comment events internally, so feeds advance correctly and reblogs still show up. "Hide reblogs" continues to work.
+
 ### Changed
 
 - **Profile navigation** — The Feed and Following links on profile pages are now tabs below the profile header, styled like Twitter/Bluesky, with the active tab highlighted by an underline. The BDSMLR and RSS icons are grouped together and right-aligned in the top-right corner of the profile header.
