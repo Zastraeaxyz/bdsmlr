@@ -72,16 +72,43 @@ export function sanitizeHtml(html: string): string {
   return cleaned;
 }
 
+const STATIC_IMAGE_EXTS = new Set([
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+  "bmp",
+  "svg",
+  "ico",
+  "tif",
+  "tiff",
+  "avif",
+]);
+
+function pickItemUrl(item: {
+  original?: { url?: string; mimeType?: string | null };
+  alternates?: { url?: string; mimeType?: string | null }[];
+}): string | undefined {
+  const originalUrl = item.original?.url;
+  const alternateUrl = item.alternates?.find((a) => a.url && a.mimeType)?.url;
+
+  if (originalUrl && item.original?.mimeType) return originalUrl;
+
+  if (originalUrl) {
+    const ext = extname(originalUrl);
+    if (ext && STATIC_IMAGE_EXTS.has(ext)) return originalUrl;
+    if (alternateUrl) return alternateUrl;
+    return originalUrl;
+  }
+
+  return alternateUrl;
+}
+
 export function getPostMediaUrls(post: { mediaRepresentation?: MediaRepresentation }): string[] {
   const items = post.mediaRepresentation?.items
   if (!items || items.length === 0) return []
   return items
-    .map((item) => {
-      if (item.original?.url && item.original.mimeType) return item.original.url
-      const alternate = item.alternates?.find((a) => a.url && a.mimeType)
-      if (alternate?.url) return alternate.url
-      return item.original?.url
-    })
+    .map(pickItemUrl)
     .filter((url): url is string => !!url)
 }
 
