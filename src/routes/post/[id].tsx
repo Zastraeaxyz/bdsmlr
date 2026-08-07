@@ -1,4 +1,4 @@
-import { useParams, A } from "@solidjs/router";
+import { useParams, useNavigate, A } from "@solidjs/router";
 import { useAuth } from "~/lib/useAuth";
 import Header from "~/components/Header";
 import PostDetail from "~/components/PostDetail";
@@ -6,6 +6,21 @@ import PostDetail from "~/components/PostDetail";
 export default function PostPage() {
   const params = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAuthorKnown = (blogName: string) => {
+    const to = `/${blogName}/post/${params.id}`;
+    if (typeof document !== "undefined" && document.startViewTransition) {
+      document.startViewTransition(async () => {
+        navigate(to, { replace: true });
+        await new Promise<void>((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => r())),
+        );
+      });
+    } else {
+      navigate(to, { replace: true });
+    }
+  };
 
   return (
     <div class="home-page">
@@ -20,7 +35,11 @@ export default function PostPage() {
         )}
       </Header>
       <main>
-        <PostDetail postId={Number(params.id)} />
+        <PostDetail
+          postId={Number(params.id)}
+          checkBlogGone
+          onAuthorKnown={handleAuthorKnown}
+        />
       </main>
     </div>
   );

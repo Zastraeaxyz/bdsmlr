@@ -21,15 +21,18 @@ import {
   BdsmlrIcon,
 } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
+import { getCachedPost, setCachedPost } from "~/lib/postCache";
 
 export default function PostDetail(props: {
   postId: number;
   checkBlogGone?: boolean;
+  onAuthorKnown?: (blogName: string, blogId: number) => void;
 }) {
   const [post, setPost] = createSignal<Post | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal("");
   const [blogGone, setBlogGone] = createSignal(false);
+  const [blogCheckDone, setBlogCheckDone] = createSignal(false);
   const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
 
   createEffect(() => {
@@ -37,19 +40,32 @@ export default function PostDetail(props: {
     if (!postId) {
       setError("Invalid post ID");
       setLoading(false);
+      setBlogCheckDone(true);
       return;
     }
     setLoading(true);
     setError("");
     setBlogGone(false);
+    setBlogCheckDone(false);
+
+    const cached = getCachedPost(postId);
+    if (cached) {
+      setPost(cached);
+      setLoading(false);
+    }
+
     getPostDetail(postId)
       .then((data) => {
         if (data.error) {
           setError(data.error);
+          setBlogCheckDone(true);
           return;
         }
         const p = data.post ?? null;
-        setPost(p);
+        if (p) {
+          setPost(p);
+          setCachedPost(p);
+        }
         if (props.checkBlogGone && p?.blogId) {
           getBlog(p.blogId)
             .then((res) => {
@@ -57,13 +73,26 @@ export default function PostDetail(props: {
             })
             .catch((err: unknown) => {
               if ((err as Error)?.message === "blog gone") setBlogGone(true);
-            });
+            })
+            .finally(() => setBlogCheckDone(true));
+        } else {
+          setBlogCheckDone(true);
         }
       })
-      .catch((err: unknown) =>
-        setError((err as Error)?.message || "Failed to load post"),
-      )
+      .catch((err: unknown) => {
+        setError((err as Error)?.message || "Failed to load post");
+        setBlogCheckDone(true);
+      })
       .finally(() => setLoading(false));
+  });
+
+  createEffect(() => {
+    if (!props.onAuthorKnown) return;
+    const p = post();
+    if (!p?.blogName || !p.blogId) return;
+    if (!blogCheckDone()) return;
+    if (blogGone()) return;
+    props.onAuthorKnown(p.blogName, p.blogId);
   });
 
   return (
@@ -135,7 +164,7 @@ function PostDetailView(props: {
   };
 
   return (
-    <article class="post-detail">
+    <article class="post-detail" style="view-transition-name: post-detail">
       <div class="post-detail-header">
         <BlogAvatar
           blogId={props.post.blogId}
