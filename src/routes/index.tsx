@@ -1,11 +1,10 @@
 import { createSignal, createEffect, For, Show, onCleanup } from "solid-js";
-import { A, useNavigate, useSearchParams } from "@solidjs/router";
+import { useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import {
   listBlogsRecentActivity,
   searchPostsByTag,
   PostType,
-  PostVariant,
   SortField,
   SortOrder,
   type Post,
@@ -13,28 +12,18 @@ import {
 import { getCachedFollowingIds } from "~/lib/following";
 import { useAuth } from "~/lib/useAuth";
 import SortDropdown from "~/components/SortDropdown";
-import { AutoLoopVideo } from "~/components/AutoLoopVideo";
-import {
-  sanitizeHtml,
-  processContentHtml,
-  getMediaType,
-  getPostMediaUrls,
-  upgradeToLightbox,
-  type MediaType,
-} from "~/lib/sanitize";
+import { upgradeToLightbox } from "~/lib/sanitize";
 import Header from "~/components/Header";
 import SearchHelp from "~/components/SearchHelp";
-import { ReblogAttribution } from "~/components/ReblogAttribution";
-import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
-import {
-  HeartIcon,
-  ChatIcon,
-  ReblogIcon,
-  BdsmlrIcon,
-} from "~/components/Icons";
-import { formatRelativeDate } from "~/lib/date";
 import SearchHistory from "~/components/SearchHistory";
+import ViewDropdown from "~/components/ViewDropdown";
+import { PostCard } from "~/components/PostCard";
+import {
+  loadFeedView,
+  saveFeedView,
+  type FeedView,
+} from "~/lib/feedView";
 import {
   loadSearchHistory,
   addSearchHistory,
@@ -68,6 +57,7 @@ export default function Home() {
   const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
+  const [view, setView] = createSignal<FeedView>(loadFeedView());
   let nextPageToken: string | null = searchParams.page_token || null;
   let searchPage = 1;
   let searchSession: string | null = null;
@@ -288,6 +278,13 @@ export default function Home() {
             </div>
             <button type="submit">Search</button>
             <SearchHelp onFill={runSearch} />
+            <ViewDropdown
+              value={view()}
+              onChange={(v) => {
+                setView(v);
+                saveFeedView(v);
+              }}
+            />
           </form>
 
           {error() && <p class="error">{error()}</p>}
@@ -305,7 +302,9 @@ export default function Home() {
                 </p>
               }
             >
-              <div class="feed">
+              <div
+                class={view() === "grid" ? "feed feed-grid" : "feed"}
+              >
                 <For each={posts()}>
                   {(post) => (
                     <PostCard
@@ -337,152 +336,3 @@ export default function Home() {
   );
 }
 
-function PostCard(props: {
-  post: Post;
-  onTagClick?: (tag: string) => void;
-  onImageClick?: (url: string) => void;
-}) {
-  const post = props.post;
-
-  const postTypeLabel = (type?: number) => {
-    switch (type) {
-      case 0:
-        return "General";
-      case 1:
-        return "Text";
-      case 2:
-        return "Image";
-      case 3:
-        return "Video";
-      case 4:
-        return "Audio";
-      case 5:
-        return "Link";
-      case 6:
-        return "Poll";
-      case 7:
-        return "Quote";
-      default:
-        return "Post";
-    }
-  };
-
-  const mediaItems = (): { url: string; type: MediaType }[] => {
-    return getPostMediaUrls(post).map((url) => ({ url, type: getMediaType(url) }));
-  };
-
-  const contentHtml = () => {
-    const c = post.content;
-    if (!c?.html) return null;
-    const processed =
-      post.type === PostType.Text
-        ? processContentHtml(c.html, getPostMediaUrls(post))
-        : c.html;
-    return sanitizeHtml(processed);
-  };
-
-  return (
-    <div class="feed-card">
-      <div class="feed-card-header">
-        <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
-        <A href={`/${post.blogName}`} class="feed-card-blog">
-          {post.blogName}
-        </A>
-        <span class="feed-card-type">{postTypeLabel(post.type)}</span>
-        <Show when={!post.id}>
-          <span class="feed-card-type">DELETED</span>
-        </Show>
-        {post.createdAtUnix && (
-          <span class="feed-card-time">
-            {formatRelativeDate(post.createdAtUnix)}
-          </span>
-        )}
-      </div>
-      <ReblogAttribution
-        originBlogName={post.originBlogName}
-        originPostId={post.originPostId}
-        variant={post.variant}
-      />
-      {post.title && <div class="feed-card-title">{post.title}</div>}
-      {contentHtml() && (
-        <div
-          class="feed-card-body"
-          innerHTML={contentHtml()!}
-          onClick={(e) => {
-            const target = e.target as HTMLElement;
-            if (target.tagName === "IMG" && target.getAttribute("src")) {
-              props.onImageClick?.(target.getAttribute("src")!);
-            }
-          }}
-        />
-      )}
-      {post.type !== PostType.Text && mediaItems().length > 0 && (
-        <div class="feed-card-images">
-          <For each={mediaItems()}>
-            {(item) => (
-              <Show
-                when={item.type === "image"}
-                fallback={<AutoLoopVideo src={item.url} />}
-              >
-                <img
-                  src={item.url}
-                  alt=""
-                  onClick={() => props.onImageClick?.(item.url)}
-                />
-              </Show>
-            )}
-          </For>
-        </div>
-      )}
-      {post.tags && post.tags.length > 0 && (
-        <div class="feed-card-tags">
-          <For each={post.tags}>
-            {(t) => (
-              <button
-                type="button"
-                class="tag"
-                onClick={() => props.onTagClick?.(t)}
-              >
-                #{t}
-              </button>
-            )}
-          </For>
-        </div>
-      )}
-      <div class="feed-card-meta">
-        <span>
-          <HeartIcon /> {post.likesCount ?? 0}
-        </span>
-        <span>
-          <ChatIcon /> {post.commentsCount ?? 0}
-        </span>
-        <span>
-          <ReblogIcon /> {post.reblogsCount ?? 0}
-        </span>
-        <Show when={post.id}>
-          <a
-            href={`https://bdsmlr.com/post/${post.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="download-btn"
-            title="Open on BDSMLR"
-          >
-            <BdsmlrIcon />
-          </a>
-        </Show>
-        <Show when={post.id}>
-          <A
-            href={
-              post.blogName
-                ? `/${post.blogName}/post/${post.id}`
-                : `/post/${post.id}`
-            }
-            class="feed-card-permalink"
-          >
-            Permalink
-          </A>
-        </Show>
-      </div>
-    </div>
-  );
-}

@@ -36,3 +36,4 @@ downloads/
 drizzle/data/
 *.sqlite
 *.sqlite3
+har

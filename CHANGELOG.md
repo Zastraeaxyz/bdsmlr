@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Grid view for post lists** — Every feed (home, profiles, liked posts) now has a view toggle on the far right of the search bar. Click it to switch between a list and a grid layout: the grid packs posts into responsive columns with images up top and text clamped short. Your choice is remembered across visits.
 - **Deleted blogs on permalink pages** — When you open a post whose blog has been deleted, the page now shows a "Blog gone" notice and a chip next to the post type. The author's name and avatar are no longer clickable, but the post itself stays fully readable.
 
 ### Removed
