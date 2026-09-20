@@ -100,15 +100,45 @@ export default function UserFeed() {
 
   let resolvedId: number | null = null;
   let nextPageToken: string | null = null;
+  let searchPage = 1;
   let loadMoreRef: HTMLButtonElement | undefined;
 
   const loadPage = async (name: string, token?: string) => {
     if (!resolvedId) return;
     const q = activeQuery();
+    if (q) {
+      // Filtered profile search: restrict to the blog's own original posts
+      // with the "original caption" tag and paginate by offset (integer page).
+      // Only post/reblog activity kinds — including like/comment here makes the
+      // server return activity clusters that don't match the query.
+      const data = await listBlogActivity({
+        blog_id: resolvedId,
+        blog_name: name,
+        q: `tag:"original caption" ${q}`,
+        sort_field: sortField(),
+        order: sortOrder(),
+        post_types: [1, 2, 3, 4, 5, 6, 7],
+        activity_kinds: ["post", "reblog"],
+        page: searchPage,
+        page_size: PAGE_SIZE,
+      });
+      if (data.error) {
+        const msg =
+          data.error === "blog not found" ? "Blog was banned" : data.error;
+        throw new Error(msg);
+      }
+      let incoming = data.posts ?? [];
+      if (hideReblogs()) {
+        incoming = incoming.filter((p) => p.variant !== PostVariant.Reblog);
+      }
+      setPosts((prev) => [...prev, ...incoming]);
+      searchPage++;
+      if (incoming.length < PAGE_SIZE) setHasMore(false);
+      return;
+    }
     const data = await listBlogActivity({
       blog_id: resolvedId,
       blog_name: name,
-      ...(q ? { q } : {}),
       sort_field: sortField(),
       order: sortOrder(),
       post_types: [1, 2, 3, 4, 5, 6, 7],
@@ -154,6 +184,7 @@ export default function UserFeed() {
     setHasMore(true);
     resolvedId = null;
     nextPageToken = null;
+    searchPage = 1;
     try {
       const resolved = await resolveIdentifier(name);
       if (!resolved.blogId) {
@@ -178,15 +209,18 @@ export default function UserFeed() {
 
   const loadMore = async () => {
     const name = slug();
-    if (!name || !resolvedId || !hasMore() || loadingMore() || !nextPageToken)
-      return;
+    if (!name || !resolvedId || !hasMore() || loadingMore()) return;
     setLoadingMore(true);
-    const token = nextPageToken;
-    nextPageToken = null;
     try {
+      if (activeQuery()) {
+        await loadPage(name);
+        return;
+      }
+      if (!nextPageToken) return;
+      const token = nextPageToken;
+      nextPageToken = null;
       await loadPage(name, token);
     } catch (err: unknown) {
-      nextPageToken = token;
       setError((err as Error)?.message || "Failed to load more");
     } finally {
       setLoadingMore(false);
@@ -210,6 +244,7 @@ export default function UserFeed() {
     setQuery(q);
     setActiveQuery(q);
     nextPageToken = null;
+    searchPage = 1;
     setPosts([]);
     setHasMore(true);
     setHistory(addSearchHistory(historyKey(), q));
@@ -229,6 +264,7 @@ export default function UserFeed() {
     setQuery("");
     setActiveQuery("");
     nextPageToken = null;
+    searchPage = 1;
     setPosts([]);
     setHasMore(true);
     loadPage(name);
@@ -320,6 +356,7 @@ export default function UserFeed() {
               setSortField(sf);
               setSortOrder(so);
               nextPageToken = null;
+              searchPage = 1;
               setPosts([]);
               setHasMore(true);
               const name = slug();

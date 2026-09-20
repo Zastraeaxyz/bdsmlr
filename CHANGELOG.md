@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Profile searches return the blog's own matching posts** — Searching or tapping a tag on a profile page now runs a filtered search scoped to the blog's original posts (it sends an offset-based page request with only post/reblog activity and an `original caption` tag prefix), instead of the unfiltered activity feed, which matched posts across the whole site. Pagination advances by page number and stops correctly at the end of the results.
 - **Profile and RSS feeds no longer get stuck repeating the same posts** — BDSMLR's `list-blog-activity` endpoint loops forever (returns the same page and token) when a request includes reblogs but not likes/comments. The app now requests the full activity set and filters out like/comment events internally, so feeds advance correctly and reblogs still show up. "Hide reblogs" continues to work.
 
 ### Changed
