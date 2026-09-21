@@ -29,10 +29,16 @@ export async function GET(event: APIEvent) {
       includeReblogs: url.searchParams.get('include_reblogs') === '1',
     })
 
+    // Preserve the caller's query params (v2_session, include_reblogs) so
+    // feed readers can follow the next link with the same context.
+    const nextUrl = feed.hasNext ? new URL(url.href) : null
+    if (nextUrl) nextUrl.searchParams.set('page', String(feed.page + 1))
+
     const xml = generateRss({
       blog: feed.blog,
       posts: feed.posts,
       feedUrl: url.href,
+      nextUrl: nextUrl?.href,
     })
 
     return new Response(xml, {

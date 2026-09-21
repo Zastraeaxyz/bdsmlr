@@ -71,6 +71,7 @@ export function getBlog(blogId: number, v2session?: string) {
 // Including like/comment switches it to the dual-cursor path that advances.
 // The like/comment activity clusters are filtered out below via timelineItems.
 const ACTIVITY_KINDS = ['post', 'reblog', 'like', 'comment'] as const
+const PAGE_SIZE = 20
 
 export function listBlogActivity(
   blogId: number,
@@ -80,7 +81,7 @@ export function listBlogActivity(
   includeReblogs = true,
   pageToken?: string,
 ) {
-  const pageParam = pageToken ? { page_size: 20, page_token: pageToken } : page
+  const pageParam = pageToken ? { page_size: PAGE_SIZE, page_token: pageToken } : page
 
   return bdRequest<ListBlogActivityResponse>(
     '/list-blog-activity',
@@ -92,7 +93,7 @@ export function listBlogActivity(
       post_types: [1, 2, 3, 4, 5, 6, 7],
       activity_kinds: [...ACTIVITY_KINDS],
       page: pageParam,
-      page_size: 20,
+      page_size: PAGE_SIZE,
     },
     v2session,
   )
@@ -102,14 +103,22 @@ function extractTimelinePosts(
   activity: ListBlogActivityResponse,
   includeReblogs: boolean,
 ): Post[] {
-  const items = activity.timelineItems ?? []
-  let posts = items
+  const posts = (activity.timelineItems ?? [])
     .filter((item) => item.type === 1 && item.post)
     .map((item) => item.post as Post)
   if (!includeReblogs) {
-    posts = posts.filter((p) => p.variant !== 2)
+    return posts.filter((p) => p.variant !== 2)
   }
   return posts
+}
+
+// The server keeps echoing a nextPageToken after the last page, so the only
+// reliable signal that more pages exist is a full page of post/reblog items.
+function hasNextPage(activity: ListBlogActivityResponse): boolean {
+  const postCount = (activity.timelineItems ?? []).filter(
+    (item) => item.type === 1 && item.post,
+  ).length
+  return postCount >= PAGE_SIZE
 }
 
 const RESOLVE_CACHE_TTL = Number(process.env.RESOLVE_CACHE_TTL) || 3600
@@ -192,6 +201,7 @@ export interface BlogFeed {
   blog: Blog
   posts: Post[]
   page: number
+  hasNext: boolean
 }
 
 export async function fetchBlogFeed(params: {
@@ -244,7 +254,7 @@ export async function fetchBlogFeed(params: {
     // with no post/reblog timeline items means we've reached the end.
     const posts = extractTimelinePosts(activity, includeReblogs)
 
-    return { blog: blogData.blog, posts, page }
+    return { blog: blogData.blog, posts, page, hasNext: hasNextPage(activity) }
   } catch (e) {
     if (e instanceof FetchError) throw e
     throw new FetchError(

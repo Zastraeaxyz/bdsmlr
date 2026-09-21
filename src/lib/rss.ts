@@ -92,9 +92,10 @@ interface RssInput {
   blog: Blog
   posts: Post[]
   feedUrl: string
+  nextUrl?: string
 }
 
-export function generateRss({ blog, posts, feedUrl }: RssInput): string {
+export function generateRss({ blog, posts, feedUrl, nextUrl }: RssInput): string {
   const feed = new RSS({
     title: blog.title || blog.name,
     description: blog.description || '',
@@ -104,6 +105,9 @@ export function generateRss({ blog, posts, feedUrl }: RssInput): string {
     custom_namespaces: {
       media: 'http://search.yahoo.com/mrss/',
     },
+    custom_elements: nextUrl
+      ? [{ 'atom:link': { _attr: { href: nextUrl, rel: 'next' } } }]
+      : [],
   })
 
   for (const post of posts) {

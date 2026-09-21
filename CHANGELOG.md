@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **RSS feeds advertise their next page** — Feed readers that support pagination can now fetch older posts by following the `<atom:link rel="next">` link in each feed page. The link only appears when more posts exist, and it keeps any `v2_session` or `include_reblogs` options from the original feed URL.
 - **Generic post links redirect to the author's page** — Opening a shared link to `/post/<id>` now jumps straight to the author's profile at `/blog/post/<id>` when the blog still exists, so you immediately see their profile header and Feed/Following tabs. The post card animates smoothly into place on the new page instead of reloading, and posts you've already opened load instantly. If the blog has been deleted, the post stays fully readable with the "Blog gone" notice rather than redirecting.
 - **Grid view for post lists** — Every feed (home, profiles, liked posts) now has a view toggle on the far right of the search bar. Click it to switch between a list and a grid layout: the grid packs posts into responsive columns with images up top and text clamped short. Your choice is remembered across visits.
 - **Deleted blogs on permalink pages** — When you open a post whose blog has been deleted, the page now shows a "Blog gone" notice and a chip next to the post type. The author's name and avatar are no longer clickable, but the post itself stays fully readable.
