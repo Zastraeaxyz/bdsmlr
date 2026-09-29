@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Tag searches keep loading past the first page** — BDSMLR changed its search response to group repeated reblogs into a single "result unit" and to report a `hasMore` flag, leaving `null` gaps in the older `posts` list. The home feed now reads the grouped results, skips empty slots, and uses `hasMore` to know when to stop, so searches no longer stall after the first page or show blank cards. A freshly started search that is still "warming up" is retried briefly instead of being treated as having no results.
-- **Profile searches return the blog's own matching posts** — Searching or tapping a tag on a profile page now runs a filtered search scoped to the blog's original posts (it sends an offset-based page request with only post/reblog activity and an `original caption` tag prefix), instead of the unfiltered activity feed, which matched posts across the whole site. Pagination advances by page number and stops correctly at the end of the results.
 - **Profile and RSS feeds no longer get stuck repeating the same posts** — BDSMLR's `list-blog-activity` endpoint loops forever (returns the same page and token) when a request includes reblogs but not likes/comments. The app now requests the full activity set and filters out like/comment events internally, so feeds advance correctly and reblogs still show up. "Hide reblogs" continues to work.
 
 ### Changed
@@ -20,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Search queries live in the URL** — Searching on the home feed or a profile now puts the query in the address bar (`?tag_name=…`), so you can bookmark or share a search, reload it, and step back and forward through your past searches with the browser buttons.
 - **RSS feeds advertise their next page** — Feed readers that support pagination can now fetch older posts by following the `<atom:link rel="next">` link in each feed page. The link only appears when more posts exist, and it keeps any `v2_session` or `include_reblogs` options from the original feed URL.
 - **Generic post links redirect to the author's page** — Opening a shared link to `/post/<id>` now jumps straight to the author's profile at `/blog/post/<id>` when the blog still exists, so you immediately see their profile header and Feed/Following tabs. The post card animates smoothly into place on the new page instead of reloading, and posts you've already opened load instantly. If the blog has been deleted, the post stays fully readable with the "Blog gone" notice rather than redirecting.
 - **Grid view for post lists** — Every feed (home, profiles, liked posts) now has a view toggle on the far right of the search bar. Click it to switch between a list and a grid layout: the grid packs posts into responsive columns with images up top and text clamped short. Your choice is remembered across visits.

@@ -7,7 +7,7 @@ import {
   onMount,
   untrack,
 } from "solid-js";
-import { useParams } from "@solidjs/router";
+import { useParams, useSearchParams } from "@solidjs/router";
 import {
   resolveIdentifier,
   listBlogActivity,
@@ -45,6 +45,7 @@ const PAGE_SIZE = 20;
 export default function UserFeed() {
   const params = useParams();
   const slug = () => params.user;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [posts, setPosts] = createSignal<Post[]>([]);
   const [topTags, setTopTags] = createSignal<TopTag[]>([]);
@@ -52,8 +53,12 @@ export default function UserFeed() {
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
   const [error, setError] = createSignal("");
-  const [query, setQuery] = createSignal("");
-  const [activeQuery, setActiveQuery] = createSignal("");
+  const [query, setQuery] = createSignal(
+    (searchParams.tag_name as string) || "",
+  );
+  const [activeQuery, setActiveQuery] = createSignal(
+    (searchParams.tag_name as string) || "",
+  );
   const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
   const [showAllTags, setShowAllTags] = createSignal(false);
   const [sortField, setSortField] = createSignal(SortField.Date);
@@ -227,12 +232,30 @@ export default function UserFeed() {
     }
   };
 
-  let lastFetchedSlug: string | undefined;
+  let lastSlug: string | undefined;
+  let lastTagName: string | undefined;
   createEffect(() => {
     const name = slug();
-    if (name === lastFetchedSlug) return;
-    lastFetchedSlug = name;
-    untrack(fetchFeed);
+    const q = (searchParams.tag_name as string) || "";
+    if (name !== lastSlug) {
+      lastSlug = name;
+      lastTagName = q;
+      setQuery(q);
+      setActiveQuery(q);
+      untrack(fetchFeed);
+      return;
+    }
+    if (q === lastTagName) return;
+    lastTagName = q;
+    setQuery(q);
+    setActiveQuery(q);
+    nextPageToken = null;
+    searchPage = 1;
+    searchSession = null;
+    setPosts([]);
+    setHasMore(true);
+    setError("");
+    if (resolvedId && name) untrack(() => loadPage(name));
   });
 
   const loadMore = async () => {
@@ -269,15 +292,19 @@ export default function UserFeed() {
   const runSearch = (q: string) => {
     const name = slug();
     if (!name) return;
-    setQuery(q);
-    setActiveQuery(q);
-    nextPageToken = null;
-    searchPage = 1;
-    searchSession = null;
-    setPosts([]);
-    setHasMore(true);
     setHistory(addSearchHistory(historyKey(), q));
-    loadPage(name);
+    const current = (searchParams.tag_name as string) || "";
+    if (q === current) {
+      nextPageToken = null;
+      searchPage = 1;
+      searchSession = null;
+      setPosts([]);
+      setHasMore(true);
+      setError("");
+      loadPage(name);
+      return;
+    }
+    setSearchParams({ tag_name: q || undefined });
   };
 
   const doSearch = (e: Event) => {
@@ -290,14 +317,7 @@ export default function UserFeed() {
   const clearSearch = () => {
     const name = slug();
     if (!name) return;
-    setQuery("");
-    setActiveQuery("");
-    nextPageToken = null;
-    searchPage = 1;
-    searchSession = null;
-    setPosts([]);
-    setHasMore(true);
-    loadPage(name);
+    runSearch("");
   };
 
   const handleTagClick = (tag: string) => {

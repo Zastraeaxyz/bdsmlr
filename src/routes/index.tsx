@@ -50,8 +50,12 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
   const [error, setError] = createSignal("");
-  const [query, setQuery] = createSignal("");
-  const [activeQuery, setActiveQuery] = createSignal("");
+  const [query, setQuery] = createSignal(
+    (searchParams.tag_name as string) || "",
+  );
+  const [activeQuery, setActiveQuery] = createSignal(
+    (searchParams.tag_name as string) || "",
+  );
   const [history, setHistory] = createSignal<string[]>(
     loadSearchHistory(HISTORY_KEY),
   );
@@ -146,12 +150,17 @@ export default function Home() {
     }
   };
 
-  let lastFetchedBlogId: number | null | undefined;
+  let lastFeedKey: string | undefined;
   createEffect(() => {
     if (authLoading()) return;
     const blogId = user()?.blog_id ?? null;
-    if (blogId === lastFetchedBlogId) return;
-    lastFetchedBlogId = blogId;
+    const q = (searchParams.tag_name as string) || "";
+    const key = `${blogId ?? ""}|${q}`;
+    if (key === lastFeedKey) return;
+    lastFeedKey = key;
+    setQuery(q);
+    setActiveQuery(q);
+    nextPageToken = (searchParams.page_token as string) || null;
     if (blogId) untrack(fetchFeed);
   });
 
@@ -208,11 +217,14 @@ export default function Home() {
   });
 
   const runSearch = (q: string) => {
-    setQuery(q);
-    setActiveQuery(q);
-    nextPageToken = null;
     setHistory(addSearchHistory(HISTORY_KEY, q));
-    fetchFeed();
+    const current = (searchParams.tag_name as string) || "";
+    if (q === current) {
+      nextPageToken = null;
+      fetchFeed();
+      return;
+    }
+    setSearchParams({ tag_name: q || undefined, page_token: undefined });
   };
 
   const doSearch = (e: Event) => {
@@ -221,10 +233,7 @@ export default function Home() {
   };
 
   const clearSearch = () => {
-    setQuery("");
-    setActiveQuery("");
-    nextPageToken = null;
-    fetchFeed();
+    runSearch("");
   };
 
   const handleTagClick = (tag: string) => {
