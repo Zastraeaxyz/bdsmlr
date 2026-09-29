@@ -1,9 +1,10 @@
-import { createSignal, createEffect, For, Show, onCleanup } from "solid-js";
+import { createSignal, createEffect, For, Show, onCleanup, untrack } from "solid-js";
 import { useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import {
   listBlogsRecentActivity,
   searchPostsByTag,
+  searchResultPosts,
   PostType,
   SortField,
   SortOrder,
@@ -64,6 +65,26 @@ export default function Home() {
   let followedBlogIds: number[] = [];
   let loadMoreRef: HTMLButtonElement | undefined;
 
+  const requestSearch = (q: string, page: number, session: string | null) =>
+    searchPostsByTag({
+      tag_name: q,
+      sort_field: sortField(),
+      order: sortOrder(),
+      post_types: [
+        PostType.Text,
+        PostType.Image,
+        PostType.Video,
+        PostType.Audio,
+        PostType.Link,
+        PostType.Chat,
+        PostType.Quote,
+      ],
+      variants: [1],
+      page,
+      ...(session ? { session } : {}),
+      page_size: PAGE_SIZE,
+    });
+
   const syncUrl = () => {
     setSearchParams(
       { page_token: nextPageToken || undefined },
@@ -88,27 +109,23 @@ export default function Home() {
       if (q) {
         searchPage = 1;
         searchSession = null;
-        const data = await searchPostsByTag({
-          tag_name: q,
-          sort_field: sortField(),
-          order: sortOrder(),
-          post_types: [
-            PostType.Text,
-            PostType.Image,
-            PostType.Video,
-            PostType.Audio,
-            PostType.Link,
-            PostType.Chat,
-            PostType.Quote,
-          ],
-          variants: [1],
-          page: 1,
-          page_size: PAGE_SIZE,
-        });
-        const incoming = data.posts ?? [];
+        let data = await requestSearch(q, 1, null);
+        for (
+          let attempt = 0;
+          attempt < 4 &&
+          searchResultPosts(data).length === 0 &&
+          data.hasMore &&
+          data.searchStatus === "warming";
+          attempt++
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          data = await requestSearch(q, 1, null);
+        }
+        const incoming = searchResultPosts(data);
         setPosts(incoming);
         searchSession = data.sessionId ?? null;
-        if (incoming.length < PAGE_SIZE || !searchSession) setHasMore(false);
+        if (data.hasMore === false || (data.hasMore === undefined && incoming.length < PAGE_SIZE))
+          setHasMore(false);
         searchPage++;
       } else {
         followedBlogIds = getCachedFollowingIds();
@@ -129,13 +146,17 @@ export default function Home() {
     }
   };
 
+  let lastFetchedBlogId: number | null | undefined;
   createEffect(() => {
-    if (authLoading() || !user()) return;
-    fetchFeed();
+    if (authLoading()) return;
+    const blogId = user()?.blog_id ?? null;
+    if (blogId === lastFetchedBlogId) return;
+    lastFetchedBlogId = blogId;
+    if (blogId) untrack(fetchFeed);
   });
 
   const loadMore = async () => {
-    if (!hasMore() || loadingMore()) return;
+    if (!hasMore() || loadingMore() || loading()) return;
     setLoadingMore(true);
     const token = nextPageToken;
     nextPageToken = null;
@@ -146,29 +167,13 @@ export default function Home() {
           setHasMore(false);
           return;
         }
-        const data = await searchPostsByTag({
-          tag_name: q,
-          sort_field: sortField(),
-          order: sortOrder(),
-          post_types: [
-            PostType.Text,
-            PostType.Image,
-            PostType.Video,
-            PostType.Audio,
-            PostType.Link,
-            PostType.Chat,
-            PostType.Quote,
-          ],
-          variants: [1],
-          page: searchPage,
-          session: searchSession,
-          page_size: PAGE_SIZE,
-        });
-        const incoming = data.posts ?? [];
+        const data = await requestSearch(q, searchPage, searchSession);
+        const incoming = searchResultPosts(data);
         setPosts((prev) => [...prev, ...incoming]);
-        searchSession = data.sessionId ?? null;
+        searchSession = data.sessionId ?? searchSession;
         searchPage++;
-        if (incoming.length < PAGE_SIZE || !searchSession) setHasMore(false);
+        if (data.hasMore === false || (data.hasMore === undefined && incoming.length < PAGE_SIZE))
+          setHasMore(false);
       } else {
         if (followedBlogIds.length === 0 || !token) return;
         const data = await listBlogsRecentActivity(

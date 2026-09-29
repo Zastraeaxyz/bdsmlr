@@ -5,12 +5,15 @@ import {
   Show,
   onCleanup,
   onMount,
+  untrack,
 } from "solid-js";
 import { useParams } from "@solidjs/router";
 import {
   resolveIdentifier,
   listBlogActivity,
   listBlogTopTags,
+  searchPostsByTag,
+  searchResultPosts,
   PostVariant,
   SortField,
   SortOrder,
@@ -101,25 +104,70 @@ export default function UserFeed() {
   let resolvedId: number | null = null;
   let nextPageToken: string | null = null;
   let searchPage = 1;
+  let searchSession: string | null = null;
   let loadMoreRef: HTMLButtonElement | undefined;
 
+  const requestSearch = (
+    name: string,
+    q: string,
+    page: number,
+    session: string | null,
+  ) =>
+    searchPostsByTag({
+      tag_name: `blog:${name} ${q}`,
+      sort_field: sortField(),
+      order: sortOrder(),
+      post_types: [1, 2, 3, 4, 5, 6, 7],
+      variants: [1],
+      page,
+      ...(session ? { session } : {}),
+      page_size: PAGE_SIZE,
+    });
+
+  let loadingPage = false;
+
   const loadPage = async (name: string, token?: string) => {
-    if (!resolvedId) return;
-    const q = activeQuery();
-    if (q) {
-      // Filtered profile search: restrict to the blog's own original posts
-      // with the "original caption" tag and paginate by offset (integer page).
-      // Only post/reblog activity kinds — including like/comment here makes the
-      // server return activity clusters that don't match the query.
+    if (loadingPage || !resolvedId) return;
+    loadingPage = true;
+    try {
+      const q = activeQuery();
+      if (q) {
+        let data = await requestSearch(name, q, searchPage, searchSession);
+        for (
+          let attempt = 0;
+          searchPage === 1 &&
+          attempt < 4 &&
+          searchResultPosts(data).length === 0 &&
+          data.hasMore &&
+          data.searchStatus === "warming";
+          attempt++
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          data = await requestSearch(name, q, 1, null);
+        }
+        const incoming = searchResultPosts(data);
+        setPosts((prev) => [...prev, ...incoming]);
+        searchSession = data.sessionId ?? searchSession;
+        searchPage++;
+        if (
+          data.hasMore === false ||
+          (data.hasMore === undefined && incoming.length < PAGE_SIZE)
+        )
+          setHasMore(false);
+        return;
+      }
       const data = await listBlogActivity({
         blog_id: resolvedId,
         blog_name: name,
-        q: `tag:"original caption" ${q}`,
         sort_field: sortField(),
         order: sortOrder(),
         post_types: [1, 2, 3, 4, 5, 6, 7],
-        activity_kinds: ["post", "reblog"],
-        page: searchPage,
+        // "like"/"comment" are required: without them the server uses offset
+        // pagination (result_offset) which loops forever on the same page.
+        activity_kinds: ["post", "reblog", "like", "comment"],
+        page: token
+          ? { page_size: PAGE_SIZE, page_token: token }
+          : { page_size: PAGE_SIZE },
         page_size: PAGE_SIZE,
       });
       if (data.error) {
@@ -127,48 +175,23 @@ export default function UserFeed() {
           data.error === "blog not found" ? "Blog was banned" : data.error;
         throw new Error(msg);
       }
-      let incoming = data.posts ?? [];
+      // timelineItems type 1 = the blog's own posts + reblogs; type 2 =
+      // like/comment activity clusters we don't show.
+      const timelinePosts = (data.timelineItems ?? [])
+        .filter((item) => item.type === 1 && item.post)
+        .map((item) => item.post as Post);
+      let incoming = timelinePosts;
       if (hideReblogs()) {
         incoming = incoming.filter((p) => p.variant !== PostVariant.Reblog);
       }
       setPosts((prev) => [...prev, ...incoming]);
-      searchPage++;
-      if (incoming.length < PAGE_SIZE) setHasMore(false);
-      return;
+      nextPageToken = data.page?.nextPageToken ?? null;
+      // The server keeps echoing a token after the last page, so also stop when
+      // a page returns fewer posts than requested.
+      if (!nextPageToken || timelinePosts.length < PAGE_SIZE) setHasMore(false);
+    } finally {
+      loadingPage = false;
     }
-    const data = await listBlogActivity({
-      blog_id: resolvedId,
-      blog_name: name,
-      sort_field: sortField(),
-      order: sortOrder(),
-      post_types: [1, 2, 3, 4, 5, 6, 7],
-      // "like"/"comment" are required: without them the server uses offset
-      // pagination (result_offset) which loops forever on the same page.
-      activity_kinds: ["post", "reblog", "like", "comment"],
-      page: token
-        ? { page_size: PAGE_SIZE, page_token: token }
-        : { page_size: PAGE_SIZE },
-      page_size: PAGE_SIZE,
-    });
-    if (data.error) {
-      const msg =
-        data.error === "blog not found" ? "Blog was banned" : data.error;
-      throw new Error(msg);
-    }
-    // timelineItems type 1 = the blog's own posts + reblogs; type 2 =
-    // like/comment activity clusters we don't show.
-    const timelinePosts = (data.timelineItems ?? [])
-      .filter((item) => item.type === 1 && item.post)
-      .map((item) => item.post as Post);
-    let incoming = timelinePosts;
-    if (hideReblogs()) {
-      incoming = incoming.filter((p) => p.variant !== PostVariant.Reblog);
-    }
-    setPosts((prev) => [...prev, ...incoming]);
-    nextPageToken = data.page?.nextPageToken ?? null;
-    // The server keeps echoing a token after the last page, so also stop when
-    // a page returns fewer posts than requested.
-    if (!nextPageToken || timelinePosts.length < PAGE_SIZE) setHasMore(false);
   };
 
   const fetchFeed = async () => {
@@ -185,6 +208,7 @@ export default function UserFeed() {
     resolvedId = null;
     nextPageToken = null;
     searchPage = 1;
+    searchSession = null;
     try {
       const resolved = await resolveIdentifier(name);
       if (!resolved.blogId) {
@@ -203,8 +227,12 @@ export default function UserFeed() {
     }
   };
 
+  let lastFetchedSlug: string | undefined;
   createEffect(() => {
-    fetchFeed();
+    const name = slug();
+    if (name === lastFetchedSlug) return;
+    lastFetchedSlug = name;
+    untrack(fetchFeed);
   });
 
   const loadMore = async () => {
@@ -245,6 +273,7 @@ export default function UserFeed() {
     setActiveQuery(q);
     nextPageToken = null;
     searchPage = 1;
+    searchSession = null;
     setPosts([]);
     setHasMore(true);
     setHistory(addSearchHistory(historyKey(), q));
@@ -265,6 +294,7 @@ export default function UserFeed() {
     setActiveQuery("");
     nextPageToken = null;
     searchPage = 1;
+    searchSession = null;
     setPosts([]);
     setHasMore(true);
     loadPage(name);
@@ -357,6 +387,7 @@ export default function UserFeed() {
               setSortOrder(so);
               nextPageToken = null;
               searchPage = 1;
+              searchSession = null;
               setPosts([]);
               setHasMore(true);
               const name = slug();
@@ -437,7 +468,11 @@ export default function UserFeed() {
         <Show when={!loading()}>
           <Show
             when={posts().length > 0}
-            fallback={<p class="empty">No posts in feed.</p>}
+            fallback={
+              <p class="empty">
+                {activeQuery() ? "No results found." : "No posts in feed."}
+              </p>
+            }
           >
             <div
               class={view() === "grid" ? "feed feed-grid" : "feed"}

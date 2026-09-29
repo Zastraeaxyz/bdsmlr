@@ -258,14 +258,49 @@ export interface SearchPostsByTagRequest {
   session?: string
 }
 
-export interface SearchPostsByTagResponse {
+export interface SearchReblogGroup {
+  count?: number
+  label?: string
+  originPostId?: number
+  representativePostId?: number
   posts?: Post[]
+}
+
+export interface SearchResultUnit {
+  post?: Post
+  reblogGroup?: SearchReblogGroup
+}
+
+export interface SearchPostsByTagResponse {
+  posts?: (Post | null)[]
+  resultUnits?: SearchResultUnit[]
   sessionId?: string
+  hasMore?: boolean
+  pageNumber?: number
+  pageSize?: number
+  searchStatus?: string
+  page?: { nextPageToken?: string }
   error?: string
 }
 
 export function searchPostsByTag(req: SearchPostsByTagRequest) {
   return request<SearchPostsByTagResponse>(API_BASE, '/search-posts-by-tag', req)
+}
+
+export function searchResultPosts(data: SearchPostsByTagResponse): Post[] {
+  const units = data.resultUnits
+  if (units && units.length > 0) {
+    const posts: Post[] = []
+    for (const unit of units) {
+      if (unit?.post) {
+        posts.push(unit.post)
+      } else if (unit?.reblogGroup?.posts?.length) {
+        posts.push(unit.reblogGroup.posts[0])
+      }
+    }
+    return posts
+  }
+  return (data.posts ?? []).filter((post): post is Post => !!post)
 }
 
 export async function signUrl(url: string): Promise<string> {
