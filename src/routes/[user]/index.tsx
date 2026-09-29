@@ -135,32 +135,6 @@ export default function UserFeed() {
     if (loadingPage || !resolvedId) return;
     loadingPage = true;
     try {
-      const q = activeQuery();
-      if (q) {
-        let data = await requestSearch(name, q, searchPage, searchSession);
-        for (
-          let attempt = 0;
-          searchPage === 1 &&
-          attempt < 4 &&
-          searchResultPosts(data).length === 0 &&
-          data.hasMore &&
-          data.searchStatus === "warming";
-          attempt++
-        ) {
-          await new Promise((resolve) => setTimeout(resolve, 250));
-          data = await requestSearch(name, q, 1, null);
-        }
-        const incoming = searchResultPosts(data);
-        setPosts((prev) => [...prev, ...incoming]);
-        searchSession = data.sessionId ?? searchSession;
-        searchPage++;
-        if (
-          data.hasMore === false ||
-          (data.hasMore === undefined && incoming.length < PAGE_SIZE)
-        )
-          setHasMore(false);
-        return;
-      }
       const data = await listBlogActivity({
         blog_id: resolvedId,
         blog_name: name,
@@ -199,7 +173,14 @@ export default function UserFeed() {
     }
   };
 
-  const fetchFeed = async () => {
+  const currentUrlPage = () => {
+    const page = Number(searchParams.page);
+    return Number.isInteger(page) && page > 0 ? page : 1;
+  };
+
+  const currentUrlSession = () => (searchParams.session as string) || null;
+
+  const fetchFeed = async (targetPage = 1) => {
     const name = slug();
     if (!name) {
       setError("No user specified");
@@ -221,7 +202,42 @@ export default function UserFeed() {
         return;
       }
       resolvedId = resolved.blogId;
-      await loadPage(name);
+      const q = activeQuery();
+      if (q) {
+        const resumeSession = targetPage > 1 ? currentUrlSession() : null;
+        searchSession = resumeSession;
+        searchPage = targetPage;
+        let data = await requestSearch(name, q, targetPage, resumeSession);
+        for (
+          let attempt = 0;
+          targetPage === 1 &&
+          attempt < 4 &&
+          searchResultPosts(data).length === 0 &&
+          data.hasMore &&
+          data.searchStatus === "warming";
+          attempt++
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          data = await requestSearch(name, q, 1, null);
+        }
+        const incoming = searchResultPosts(data);
+        setPosts(incoming);
+        searchSession = data.sessionId ?? resumeSession;
+        searchPage = targetPage + 1;
+        if (
+          data.hasMore === false ||
+          (data.hasMore === undefined && incoming.length < PAGE_SIZE)
+        )
+          setHasMore(false);
+        if (
+          targetPage > 1 &&
+          searchSession &&
+          searchSession !== currentUrlSession()
+        )
+          setSearchParams({ session: searchSession }, { replace: true });
+      } else {
+        await loadPage(name);
+      }
 
       const tagsRes = await listBlogTopTags(name);
       setTopTags(tagsRes.tags ?? []);
@@ -232,39 +248,48 @@ export default function UserFeed() {
     }
   };
 
-  let lastSlug: string | undefined;
-  let lastTagName: string | undefined;
+  let lastFeedKey: string | undefined;
   createEffect(() => {
     const name = slug();
     const q = (searchParams.tag_name as string) || "";
-    if (name !== lastSlug) {
-      lastSlug = name;
-      lastTagName = q;
-      setQuery(q);
-      setActiveQuery(q);
-      untrack(fetchFeed);
-      return;
-    }
-    if (q === lastTagName) return;
-    lastTagName = q;
+    const key = `${name ?? ""}|${q}`;
+    if (key === lastFeedKey) return;
+    lastFeedKey = key;
     setQuery(q);
     setActiveQuery(q);
-    nextPageToken = null;
-    searchPage = 1;
-    searchSession = null;
-    setPosts([]);
-    setHasMore(true);
-    setError("");
-    if (resolvedId && name) untrack(() => loadPage(name));
+    untrack(() => fetchFeed(currentUrlPage()));
   });
 
   const loadMore = async () => {
     const name = slug();
-    if (!name || !resolvedId || !hasMore() || loadingMore()) return;
+    if (!name || !resolvedId || !hasMore() || loadingMore() || loading())
+      return;
     setLoadingMore(true);
     try {
-      if (activeQuery()) {
-        await loadPage(name);
+      const q = activeQuery();
+      if (q) {
+        if (!searchSession) {
+          setHasMore(false);
+          return;
+        }
+        const data = await requestSearch(name, q, searchPage, searchSession);
+        const incoming = searchResultPosts(data);
+        setPosts((prev) => [...prev, ...incoming]);
+        searchSession = data.sessionId ?? searchSession;
+        const loadedPage = searchPage;
+        searchPage++;
+        if (
+          data.hasMore === false ||
+          (data.hasMore === undefined && incoming.length < PAGE_SIZE)
+        )
+          setHasMore(false);
+        setSearchParams(
+          {
+            page: loadedPage > 1 ? loadedPage : undefined,
+            session: searchSession ?? undefined,
+          },
+          { replace: true },
+        );
         return;
       }
       if (!nextPageToken) return;
@@ -295,16 +320,14 @@ export default function UserFeed() {
     setHistory(addSearchHistory(historyKey(), q));
     const current = (searchParams.tag_name as string) || "";
     if (q === current) {
-      nextPageToken = null;
-      searchPage = 1;
-      searchSession = null;
-      setPosts([]);
-      setHasMore(true);
-      setError("");
-      loadPage(name);
+      fetchFeed(1);
       return;
     }
-    setSearchParams({ tag_name: q || undefined });
+    setSearchParams({
+      tag_name: q || undefined,
+      page: undefined,
+      session: undefined,
+    });
   };
 
   const doSearch = (e: Event) => {
@@ -410,6 +433,11 @@ export default function UserFeed() {
               searchSession = null;
               setPosts([]);
               setHasMore(true);
+              if (activeQuery()) {
+                setSearchParams({ page: undefined, session: undefined });
+                fetchFeed(1);
+                return;
+              }
               const name = slug();
               if (name) loadPage(name);
             }}

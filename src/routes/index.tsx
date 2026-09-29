@@ -96,7 +96,14 @@ export default function Home() {
     );
   };
 
-  const fetchFeed = async () => {
+  const currentUrlPage = () => {
+    const page = Number(searchParams.page);
+    return Number.isInteger(page) && page > 0 ? page : 1;
+  };
+
+  const currentUrlSession = () => (searchParams.session as string) || null;
+
+  const fetchFeed = async (targetPage = 1) => {
     if (!user()?.blog_id) {
       setError("Not authenticated");
       setLoading(false);
@@ -111,11 +118,13 @@ export default function Home() {
     try {
       const q = activeQuery();
       if (q) {
-        searchPage = 1;
-        searchSession = null;
-        let data = await requestSearch(q, 1, null);
+        const resumeSession = targetPage > 1 ? currentUrlSession() : null;
+        searchSession = resumeSession;
+        searchPage = targetPage;
+        let data = await requestSearch(q, targetPage, resumeSession);
         for (
           let attempt = 0;
+          targetPage === 1 &&
           attempt < 4 &&
           searchResultPosts(data).length === 0 &&
           data.hasMore &&
@@ -127,10 +136,19 @@ export default function Home() {
         }
         const incoming = searchResultPosts(data);
         setPosts(incoming);
-        searchSession = data.sessionId ?? null;
-        if (data.hasMore === false || (data.hasMore === undefined && incoming.length < PAGE_SIZE))
+        searchSession = data.sessionId ?? resumeSession;
+        searchPage = targetPage + 1;
+        if (
+          data.hasMore === false ||
+          (data.hasMore === undefined && incoming.length < PAGE_SIZE)
+        )
           setHasMore(false);
-        searchPage++;
+        if (
+          targetPage > 1 &&
+          searchSession &&
+          searchSession !== currentUrlSession()
+        )
+          setSearchParams({ session: searchSession }, { replace: true });
       } else {
         followedBlogIds = getCachedFollowingIds();
         if (followedBlogIds.length === 0) {
@@ -161,7 +179,7 @@ export default function Home() {
     setQuery(q);
     setActiveQuery(q);
     nextPageToken = (searchParams.page_token as string) || null;
-    if (blogId) untrack(fetchFeed);
+    if (blogId) untrack(() => fetchFeed(currentUrlPage()));
   });
 
   const loadMore = async () => {
@@ -180,9 +198,17 @@ export default function Home() {
         const incoming = searchResultPosts(data);
         setPosts((prev) => [...prev, ...incoming]);
         searchSession = data.sessionId ?? searchSession;
+        const loadedPage = searchPage;
         searchPage++;
         if (data.hasMore === false || (data.hasMore === undefined && incoming.length < PAGE_SIZE))
           setHasMore(false);
+        setSearchParams(
+          {
+            page: loadedPage > 1 ? loadedPage : undefined,
+            session: searchSession ?? undefined,
+          },
+          { replace: true },
+        );
       } else {
         if (followedBlogIds.length === 0 || !token) return;
         const data = await listBlogsRecentActivity(
@@ -221,10 +247,15 @@ export default function Home() {
     const current = (searchParams.tag_name as string) || "";
     if (q === current) {
       nextPageToken = null;
-      fetchFeed();
+      fetchFeed(1);
       return;
     }
-    setSearchParams({ tag_name: q || undefined, page_token: undefined });
+    setSearchParams({
+      tag_name: q || undefined,
+      page: undefined,
+      session: undefined,
+      page_token: undefined,
+    });
   };
 
   const doSearch = (e: Event) => {
@@ -254,7 +285,9 @@ export default function Home() {
                 setSortField(sf);
                 setSortOrder(so);
                 nextPageToken = null;
-                fetchFeed();
+                if (activeQuery())
+                  setSearchParams({ page: undefined, session: undefined });
+                fetchFeed(1);
               }}
               options={{
                 newest: true,
