@@ -1,6 +1,7 @@
 import { createContext, createSignal, createEffect, useContext, onCleanup, type ParentProps } from "solid-js"
 import { getCurrentUser, setCurrentUser, login as apiLogin, type AuthUser } from "./api"
 import { fetchAllFollowingIds, setCachedFollowingIds, clearCachedFollowingIds } from "./following"
+import { clearPostInteractions } from "./postInteractions"
 
 interface AuthContextType {
   user: () => AuthUser | null
@@ -51,6 +52,7 @@ export function AuthProvider(props: ParentProps) {
     setCurrentUser(null)
     localStorage.removeItem("user")
     clearCachedFollowingIds()
+    clearPostInteractions()
     setUser(null)
   }
 

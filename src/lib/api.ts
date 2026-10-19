@@ -355,5 +355,85 @@ export function getBlog(blogId: number) {
   return requestGet<GetBlogResponse>(API_BASE, '/get-blog', { blogId: String(blogId) })
 }
 
+export interface WriteError {
+  code?: string
+  message?: string
+}
+
+export interface LikeState {
+  liked?: boolean
+  likes_count?: number
+  likesCount?: number
+}
+
+export interface LikePostResponse {
+  ok?: boolean
+  action?: string
+  postId?: number
+  actingBlogId?: number
+  state?: LikeState
+  error?: WriteError
+}
+
+export interface ReblogPostResponse {
+  ok?: boolean
+  action?: string
+  postId?: number
+  actingBlogId?: number
+  createdReblogPostId?: number | null
+  error?: WriteError
+}
+
+export interface BatchLikeStatesResponse {
+  states?: { postId?: number; liked?: boolean }[]
+}
+
+export interface BatchReblogStatesResponse {
+  states?: { postId?: number; actorReblogCount?: number }[]
+}
+
+export function likePost(postId: number, actingBlogId: number) {
+  return request<LikePostResponse>(API_BASE, '/internal-write/like', {
+    postId,
+    actingBlogId,
+  })
+}
+
+export function unlikePost(postId: number, actingBlogId: number) {
+  return request<LikePostResponse>(API_BASE, '/internal-write/unlike', {
+    postId,
+    actingBlogId,
+  })
+}
+
+export function reblogPost(
+  postId: number,
+  actingBlogId: number,
+  opts: { mode?: 'live' | 'queue'; comment?: string; tags?: string[] } = {},
+) {
+  return request<ReblogPostResponse>(API_BASE, '/internal-write/reblog', {
+    postId,
+    actingBlogId,
+    mode: opts.mode ?? 'live',
+    ...(opts.comment ? { comment: opts.comment } : {}),
+    ...(opts.tags && opts.tags.length > 0 ? { tags: opts.tags } : {}),
+  })
+}
+
+export function batchGetLikeStates(postIds: number[], actingBlogId: number) {
+  return request<BatchLikeStatesResponse>(API_BASE, '/batch-get-like-states', {
+    postIds,
+    actingBlogId,
+  })
+}
+
+export function batchGetReblogStates(postIds: number[], actingBlogId: number) {
+  return request<BatchReblogStatesResponse>(
+    API_BASE,
+    '/batch-get-reblog-states',
+    { postIds, actingBlogId },
+  )
+}
+
 
 

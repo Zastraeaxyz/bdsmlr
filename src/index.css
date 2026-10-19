@@ -1101,10 +1101,44 @@ button:disabled {
 }
 
 .feed-card-meta span,
-.post-detail-meta span {
+.post-detail-meta span,
+.post-action {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+}
+
+.post-action {
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  padding: 0;
+  border-radius: 4px;
+  line-height: inherit;
+}
+
+.post-action:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-heading);
+}
+
+.post-action.active {
+  color: var(--danger);
+}
+
+.post-action.active:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+.heart-filled {
+  fill: currentColor;
+}
+
+.action-error {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--danger);
 }
 
 .feed-card-permalink {

@@ -22,6 +22,8 @@ import {
 } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
 import { getCachedPost, setCachedPost } from "~/lib/postCache";
+import { useAuth } from "~/lib/useAuth";
+import { reblog, toggleLike, usePostInteraction } from "~/lib/postInteractions";
 
 export default function PostDetail(props: {
   postId: number;
@@ -126,6 +128,24 @@ function PostDetailView(props: {
   blogGone?: boolean;
   onImageClick?: (url: string) => void;
 }) {
+  const { user } = useAuth();
+  const interaction = usePostInteraction(props.post);
+  const [busy, setBusy] = createSignal(false);
+  const [actionError, setActionError] = createSignal("");
+
+  const runAction = async (action: (post: Post) => Promise<void>) => {
+    if (busy()) return;
+    setBusy(true);
+    setActionError("");
+    try {
+      await action(props.post);
+    } catch (err: unknown) {
+      setActionError((err as Error)?.message || "Action failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const postTypeLabel = (type?: number) => {
     switch (type) {
       case 0:
@@ -248,15 +268,52 @@ function PostDetailView(props: {
       )}
 
       <div class="post-detail-meta">
-        <span>
-          <HeartIcon /> {props.post.likesCount ?? 0}
-        </span>
+        <Show
+          when={user() && props.post.id}
+          fallback={
+            <span>
+              <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
+            </span>
+          }
+        >
+          <button
+            type="button"
+            class={interaction().liked ? "post-action active" : "post-action"}
+            onClick={() => runAction(toggleLike)}
+            disabled={busy()}
+            title={interaction().liked ? "Unlike" : "Like"}
+            aria-label={interaction().liked ? "Unlike post" : "Like post"}
+            aria-pressed={interaction().liked}
+          >
+            <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
+          </button>
+        </Show>
         <span>
           <ChatIcon /> {props.post.commentsCount ?? 0}
         </span>
-        <span>
-          <ReblogIcon /> {props.post.reblogsCount ?? 0}
-        </span>
+        <Show
+          when={user() && props.post.id}
+          fallback={
+            <span>
+              <ReblogIcon /> {interaction().reblogsCount}
+            </span>
+          }
+        >
+          <button
+            type="button"
+            class={
+              interaction().reblogged ? "post-action active" : "post-action"
+            }
+            onClick={() => runAction(reblog)}
+            disabled={busy()}
+            title={interaction().reblogged ? "Reblog again" : "Reblog"}
+            aria-label={
+              interaction().reblogged ? "Reblog post again" : "Reblog post"
+            }
+          >
+            <ReblogIcon /> {interaction().reblogsCount}
+          </button>
+        </Show>
         <Show when={props.post.id}>
           <a
             href={`https://bdsmlr.com/post/${props.post.id}`}
@@ -269,6 +326,9 @@ function PostDetailView(props: {
           </a>
         </Show>
       </div>
+      <Show when={actionError()}>
+        <p class="action-error">{actionError()}</p>
+      </Show>
     </article>
   );
 }

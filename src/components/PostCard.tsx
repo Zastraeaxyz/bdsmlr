@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { PostType, type Post } from "~/lib/api";
 import { AutoLoopVideo } from "~/components/AutoLoopVideo";
@@ -18,6 +18,8 @@ import {
   BdsmlrIcon,
 } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
+import { useAuth } from "~/lib/useAuth";
+import { reblog, toggleLike, usePostInteraction } from "~/lib/postInteractions";
 
 export interface PostCardProps {
   post: Post;
@@ -27,6 +29,23 @@ export interface PostCardProps {
 
 export function PostCard(props: PostCardProps) {
   const post = props.post;
+  const { user } = useAuth();
+  const interaction = usePostInteraction(post);
+  const [busy, setBusy] = createSignal(false);
+  const [actionError, setActionError] = createSignal("");
+
+  const runAction = async (action: (post: Post) => Promise<void>) => {
+    if (busy()) return;
+    setBusy(true);
+    setActionError("");
+    try {
+      await action(post);
+    } catch (err: unknown) {
+      setActionError((err as Error)?.message || "Action failed");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const postTypeLabel = (type?: number) => {
     switch (type) {
@@ -142,15 +161,52 @@ export function PostCard(props: PostCardProps) {
         </div>
       )}
       <div class="feed-card-meta">
-        <span>
-          <HeartIcon /> {post.likesCount ?? 0}
-        </span>
+        <Show
+          when={user() && post.id}
+          fallback={
+            <span>
+              <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
+            </span>
+          }
+        >
+          <button
+            type="button"
+            class={interaction().liked ? "post-action active" : "post-action"}
+            onClick={() => runAction(toggleLike)}
+            disabled={busy()}
+            title={interaction().liked ? "Unlike" : "Like"}
+            aria-label={interaction().liked ? "Unlike post" : "Like post"}
+            aria-pressed={interaction().liked}
+          >
+            <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
+          </button>
+        </Show>
         <span>
           <ChatIcon /> {post.commentsCount ?? 0}
         </span>
-        <span>
-          <ReblogIcon /> {post.reblogsCount ?? 0}
-        </span>
+        <Show
+          when={user() && post.id}
+          fallback={
+            <span>
+              <ReblogIcon /> {interaction().reblogsCount}
+            </span>
+          }
+        >
+          <button
+            type="button"
+            class={
+              interaction().reblogged ? "post-action active" : "post-action"
+            }
+            onClick={() => runAction(reblog)}
+            disabled={busy()}
+            title={interaction().reblogged ? "Reblog again" : "Reblog"}
+            aria-label={
+              interaction().reblogged ? "Reblog post again" : "Reblog post"
+            }
+          >
+            <ReblogIcon /> {interaction().reblogsCount}
+          </button>
+        </Show>
         <Show when={post.id}>
           <a
             href={`https://bdsmlr.com/post/${post.id}`}
@@ -175,6 +231,9 @@ export function PostCard(props: PostCardProps) {
           </A>
         </Show>
       </div>
+      <Show when={actionError()}>
+        <p class="action-error">{actionError()}</p>
+      </Show>
     </div>
   );
 }

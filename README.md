@@ -1,6 +1,6 @@
 # Better BDSMLR
 
-A read-only browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, search posts, and browse blogs — no posting or write capabilities.
+A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, search posts, browse blogs, and like or reblog posts.
 
 ## Features
 
@@ -18,7 +18,7 @@ A read-only browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow you
 - **Open on BDSMLR** — Every post and profile has a button to open the original on BDSMLR in a new tab
 - **Reblog tracking** — See who originally posted content and jump to the original post
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
-- **Read-only** — Browsing client with no posting or write capabilities
+- **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 
 ## Disclaimer
 
