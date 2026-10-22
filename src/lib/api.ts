@@ -1,3 +1,5 @@
+import { unwrapMediaUrl } from './sanitize'
+
 const API_BASE = '/v2/api'
 const AUTH_BASE = '/v2/api/auth'
 
@@ -353,6 +355,19 @@ export interface GetBlogResponse {
 
 export function getBlog(blogId: number) {
   return requestGet<GetBlogResponse>(API_BASE, '/get-blog', { blogId: String(blogId) })
+    .then((res) => normalizeBlogMedia(res))
+}
+
+export function normalizeBlogMedia(res: GetBlogResponse): GetBlogResponse {
+  if (!res.blog) return res
+  return {
+    ...res,
+    blog: {
+      ...res.blog,
+      avatarUrl: res.blog.avatarUrl ? unwrapMediaUrl(res.blog.avatarUrl) : res.blog.avatarUrl,
+      coverUrl: res.blog.coverUrl ? unwrapMediaUrl(res.blog.coverUrl) : res.blog.coverUrl,
+    },
+  }
 }
 
 export interface WriteError {

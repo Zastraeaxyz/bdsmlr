@@ -3,6 +3,7 @@ import {
   getMediaType,
   getPostMediaUrls,
   transformMediaUrl,
+  unwrapMediaUrl,
   upgradeToLightbox,
 } from '~/lib/sanitize'
 import {
@@ -114,6 +115,37 @@ describe('transformMediaUrl', () => {
     expect(transformMediaUrl('https://example.com/x.jpg', 'feed')).toBe(
       'https://example.com/x.jpg',
     )
+  })
+})
+
+describe('unwrapMediaUrl', () => {
+  const query = '?e=1792785666&t=8knlL6siS8_Ake0hOCT5v1-fz-OrTvRbQ60xAHBD9gs&cb=1792699266'
+
+  it('unwraps a blog avatar URL to the signing CDN host', () => {
+    expect(
+      unwrapMediaUrl(
+        `https://media.bdsmlr.com/gallery-grid/s3://ocdn012.bdsmlr.com/uploads/blogs/2021/07/10401079/avatar/10401079-sl9EHISBZl1.png${query}`,
+      ),
+    ).toBe(
+      `https://ocdn012.bdsmlr.com/uploads/blogs/2021/07/10401079/avatar/10401079-sl9EHISBZl1.png${query}`,
+    )
+  })
+
+  it('unwraps blog cover URLs', () => {
+    expect(
+      unwrapMediaUrl(
+        'https://media.bdsmlr.com/gallery-grid/s3://ocdn012.bdsmlr.com/uploads/blogs/2017/03/5737/background/5737-98WN28Rne81.gif?e=1',
+      ),
+    ).toBe(
+      'https://ocdn012.bdsmlr.com/uploads/blogs/2017/03/5737/background/5737-98WN28Rne81.gif?e=1',
+    )
+  })
+
+  it('leaves CDN and external URLs untouched', () => {
+    expect(unwrapMediaUrl('https://ocdn012.bdsmlr.com/uploads/a.jpg?e=1')).toBe(
+      'https://ocdn012.bdsmlr.com/uploads/a.jpg?e=1',
+    )
+    expect(unwrapMediaUrl('https://example.com/x.jpg')).toBe('https://example.com/x.jpg')
   })
 })
 

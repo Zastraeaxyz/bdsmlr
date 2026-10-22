@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Profile pictures and blog covers display again** — BDSMLR's blog lookup started returning avatar and cover URLs with a broken media proxy prefix, so every profile picture fell back to a letter placeholder. The app now uses the working signed CDN URL from those responses.
 - **Tag searches keep loading past the first page** — BDSMLR changed its search response to group repeated reblogs into a single "result unit" and to report a `hasMore` flag, leaving `null` gaps in the older `posts` list. The home feed now reads the grouped results, skips empty slots, and uses `hasMore` to know when to stop, so searches no longer stall after the first page or show blank cards. A freshly started search that is still "warming up" is retried briefly instead of being treated as having no results.
 - **Profile and RSS feeds no longer get stuck repeating the same posts** — BDSMLR's `list-blog-activity` endpoint loops forever (returns the same page and token) when a request includes reblogs but not likes/comments. The app now requests the full activity set and filters out like/comment events internally, so feeds advance correctly and reblogs still show up. "Hide reblogs" continues to work.
 

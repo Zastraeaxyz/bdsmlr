@@ -1,5 +1,6 @@
 import {
   FetchError,
+  normalizeBlogMedia,
   type Blog,
   type Post,
   type GetBlogResponse,
@@ -62,7 +63,7 @@ export function getBlog(blogId: number, v2session?: string) {
     '/get-blog',
     { blogId: String(blogId) },
     v2session,
-  )
+  ).then((res) => normalizeBlogMedia(res))
 }
 
 // NOTE: activity_kinds must include "like" or "comment". A request with only

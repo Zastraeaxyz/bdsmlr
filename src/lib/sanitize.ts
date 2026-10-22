@@ -55,6 +55,12 @@ export function transformMediaUrl(url: string, size: string = "feed"): string {
   return url;
 }
 
+export function unwrapMediaUrl(url: string): string {
+  const m = url.match(MEDIA_RE);
+  if (m) return `https://${m[2]}${m[3]}.bdsmlr.com/${m[4]}`;
+  return url;
+}
+
 export function upgradeToLightbox(url: string): string {
   return url.replace(
     /https:\/\/media\.bdsmlr\.com\/(feed|masonry)\//,
