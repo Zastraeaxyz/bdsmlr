@@ -59,6 +59,14 @@ export default function Messages() {
   const [newTo, setNewTo] = createSignal("");
   const [newBody, setNewBody] = createSignal("");
   const [creating, setCreating] = createSignal(false);
+  let conversationRef: HTMLDivElement | undefined;
+
+  const scrollToBottom = () => {
+    requestAnimationFrame(() => {
+      const el = conversationRef;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  };
 
   createEffect(() => {
     if (!authLoading() && !user()) navigate("/login", { replace: true });
@@ -90,6 +98,7 @@ export default function Messages() {
     try {
       const data = await getMessageThread(id);
       setThread(data);
+      scrollToBottom();
       setThreads((prev) =>
         prev.map((t) => (t.id === id ? { ...t, unread: false } : t)),
       );
@@ -140,6 +149,7 @@ export default function Messages() {
       setThread((prev) =>
         prev ? { ...prev, messages: [...(prev.messages ?? []), optimistic] } : prev,
       );
+      scrollToBottom();
       setThreads((prev) =>
         prev.map((t) =>
           t.id === current.thread.id
@@ -191,6 +201,9 @@ export default function Messages() {
     const before = current?.next_before;
     if (!current || !before || loadingOlder()) return;
     setLoadingOlder(true);
+    const el = conversationRef;
+    const previousHeight = el?.scrollHeight ?? 0;
+    const previousTop = el?.scrollTop ?? 0;
     try {
       const data = await getMessageThread(current.thread.id, before);
       setThread((prev) =>
@@ -202,6 +215,9 @@ export default function Messages() {
             }
           : data,
       );
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop = el.scrollHeight - previousHeight + previousTop;
+      });
     } catch (err: unknown) {
       setError((err as Error)?.message || "Failed to load older messages");
     } finally {
@@ -339,7 +355,10 @@ export default function Messages() {
                 </div>
               </header>
 
-              <div class="messages-conversation">
+              <div
+                class="messages-conversation"
+                ref={(el) => (conversationRef = el)}
+              >
                 <Show when={thread()!.next_before}>
                   <button
                     type="button"
