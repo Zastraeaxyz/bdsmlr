@@ -1,6 +1,6 @@
 # Better BDSMLR
 
-A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, search posts, browse blogs, and like or reblog posts.
+A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, search posts, browse blogs, and like, reblog, or comment on posts.
 
 ## Features
 
@@ -19,6 +19,7 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Reblog tracking** — See who originally posted content and jump to the original post
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
+- **Comments** — Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
 
 ## Disclaimer
 

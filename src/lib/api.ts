@@ -437,3 +437,53 @@ export function batchGetReblogStates(postIds: number[], actingBlogId: number) {
 
 
 
+
+export interface PostComment {
+  id?: number
+  postId?: number
+  userId?: number
+  blogId?: number
+  blogName?: string
+  body?: string
+  createdAtUnix?: number
+}
+
+export interface ListPostCommentsResponse {
+  comments?: PostComment[]
+  page?: { nextPageToken?: string }
+  error?: string
+}
+
+export interface CommentPostResponse {
+  ok?: boolean
+  action?: string
+  postId?: number
+  actingBlogId?: number
+  error?: WriteError
+}
+
+export function listPostComments(
+  postId: number,
+  pageSize = 20,
+  pageToken?: string,
+) {
+  return request<ListPostCommentsResponse>(API_BASE, '/list-post-comments', {
+    postId,
+    page: {
+      pageSize,
+      ...(pageToken ? { pageToken } : {}),
+    },
+  })
+}
+
+export function commentPost(
+  postId: number,
+  comment: string,
+  actingBlogId: number,
+) {
+  return request<CommentPostResponse>(API_BASE, '/internal-write/comment', {
+    postId,
+    comment,
+    actingBlogId,
+  })
+}

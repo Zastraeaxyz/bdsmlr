@@ -14,6 +14,7 @@ import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import { AutoLoopVideo } from "~/components/AutoLoopVideo";
+import { Comments } from "~/components/Comments";
 import {
   HeartIcon,
   ChatIcon,
@@ -132,6 +133,9 @@ function PostDetailView(props: {
   const interaction = usePostInteraction(props.post);
   const [busy, setBusy] = createSignal(false);
   const [actionError, setActionError] = createSignal("");
+  const [commentsCount, setCommentsCount] = createSignal(
+    props.post.commentsCount ?? 0,
+  );
 
   const runAction = async (action: (post: Post) => Promise<void>) => {
     if (busy()) return;
@@ -289,7 +293,7 @@ function PostDetailView(props: {
           </button>
         </Show>
         <span>
-          <ChatIcon /> {props.post.commentsCount ?? 0}
+          <ChatIcon /> {commentsCount()}
         </span>
         <Show
           when={user() && props.post.id}
@@ -328,6 +332,13 @@ function PostDetailView(props: {
       </div>
       <Show when={actionError()}>
         <p class="action-error">{actionError()}</p>
+      </Show>
+      <Show when={props.post.id}>
+        <Comments
+          postId={props.post.id}
+          initialCount={props.post.commentsCount ?? 0}
+          onCountChange={setCommentsCount}
+        />
       </Show>
     </article>
   );

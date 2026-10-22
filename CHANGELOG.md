@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Comments** — Every post now has a comments view: click the comment count on a feed card to open it in a dialog, or scroll to the comments section on the post detail page. Comments show the author, time, and body, can be paginated, and signed-in users can post a new comment without leaving the page.
 - **Likes and reblogs** — Posts on every feed and on post detail pages now have working Like and Reblog buttons. Click the heart to like or unlike a post, and click the reblog icon to reblog it to your primary blog. Buttons highlight when you have already liked or reblogged a post, and the counts update without reloading the page.
 - **Search queries and pages live in the URL** — Searching on the home feed or a profile puts the query in the address bar (`?tag_name=…`), and the page number plus the search's session token are added as you load more (`&page=3&session=…`). Bookmark or share a search to reopen it later: opening the URL jumps straight back to that page with a single request. Changing the query or sort starts over from the first page, and you can still step back and forward through your past searches with the browser buttons.
 - **RSS feeds advertise their next page** — Feed readers that support pagination can now fetch older posts by following the `<atom:link rel="next">` link in each feed page. The link only appears when more posts exist, and it keeps any `v2_session` or `include_reblogs` options from the original feed URL.

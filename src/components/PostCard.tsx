@@ -18,6 +18,7 @@ import {
   BdsmlrIcon,
 } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
+import { Comments } from "~/components/Comments";
 import { useAuth } from "~/lib/useAuth";
 import { reblog, toggleLike, usePostInteraction } from "~/lib/postInteractions";
 
@@ -33,6 +34,10 @@ export function PostCard(props: PostCardProps) {
   const interaction = usePostInteraction(post);
   const [busy, setBusy] = createSignal(false);
   const [actionError, setActionError] = createSignal("");
+  const [showComments, setShowComments] = createSignal(false);
+  const [commentsCount, setCommentsCount] = createSignal(
+    post.commentsCount ?? 0,
+  );
 
   const runAction = async (action: (post: Post) => Promise<void>) => {
     if (busy()) return;
@@ -181,9 +186,24 @@ export function PostCard(props: PostCardProps) {
             <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
           </button>
         </Show>
-        <span>
-          <ChatIcon /> {post.commentsCount ?? 0}
-        </span>
+        <Show
+          when={post.id}
+          fallback={
+            <span>
+              <ChatIcon /> {commentsCount()}
+            </span>
+          }
+        >
+          <button
+            type="button"
+            class="post-action"
+            onClick={() => setShowComments(true)}
+            title="View comments"
+            aria-label={`View ${commentsCount()} comments`}
+          >
+            <ChatIcon /> {commentsCount()}
+          </button>
+        </Show>
         <Show
           when={user() && post.id}
           fallback={
@@ -233,6 +253,31 @@ export function PostCard(props: PostCardProps) {
       </div>
       <Show when={actionError()}>
         <p class="action-error">{actionError()}</p>
+      </Show>
+      <Show when={showComments()}>
+        <div
+          class="tag-modal-backdrop"
+          onClick={() => setShowComments(false)}
+        >
+          <div
+            class="tag-modal comments-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              class="tag-modal-close"
+              onClick={() => setShowComments(false)}
+              aria-label="Close comments"
+            >
+              ×
+            </button>
+            <Comments
+              postId={post.id}
+              initialCount={post.commentsCount ?? 0}
+              onCountChange={setCommentsCount}
+            />
+          </div>
+        </div>
       </Show>
     </div>
   );
