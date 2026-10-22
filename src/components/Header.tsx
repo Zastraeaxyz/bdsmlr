@@ -1,4 +1,4 @@
-import { createSignal, Show, onCleanup, onMount } from 'solid-js'
+import { createSignal, For, Show, onCleanup, onMount } from 'solid-js'
 import { useNavigate, A } from '@solidjs/router'
 import { useAuth } from '../lib/useAuth'
 import { useBlogAvatar } from '../lib/blogAvatar'
@@ -10,9 +10,9 @@ interface HeaderProps {
 
 export default function Header(props: HeaderProps) {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, blogs, activeBlogId, activeBlog, setActiveBlog } = useAuth()
   const [showDropdown, setShowDropdown] = createSignal(false)
-  const avatarUrl = useBlogAvatar(() => user()?.blog_id ?? null)
+  const avatarUrl = useBlogAvatar(() => activeBlogId())
 
   let containerRef: HTMLDivElement | undefined
 
@@ -62,12 +62,12 @@ export default function Header(props: HeaderProps) {
             <Show when={avatarUrl()}>
               <img class="user-dropdown-avatar" src={avatarUrl()!} alt="" />
             </Show>
-            <span>{user()!.blog_name}</span>
+            <span>{activeBlog()?.name ?? user()!.blog_name}</span>
           </button>
           <Show when={showDropdown()}>
             <div class="user-dropdown-menu">
               <A
-                href={`/${user()!.blog_name}`}
+                href={`/${activeBlog()?.name ?? user()!.blog_name}`}
                 class="user-dropdown-item"
                 onClick={() => setShowDropdown(false)}
               >
@@ -94,6 +94,28 @@ export default function Header(props: HeaderProps) {
               >
                 Messages
               </A>
+              <Show when={blogs().length > 1}>
+                <div class="user-dropdown-section">Active blog</div>
+                <For each={blogs()}>
+                  {(blog) => (
+                    <button
+                      type="button"
+                      class="user-dropdown-item user-dropdown-blog"
+                      classList={{ active: blog.id === activeBlogId() }}
+                      onClick={() => {
+                        setActiveBlog(blog.id)
+                        setShowDropdown(false)
+                        window.location.reload()
+                      }}
+                    >
+                      <span>{blog.name}</span>
+                      <Show when={blog.id === activeBlogId()}>
+                        <span class="user-dropdown-check">✓</span>
+                      </Show>
+                    </button>
+                  )}
+                </For>
+              </Show>
               <button
                 type="button"
                 class="user-dropdown-item"

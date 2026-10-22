@@ -21,7 +21,7 @@ import {
 } from "~/lib/feedView";
 
 export default function LikedPosts() {
-  const { user } = useAuth();
+  const { user, activeBlogId } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [posts, setPosts] = createSignal<Post[]>([]);
@@ -45,7 +45,8 @@ export default function LikedPosts() {
 
   const fetchLiked = async () => {
     const u = user();
-    if (!u?.blog_id) {
+    const blogId = activeBlogId();
+    if (!u || !blogId) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -57,7 +58,7 @@ export default function LikedPosts() {
     setHasMore(true);
     try {
       const data = await listBlogActivity({
-        blog_id: u.blog_id,
+        blog_id: blogId,
         sort_field: sortField(),
         order: sortOrder(),
         post_types: [1, 2, 3, 4, 5, 6, 7],
@@ -83,13 +84,14 @@ export default function LikedPosts() {
 
   const loadMore = async () => {
     const u = user();
-    if (!u?.blog_id || !hasMore() || loadingMore() || !nextPageToken) return;
+    const blogId = activeBlogId();
+    if (!u || !blogId || !hasMore() || loadingMore() || !nextPageToken) return;
     setLoadingMore(true);
     const token = nextPageToken;
     nextPageToken = null;
     try {
       const data = await listBlogActivity({
-        blog_id: u.blog_id,
+        blog_id: blogId,
         sort_field: sortField(),
         order: sortOrder(),
         post_types: [1, 2, 3, 4, 5, 6, 7],

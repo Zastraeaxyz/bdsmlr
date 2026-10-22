@@ -47,7 +47,7 @@ export interface CommentsProps {
 }
 
 export function Comments(props: CommentsProps) {
-  const { user } = useAuth();
+  const { user, activeBlog } = useAuth();
   const [comments, setComments] = createSignal<PostComment[]>([]);
   const [count, setCount] = createSignal(props.initialCount ?? 0);
   const [loading, setLoading] = createSignal(true);
@@ -110,19 +110,20 @@ export function Comments(props: CommentsProps) {
     e.preventDefault();
     const text = draft().trim();
     const currentUser = user();
-    if (!text || !currentUser?.blog_id || submitting()) return;
+    const blog = activeBlog();
+    if (!text || !currentUser || !blog || submitting()) return;
     setSubmitting(true);
     setError("");
     try {
-      const res = await commentPost(props.postId, text, currentUser.blog_id);
+      const res = await commentPost(props.postId, text, blog.id);
       if (res.ok === false || res.error) {
         throw new Error(res.error?.message || "Could not post comment");
       }
       const posted: PostComment = {
         postId: props.postId,
         userId: currentUser.user_id,
-        blogId: currentUser.blog_id,
-        blogName: currentUser.blog_name ?? currentUser.username ?? undefined,
+        blogId: blog.id,
+        blogName: blog.name,
         body: text,
         createdAtUnix: Math.floor(Date.now() / 1000),
       };
@@ -141,7 +142,7 @@ export function Comments(props: CommentsProps) {
       <h3 class="comments-title">Comments ({count()})</h3>
 
       <Show
-        when={user()}
+        when={user() && activeBlog()}
         fallback={<p class="comments-signin">Sign in to comment.</p>}
       >
         <form class="comment-form" onSubmit={submit}>

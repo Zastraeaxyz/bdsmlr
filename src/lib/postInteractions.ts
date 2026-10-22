@@ -8,6 +8,7 @@ import {
   unlikePost,
   type Post,
 } from "./api";
+import { currentActorBlogId } from "./activeBlog";
 
 export interface PostInteractionState {
   liked: boolean;
@@ -64,18 +65,19 @@ async function flush() {
   queuedIds.clear();
   if (ids.length === 0) return;
 
-  let user;
+  let actorId: number | null = null;
   try {
-    user = requireUser();
+    requireUser();
+    actorId = currentActorBlogId();
   } catch {
     return;
   }
-  if (!user.blog_id) return;
+  if (!actorId) return;
 
   try {
     const [likeStates, reblogStates] = await Promise.all([
-      batchGetLikeStates(ids, user.blog_id),
-      batchGetReblogStates(ids, user.blog_id),
+      batchGetLikeStates(ids, actorId),
+      batchGetReblogStates(ids, actorId),
     ]);
 
     for (const id of ids) {
@@ -104,8 +106,9 @@ export function usePostInteraction(post: Post) {
 }
 
 export async function toggleLike(post: Post): Promise<void> {
-  const user = requireUser();
-  if (!user.blog_id) throw new Error("Not authenticated");
+  requireUser();
+  const actorId = currentActorBlogId();
+  if (!actorId) throw new Error("Not authenticated");
   const [, setState] = signalFor(post);
   const prev = signalFor(post)[0]();
   const nextLiked = !prev.liked;
@@ -118,8 +121,8 @@ export async function toggleLike(post: Post): Promise<void> {
 
   try {
     const res = nextLiked
-      ? await likePost(post.id, user.blog_id)
-      : await unlikePost(post.id, user.blog_id);
+      ? await likePost(post.id, actorId)
+      : await unlikePost(post.id, actorId);
     if (res.ok === false || res.error) {
       throw new Error(res.error?.message || "Could not update like");
     }
@@ -136,16 +139,21 @@ export async function toggleLike(post: Post): Promise<void> {
   }
 }
 
-export async function reblog(post: Post): Promise<void> {
-  const user = requireUser();
-  if (!user.blog_id) throw new Error("Not authenticated");
+export async function reblog(
+  post: Post,
+  opts: { mode?: "live" | "queue"; comment?: string; tags?: string[] } = {},
+): Promise<"live" | "queue"> {
+  requireUser();
+  const actorId = currentActorBlogId();
+  if (!actorId) throw new Error("Not authenticated");
   const [, setState] = signalFor(post);
+  const mode = opts.mode ?? "live";
 
-  try {
-    const res = await reblogPost(post.id, user.blog_id);
-    if (res.ok === false || res.error) {
-      throw new Error(res.error?.message || "Could not reblog post");
-    }
+  const res = await reblogPost(post.id, actorId, { ...opts, mode });
+  if (res.ok === false || res.error) {
+    throw new Error(res.error?.message || "Could not reblog post");
+  }
+  if (mode === "live") {
     const current = signalFor(post)[0]();
     setState({
       ...current,
@@ -153,9 +161,8 @@ export async function reblog(post: Post): Promise<void> {
       actorReblogCount: current.actorReblogCount + 1,
       reblogsCount: current.reblogsCount + 1,
     });
-  } catch (err) {
-    throw err;
   }
+  return mode;
 }
 
 export function clearPostInteractions(): void {

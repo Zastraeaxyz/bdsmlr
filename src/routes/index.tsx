@@ -10,7 +10,11 @@ import {
   SortOrder,
   type Post,
 } from "~/lib/api";
-import { getCachedFollowingIds } from "~/lib/following";
+import {
+  fetchAllFollowingIds,
+  getCachedFollowingIds,
+  setCachedFollowingIds,
+} from "~/lib/following";
 import { useAuth } from "~/lib/useAuth";
 import SortDropdown from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
@@ -36,7 +40,7 @@ const PAGE_SIZE = 20;
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, activeBlogId } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   createEffect(() => {
@@ -104,7 +108,7 @@ export default function Home() {
   const currentUrlSession = () => (searchParams.session as string) || null;
 
   const fetchFeed = async (targetPage = 1) => {
-    if (!user()?.blog_id) {
+    if (!user() || !activeBlogId()) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -150,7 +154,14 @@ export default function Home() {
         )
           setSearchParams({ session: searchSession }, { replace: true });
       } else {
-        followedBlogIds = getCachedFollowingIds();
+        const actorId = activeBlogId();
+        followedBlogIds = getCachedFollowingIds(actorId);
+        if (followedBlogIds.length === 0 && actorId) {
+          try {
+            followedBlogIds = await fetchAllFollowingIds(actorId);
+            setCachedFollowingIds(followedBlogIds, actorId);
+          } catch {}
+        }
         if (followedBlogIds.length === 0) {
           setPosts([]);
           return;
@@ -171,7 +182,7 @@ export default function Home() {
   let lastFeedKey: string | undefined;
   createEffect(() => {
     if (authLoading()) return;
-    const blogId = user()?.blog_id ?? null;
+    const blogId = activeBlogId();
     const q = (searchParams.tag_name as string) || "";
     const key = `${blogId ?? ""}|${q}`;
     if (key === lastFeedKey) return;

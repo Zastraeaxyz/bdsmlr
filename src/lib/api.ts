@@ -76,10 +76,18 @@ export interface BlogFollowGraphResponse {
   error?: string
 }
 
-export function blogFollowGraph(blogId: number, pageToken?: string) {
+export type FollowDirection = 'following' | 'followers' | 'both'
+
+export function blogFollowGraph(
+  blogId: number,
+  pageToken?: string,
+  direction: FollowDirection = 'following',
+  pageSize = 200,
+) {
   return request<BlogFollowGraphResponse>(API_BASE, '/blog-follow-graph', {
     blogId: String(blogId),
-    direction: 'following',
+    direction,
+    pageSize,
     ...(pageToken ? { pageToken } : {}),
   })
 }
@@ -448,6 +456,110 @@ export function batchGetReblogStates(postIds: number[], actingBlogId: number) {
     '/batch-get-reblog-states',
     { postIds, actingBlogId },
   )
+}
+
+export interface BlogFollowStateResponse {
+  isFollowed?: boolean
+  is_followed?: boolean
+  error?: string
+}
+
+export interface BlogWriteResponse {
+  ok?: boolean
+  error?: WriteError
+}
+
+export interface BlockedResponse {
+  blocked_blog_ids?: (number | string)[]
+  blockedBlogIds?: (number | string)[]
+  blocked_user_ids?: (number | string)[]
+  blockedUserIds?: (number | string)[]
+  error?: string
+}
+
+export interface FamilyBlogsResponse {
+  blogs?: Blog[]
+  error?: string
+}
+
+export function getBlogFollowState(actingBlogId: number, targetBlogId: number) {
+  return request<BlogFollowStateResponse>(API_BASE, '/blog-follow-state', {
+    actingBlogId,
+    targetBlogId,
+  })
+}
+
+export function followBlog(actingBlogId: number, targetBlogId: number) {
+  return request<BlogWriteResponse>(API_BASE, '/internal-write/follow', {
+    actingBlogId,
+    targetBlogId,
+  })
+}
+
+export function unfollowBlog(actingBlogId: number, targetBlogId: number) {
+  return request<BlogWriteResponse>(API_BASE, '/internal-write/unfollow', {
+    actingBlogId,
+    targetBlogId,
+  })
+}
+
+export function getBlocked(userId: number) {
+  return request<BlockedResponse>(API_BASE, '/get-blocked', {
+    user_id: userId,
+  })
+}
+
+export function blockBlog(actingBlogId: number, targetBlogId: number) {
+  return request<BlogWriteResponse>(API_BASE, '/internal-write/block', {
+    actingBlogId,
+    targetBlogId,
+  })
+}
+
+export function unblockBlog(actingBlogId: number, targetBlogId: number) {
+  return request<BlogWriteResponse>(API_BASE, '/internal-write/unblock', {
+    actingBlogId,
+    targetBlogId,
+  })
+}
+
+export function reportBlog(
+  actingBlogId: number,
+  targetBlogId: number,
+  reason: string,
+) {
+  return request<BlogWriteResponse>(API_BASE, '/internal-write/report-blog', {
+    actingBlogId,
+    targetBlogId,
+    reason,
+  })
+}
+
+export function reportPost(actingBlogId: number, postId: number) {
+  return request<BlogWriteResponse>(API_BASE, '/internal-write/report-post', {
+    actingBlogId,
+    postId,
+  })
+}
+
+export function deletePost(actingBlogId: number, postId: number) {
+  return request<BlogWriteResponse>(API_BASE, '/internal-write/delete', {
+    actingBlogId,
+    postId,
+  })
+}
+
+export function listBlogFamilyBlogs(blogId: number) {
+  return request<FamilyBlogsResponse>(API_BASE, '/list-blog-family-blogs', {
+    blog_id: blogId,
+  }).then((res) => ({
+    ...res,
+    blogs: (res.blogs ?? []).map((blog) => ({
+      ...blog,
+      avatarUrl: blog.avatarUrl ? unwrapMediaUrl(blog.avatarUrl) : blog.avatarUrl,
+      coverUrl: blog.coverUrl ? unwrapMediaUrl(blog.coverUrl) : blog.coverUrl,
+    })),
+  }))
 }
 
 

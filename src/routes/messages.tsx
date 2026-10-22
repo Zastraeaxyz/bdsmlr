@@ -1,5 +1,5 @@
 import { createEffect, createSignal, For, onMount, Show } from "solid-js";
-import { A, useNavigate } from "@solidjs/router";
+import { A, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
 import { useAuth } from "~/lib/useAuth";
@@ -41,6 +41,7 @@ function avatarUrl(url?: string): string | null {
 
 export default function Messages() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
 
   const [threads, setThreads] = createSignal<MessageThreadSummary[]>([]);
@@ -113,6 +114,11 @@ export default function Messages() {
   };
 
   onMount(() => {
+    const recipient = (searchParams.to as string) || "";
+    if (recipient) {
+      setNewTo(recipient);
+      setShowNew(true);
+    }
     void loadBootstrap();
   });
 

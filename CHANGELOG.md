@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Blog social actions**: Profiles now have Follow and Following buttons, plus tabs for Followers and Other blogs owned by the same user. The blog action menu can start a message, block or unblock the blog, and report it. Follow counts and the following cache update immediately.
+- **Post controls**: Post detail pages can report a post or delete one you own. Reblogs now open a composer where you can add a note and tags, or queue the reblog instead of publishing it immediately.
+- **Active blog switching**: If your account owns more than one blog, the profile menu now lets you choose the active blog. Likes, reblogs, comments, follows, blocks, reports, liked posts, and the home feed all use that blog.
 - **Messages**: A new `/messages` page brings your BDSMLR inbox into the app. Browse and search conversations, read threads, see which messages you sent, and send replies from the conversation view. The **New message** button starts a conversation with any blog by name. Signing in now also starts the BDSMLR web session that messaging needs, and the Messages link is in your profile menu.
 - **Comments** — Every post now has a comments view: click the comment count on a feed card to open it in a dialog, or scroll to the comments section on the post detail page. Comments show the author, time, and body, can be paginated, and signed-in users can post a new comment without leaving the page.
 - **Likes and reblogs** — Posts on every feed and on post detail pages now have working Like and Reblog buttons. Click the heart to like or unlike a post, and click the reblog icon to reblog it to your primary blog. Buttons highlight when you have already liked or reblogged a post, and the counts update without reloading the page.

@@ -19,8 +19,9 @@ import {
 } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
 import { Comments } from "~/components/Comments";
+import { ReblogComposer } from "~/components/ReblogComposer";
 import { useAuth } from "~/lib/useAuth";
-import { reblog, toggleLike, usePostInteraction } from "~/lib/postInteractions";
+import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
 
 export interface PostCardProps {
   post: Post;
@@ -35,6 +36,7 @@ export function PostCard(props: PostCardProps) {
   const [busy, setBusy] = createSignal(false);
   const [actionError, setActionError] = createSignal("");
   const [showComments, setShowComments] = createSignal(false);
+  const [showReblog, setShowReblog] = createSignal(false);
   const [commentsCount, setCommentsCount] = createSignal(
     post.commentsCount ?? 0,
   );
@@ -217,7 +219,7 @@ export function PostCard(props: PostCardProps) {
             class={
               interaction().reblogged ? "post-action active" : "post-action"
             }
-            onClick={() => runAction(reblog)}
+            onClick={() => setShowReblog(true)}
             disabled={busy()}
             title={interaction().reblogged ? "Reblog again" : "Reblog"}
             aria-label={
@@ -253,6 +255,12 @@ export function PostCard(props: PostCardProps) {
       </div>
       <Show when={actionError()}>
         <p class="action-error">{actionError()}</p>
+      </Show>
+      <Show when={showReblog()}>
+        <ReblogComposer
+          post={post}
+          onClose={() => setShowReblog(false)}
+        />
       </Show>
       <Show when={showComments()}>
         <div

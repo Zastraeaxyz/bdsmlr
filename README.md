@@ -14,13 +14,16 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Media lightbox** — Click images/videos for a full-screen overlay
 - **Individual post downloads** — Download single or multiple images from a post, with ordering and video support
 - **Bulk downloads** — Download every post from a blog or all your liked posts as a ZIP archive. Downloads resume if interrupted and persist across sessions via SQLite.
-- **User dropdown** — The navbar shows your avatar and username with quick access to Following and Sign out
+- **User dropdown** — The navbar shows your avatar and username with quick access to Following, Messages, the active blog switcher, and Sign out
 - **Open on BDSMLR** — Every post and profile has a button to open the original on BDSMLR in a new tab
 - **Reblog tracking** — See who originally posted content and jump to the original post
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 - **Comments**: Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
 - **Messages**: Open your BDSMLR inbox at `/messages` to read conversations, search threads, and send messages. Start a new conversation by entering a blog name.
+- **Blog social actions**: Follow and unfollow blogs, see followers and other blogs owned by the same user, block or unblock a blog, report a blog, and start a message from a profile.
+- **Post controls**: Report posts, delete posts from the active blog, and use the reblog composer to add a note, add tags, or send the reblog to your queue.
+- **Multiple blogs**: Switch the active blog from the profile menu. Likes, reblogs, comments, follows, blocks, and reports use the active blog.
 
 ## Disclaimer
 

@@ -1,7 +1,7 @@
 import { createSignal, createEffect, For, Show } from "solid-js";
-import { A } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import { getPostDetail, getBlog, PostType, type Post } from "~/lib/api";
+import { getPostDetail, getBlog, deletePost, reportPost, PostType, type Post } from "~/lib/api";
 import {
   sanitizeHtml,
   processContentHtml,
@@ -15,6 +15,7 @@ import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import { Comments } from "~/components/Comments";
+import { ReblogComposer } from "~/components/ReblogComposer";
 import {
   HeartIcon,
   ChatIcon,
@@ -24,7 +25,7 @@ import {
 import { formatRelativeDate } from "~/lib/date";
 import { getCachedPost, setCachedPost } from "~/lib/postCache";
 import { useAuth } from "~/lib/useAuth";
-import { reblog, toggleLike, usePostInteraction } from "~/lib/postInteractions";
+import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
 
 export default function PostDetail(props: {
   postId: number;
@@ -129,13 +130,54 @@ function PostDetailView(props: {
   blogGone?: boolean;
   onImageClick?: (url: string) => void;
 }) {
-  const { user } = useAuth();
+  const { user, activeBlogId } = useAuth();
+  const navigate = useNavigate();
   const interaction = usePostInteraction(props.post);
   const [busy, setBusy] = createSignal(false);
   const [actionError, setActionError] = createSignal("");
+  const [notice, setNotice] = createSignal("");
+  const [showReblog, setShowReblog] = createSignal(false);
   const [commentsCount, setCommentsCount] = createSignal(
     props.post.commentsCount ?? 0,
   );
+
+  const ownsPost = () =>
+    !!activeBlogId() &&
+    Number(props.post.blogId) === Number(activeBlogId());
+
+  const handleDelete = async () => {
+    const actor = activeBlogId();
+    if (!actor || !ownsPost()) return;
+    if (!window.confirm(`Delete post ${props.post.id}?`)) return;
+    setActionError("");
+    setNotice("");
+    try {
+      const res = await deletePost(actor, props.post.id);
+      if (res.ok === false || res.error) {
+        throw new Error(res.error?.message || "Could not delete post");
+      }
+      navigate(props.post.blogName ? `/${props.post.blogName}` : "/");
+    } catch (err: unknown) {
+      setActionError((err as Error)?.message || "Could not delete post");
+    }
+  };
+
+  const handleReport = async () => {
+    const actor = activeBlogId();
+    if (!actor) return;
+    if (!window.confirm(`Report post ${props.post.id}?`)) return;
+    setActionError("");
+    setNotice("");
+    try {
+      const res = await reportPost(actor, props.post.id);
+      if (res.ok === false || res.error) {
+        throw new Error(res.error?.message || "Could not report post");
+      }
+      setNotice("Report submitted. Thank you.");
+    } catch (err: unknown) {
+      setActionError((err as Error)?.message || "Could not report post");
+    }
+  };
 
   const runAction = async (action: (post: Post) => Promise<void>) => {
     if (busy()) return;
@@ -308,7 +350,7 @@ function PostDetailView(props: {
             class={
               interaction().reblogged ? "post-action active" : "post-action"
             }
-            onClick={() => runAction(reblog)}
+            onClick={() => setShowReblog(true)}
             disabled={busy()}
             title={interaction().reblogged ? "Reblog again" : "Reblog"}
             aria-label={
@@ -329,9 +371,36 @@ function PostDetailView(props: {
             <BdsmlrIcon />
           </a>
         </Show>
+        <Show when={user() && props.post.id && !ownsPost()}>
+          <button
+            type="button"
+            class="download-btn post-meta-action"
+            onClick={handleReport}
+          >
+            Report
+          </button>
+        </Show>
+        <Show when={ownsPost()}>
+          <button
+            type="button"
+            class="download-btn post-meta-action danger-text"
+            onClick={handleDelete}
+          >
+            Delete
+          </button>
+        </Show>
       </div>
       <Show when={actionError()}>
         <p class="action-error">{actionError()}</p>
+      </Show>
+      <Show when={notice()}>
+        <p class="action-notice">{notice()}</p>
+      </Show>
+      <Show when={showReblog()}>
+        <ReblogComposer
+          post={props.post}
+          onClose={() => setShowReblog(false)}
+        />
       </Show>
       <Show when={props.post.id}>
         <Comments
