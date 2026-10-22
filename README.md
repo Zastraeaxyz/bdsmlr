@@ -1,6 +1,6 @@
 # Better BDSMLR
 
-A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, search posts, browse blogs, like, reblog, or comment on posts, and send messages.
+A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, search posts, browse blogs, like, reblog, or comment on posts, discover new blogs and posts, and send messages.
 
 ## Features
 
@@ -21,6 +21,12 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 - **Comments**: Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
 - **Messages**: Open your BDSMLR inbox at `/messages` to read conversations, search threads, and send messages. Start a new conversation by entering a blog name.
+- **For You and recommendations**: A `/for-you` feed shows recommended posts, with a row of recommended blogs when available.
+- **Related posts**: Post detail pages show a "More like this" feed.
+- **Engagement lists**: Click "Liked by" or "Reblogged by" on a post to see who liked or reblogged it.
+- **Search and tags**: `/search` searches posts or blogs, and tag pills open dedicated tag pages.
+- **Activity feed**: Every profile has an Activity tab with Posts, Reblogs, Likes, and Comments filters. `/activity` opens your own activity.
+- **Followers' feed**: A profile tab shows recent posts from blogs that follow that blog.
 - **Blog social actions**: Follow and unfollow blogs, see followers and other blogs owned by the same user, block or unblock a blog, report a blog, and start a message from a profile.
 - **Post controls**: Report posts, delete posts from the active blog, and use the reblog composer to add a note, add tags, or send the reblog to your queue.
 - **Multiple blogs**: Switch the active blog from the profile menu. Likes, reblogs, comments, follows, blocks, and reports use the active blog.

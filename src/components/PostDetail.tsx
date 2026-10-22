@@ -16,6 +16,8 @@ import { LightBox } from "~/components/LightBox";
 import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
+import { RelatedPosts } from "~/components/RelatedPosts";
+import { EngagementModal } from "~/components/EngagementModal";
 import {
   HeartIcon,
   ChatIcon,
@@ -137,6 +139,8 @@ function PostDetailView(props: {
   const [actionError, setActionError] = createSignal("");
   const [notice, setNotice] = createSignal("");
   const [showReblog, setShowReblog] = createSignal(false);
+  const [showLikes, setShowLikes] = createSignal(false);
+  const [showReblogs, setShowReblogs] = createSignal(false);
   const [commentsCount, setCommentsCount] = createSignal(
     props.post.commentsCount ?? 0,
   );
@@ -308,7 +312,11 @@ function PostDetailView(props: {
       {props.post.tags && props.post.tags.length > 0 && (
         <div class="post-detail-tags">
           <For each={props.post.tags}>
-            {(t) => <span class="tag">#{t}</span>}
+            {(t) => (
+              <A href={`/tag/${encodeURIComponent(t)}`} class="tag">
+                #{t}
+              </A>
+            )}
           </For>
         </div>
       )}
@@ -396,6 +404,22 @@ function PostDetailView(props: {
       <Show when={notice()}>
         <p class="action-notice">{notice()}</p>
       </Show>
+      <div class="post-engagement-links">
+        <button
+          type="button"
+          class="engagement-link"
+          onClick={() => setShowLikes(true)}
+        >
+          Liked by {interaction().likesCount}
+        </button>
+        <button
+          type="button"
+          class="engagement-link"
+          onClick={() => setShowReblogs(true)}
+        >
+          Reblogged by {interaction().reblogsCount}
+        </button>
+      </div>
       <Show when={showReblog()}>
         <ReblogComposer
           post={props.post}
@@ -407,6 +431,23 @@ function PostDetailView(props: {
           postId={props.post.id}
           initialCount={props.post.commentsCount ?? 0}
           onCountChange={setCommentsCount}
+        />
+      </Show>
+      <Show when={props.post.id}>
+        <RelatedPosts postId={props.post.id} />
+      </Show>
+      <Show when={showLikes()}>
+        <EngagementModal
+          postId={props.post.id}
+          kind="likes"
+          onClose={() => setShowLikes(false)}
+        />
+      </Show>
+      <Show when={showReblogs()}>
+        <EngagementModal
+          postId={props.post.id}
+          kind="reblogs"
+          onClose={() => setShowReblogs(false)}
         />
       </Show>
     </article>

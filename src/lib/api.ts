@@ -248,7 +248,11 @@ export interface ListBlogActivityRequest {
 
 export interface ListBlogActivityResponse {
   posts?: Post[]
-  timelineItems?: { type: number; post?: Post }[]
+  timelineItems?: {
+    type: number
+    post?: Post
+    cluster?: { label?: string; interactions?: Post[] }
+  }[]
   page?: { nextPageToken?: string }
   error?: string
 }
@@ -612,5 +616,139 @@ export function commentPost(
     postId,
     comment,
     actingBlogId,
+  })
+}
+
+export interface ForYouResponse {
+  posts?: Post[]
+  page?: { nextPageToken?: string }
+  error?: string
+}
+
+export function forYou(
+  perspectiveBlogName: string,
+  pageSize = 20,
+  pageToken?: string,
+) {
+  return request<ForYouResponse>(API_BASE, '/for-you', {
+    perspective_blog_name: perspectiveBlogName,
+    page_size: pageSize,
+    ...(pageToken ? { page_token: pageToken } : {}),
+  })
+}
+
+export interface RecommendedBlogsResponse {
+  blogs?: Blog[]
+  error?: string
+}
+
+export function listRecommendedBlogs(blogName: string, limit = 12) {
+  return request<RecommendedBlogsResponse>(API_BASE, '/list-recommended-blogs', {
+    blog_name: blogName,
+    limit,
+  }).then((res) => ({
+    ...res,
+    blogs: (res.blogs ?? []).map((blog) => ({
+      ...blog,
+      avatarUrl: blog.avatarUrl ? unwrapMediaUrl(blog.avatarUrl) : blog.avatarUrl,
+      coverUrl: blog.coverUrl ? unwrapMediaUrl(blog.coverUrl) : blog.coverUrl,
+    })),
+  }))
+}
+
+export function relatedPosts(
+  seedPostId: number,
+  perspectiveBlogName?: string,
+  pageSize = 12,
+  pageToken?: string,
+) {
+  return request<ForYouResponse>(API_BASE, '/related-posts', {
+    seed_post_id: String(seedPostId),
+    perspective_role: 'viewer',
+    ...(perspectiveBlogName
+      ? { perspective_blog_name: perspectiveBlogName }
+      : {}),
+    page_size: pageSize,
+    ...(pageToken ? { page_token: pageToken } : {}),
+  })
+}
+
+export interface SearchBlogsResponse {
+  blogs?: Blog[]
+  page?: { nextPageToken?: string }
+  error?: string
+}
+
+export function searchBlogs(
+  query: string,
+  pageSize = 20,
+  pageToken?: string,
+) {
+  return request<SearchBlogsResponse>(API_BASE, '/search-blogs', {
+    query,
+    page: {
+      page_size: pageSize,
+      ...(pageToken ? { page_token: pageToken } : {}),
+    },
+  }).then((res) => ({
+    ...res,
+    blogs: (res.blogs ?? []).map((blog) => ({
+      ...blog,
+      avatarUrl: blog.avatarUrl ? unwrapMediaUrl(blog.avatarUrl) : blog.avatarUrl,
+      coverUrl: blog.coverUrl ? unwrapMediaUrl(blog.coverUrl) : blog.coverUrl,
+    })),
+  }))
+}
+
+export interface PostLikesResponse {
+  likes?: {
+    id?: number
+    postId?: number
+    userId?: number
+    blogId?: number
+    blogName?: string
+    createdAtUnix?: number
+  }[]
+  page?: { nextPageToken?: string }
+  error?: string
+}
+
+export interface PostReblogsResponse {
+  reblogs?: {
+    id?: number
+    postId?: number
+    blogId?: number
+    blogName?: string
+    createdAtUnix?: number
+  }[]
+  page?: { nextPageToken?: string }
+  error?: string
+}
+
+export function listPostLikes(
+  postId: number,
+  pageSize = 20,
+  pageToken?: string,
+) {
+  return request<PostLikesResponse>(API_BASE, '/list-post-likes', {
+    post_id: postId,
+    page: {
+      page_size: pageSize,
+      ...(pageToken ? { page_token: pageToken } : {}),
+    },
+  })
+}
+
+export function listPostReblogs(
+  postId: number,
+  pageSize = 20,
+  pageToken?: string,
+) {
+  return request<PostReblogsResponse>(API_BASE, '/list-post-reblogs', {
+    post_id: postId,
+    page: {
+      page_size: pageSize,
+      ...(pageToken ? { page_token: pageToken } : {}),
+    },
   })
 }

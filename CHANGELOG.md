@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **For You and recommendations**: The new `/for-you` feed shows recommended posts and a row of recommended blogs. It is available from the profile menu.
+- **Related posts**: Post detail pages now include a "More like this" section with pagination.
+- **Engagement lists**: Post pages show "Liked by" and "Reblogged by" buttons that open paginated lists of the blogs behind those counts.
+- **Search and tag pages**: The new `/search` page can search posts or blogs. Tags on post detail pages now open dedicated tag pages with their own post feed.
+- **Activity and follower feeds**: Profiles now have Activity and Followers' feed tabs. Activity can be filtered to Posts, Reblogs, Likes, or Comments, and `/activity` opens your own activity.
 - **Blog social actions**: Profiles now have Follow and Following buttons, plus tabs for Followers and Other blogs owned by the same user. The blog action menu can start a message, block or unblock the blog, and report it. Follow counts and the following cache update immediately.
 - **Post controls**: Post detail pages can report a post or delete one you own. Reblogs now open a composer where you can add a note and tags, or queue the reblog instead of publishing it immediately.
 - **Active blog switching**: If your account owns more than one blog, the profile menu now lets you choose the active blog. Likes, reblogs, comments, follows, blocks, reports, liked posts, and the home feed all use that blog.

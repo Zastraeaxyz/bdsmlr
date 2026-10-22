@@ -62,3 +62,15 @@ export function clearCachedFollowingIds(blogId?: number | null): void {
     }
   }
 }
+
+export async function fetchAllFollowerIds(blogId: number): Promise<number[]> {
+  const all: FollowEdge[] = []
+  let pageToken: string | undefined
+  while (true) {
+    const graph = await blogFollowGraph(blogId, pageToken, "followers")
+    all.push(...(graph.followers || []))
+    pageToken = graph.nextPageToken
+    if (!pageToken) break
+  }
+  return all.map((f) => Number(f.blogId))
+}

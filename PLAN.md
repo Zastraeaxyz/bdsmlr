@@ -18,7 +18,7 @@ Goal: support everything the BDSMLR new web client does, plus the legacy authori
 - Delete your own posts
 - Reblog composer with optional note, tags, and Queue mode
 
-## Phase 2: discovery
+## Phase 2: discovery (implemented, pending review)
 
 - For You feed
 - Recommended blogs
