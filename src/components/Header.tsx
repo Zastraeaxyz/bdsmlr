@@ -87,6 +87,13 @@ export default function Header(props: HeaderProps) {
               >
                 Liked
               </A>
+              <A
+                href="/messages"
+                class="user-dropdown-item"
+                onClick={() => setShowDropdown(false)}
+              >
+                Messages
+              </A>
               <button
                 type="button"
                 class="user-dropdown-item"

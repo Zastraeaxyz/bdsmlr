@@ -2,6 +2,7 @@ import { createContext, createSignal, createEffect, useContext, onCleanup, type 
 import { getCurrentUser, setCurrentUser, login as apiLogin, type AuthUser } from "./api"
 import { fetchAllFollowingIds, setCachedFollowingIds, clearCachedFollowingIds } from "./following"
 import { clearPostInteractions } from "./postInteractions"
+import { webLogin, webLogout } from "./messages"
 
 interface AuthContextType {
   user: () => AuthUser | null
@@ -36,6 +37,11 @@ export function AuthProvider(props: ParentProps) {
 
   const login = async (email: string, password: string) => {
     const u = await apiLogin(email, password, true)
+    try {
+      await webLogin(u.email ?? email, password)
+    } catch (err) {
+      console.warn("Could not start BDSMLR message session", err)
+    }
     setCurrentUser(u)
     localStorage.setItem("user", JSON.stringify(u))
     setUser(u)
@@ -49,6 +55,7 @@ export function AuthProvider(props: ParentProps) {
   }
 
   const logout = () => {
+    void webLogout()
     setCurrentUser(null)
     localStorage.removeItem("user")
     clearCachedFollowingIds()
