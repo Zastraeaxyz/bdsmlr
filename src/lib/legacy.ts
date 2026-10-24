@@ -211,3 +211,99 @@ export async function createAudioPost(input: LegacyPostInput) {
     tags: input.tags,
   });
 }
+
+export async function changeLegacyEmail(email: string) {
+  return legacyRequest("/changemail", { passwd: email });
+}
+
+export async function changeLegacyPassword(password: string, confirm: string) {
+  return legacyRequest("/changepassword", {
+    passwd: password,
+    passwd2: confirm,
+  });
+}
+
+export async function changeLegacyBlogName(name: string) {
+  return legacyRequest(`/changeusername/${encodeURIComponent(name)}`, {
+    username: name,
+  });
+}
+
+export interface LegacyCustomization {
+  blogId: string;
+  csrf: string;
+  fields: Record<string, string | boolean>;
+}
+
+export async function getBlogCustomization(
+  blogName: string,
+): Promise<LegacyCustomization> {
+  const res = await fetch(
+    `/api/legacy/customize?blog=${encodeURIComponent(blogName)}`,
+    { credentials: "include" },
+  );
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.blogId) {
+    throw new LegacyError(
+      data?.error || "Could not load blog customization",
+      res.status,
+    );
+  }
+  return data as LegacyCustomization;
+}
+
+export async function saveBlogCustomization(
+  blogId: string,
+  fields: Record<string, string | boolean>,
+): Promise<void> {
+  const body = new URLSearchParams();
+  for (const [key, value] of Object.entries(fields)) {
+    if (key === "_token") continue;
+    body.append(key, typeof value === "boolean" ? (value ? "1" : "0") : value);
+  }
+  const res = await fetch(`/api/legacy/customizesave/${blogId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  await legacyResponse(res);
+}
+
+export async function uploadCustomization(
+  path: string,
+  file: File,
+  token: string,
+  extra: Record<string, string> = {},
+): Promise<Response> {
+  const form = new FormData();
+  form.append("_token", token);
+  for (const [key, value] of Object.entries(extra)) form.append(key, value);
+  form.append("file", file);
+  const res = await fetch(`/api/legacy${path}`, {
+    method: "POST",
+    credentials: "include",
+    body: form,
+  });
+  return legacyResponse(res);
+}
+
+export async function getLegacyDrafts() {
+  const res = await fetch("/api/legacy/drafts", { credentials: "include" });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new LegacyError(data?.error || "Could not load drafts", res.status);
+  }
+  return data.drafts as import("./legacyDrafts").LegacyDraft[];
+}
+
+export async function publishLegacyDraft(id: string, queue: boolean) {
+  return legacyRequest(
+    queue ? "/publishpostdrafttoqueue" : "/publishpostdraft",
+    { id },
+  );
+}
+
+export async function deleteLegacyDraft(id: string) {
+  return legacyRequest("/draftdelete", { id });
+}

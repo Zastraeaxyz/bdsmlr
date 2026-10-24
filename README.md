@@ -21,6 +21,7 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 - **Comments**: Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
+- **Account and blog settings**: `/settings` can change your email, password, and blog name. `/customize` edits blog title, description, theme, colors, images, display options, and interests. `/drafts` lists drafts and can publish, queue, or delete them.
 - **Archive and related tags**: Profiles have an Archive tab with month and post-type filters, and a Related tags row based on tag affinity.
 - **Unread activity badge**: The Activity menu item shows a count when new posts, reblogs, likes, or comments appear since you last opened your activity feed.
 - **Settings and blocked blogs**: `/settings` shows account and blog shortcuts, and `/blocked` lists blocked blogs with an Unblock button.

@@ -3398,3 +3398,175 @@ button:disabled {
   border-color: var(--accent);
   background: var(--bg-hover);
 }
+
+.settings-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.settings-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 220px;
+  flex: 1;
+}
+
+.settings-form button {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+
+.customize-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.customize-heading {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.customize-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.customize-colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.customize-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.customize-checks label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customize-checks input {
+  width: auto;
+}
+
+.customize-interests {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.customize-avatar {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.customize-header {
+  width: 100%;
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.compose-field select {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  outline: none;
+}
+
+.draft-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.draft-card {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.draft-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.draft-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.draft-content h3 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.draft-content p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.draft-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.draft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.draft-actions button {
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .draft-card {
+    flex-direction: column;
+  }
+
+  .draft-image {
+    width: 100%;
+    height: 180px;
+  }
+}

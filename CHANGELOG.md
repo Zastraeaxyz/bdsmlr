@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Account, blog customization, and drafts**: The settings page can now change your email, password, and blog name. A new customization page edits blog title, description, theme, fonts, colors, avatar, header images, display options, and interests. A new drafts page lists saved drafts with Publish, Publish to queue, and Delete actions.
 - **Activity badge**: The Activity item in the profile menu now shows a count when new activity appears on your active blog since you last opened its activity feed.
 - **Archive, related tags, settings, and blocked blogs**: Profiles now have an Archive tab with month and post-type filters, plus a Related tags row based on tag affinity. The new `/settings` page shows account and blog shortcuts, and `/blocked` lists blocked blogs with an Unblock button.
 - **Discord community**: The landing page and the profile menu now link to the official Discord invite, opening in a new tab.
