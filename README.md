@@ -21,7 +21,9 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 - **Comments**: Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
+- **Compose posts**: The `/compose` page publishes text, quote, link, chat, image, video, and audio posts. Text, image, and video posts can also be saved as drafts or added to the queue.
 - **Social previews**: Links shared in Discord and other social apps show a branded site card, profile cards with the blog avatar and description, and post cards with the first image.
+- **Discord community**: The landing page and avatar menu link to the official Discord invite.
 - **About the backend**: `/about` explains in plain language why the app needs a server, what happens to your login and cookies, and what the server does not store.
 - **Messages**: Open your BDSMLR inbox at `/messages` to read conversations, search threads, and send messages or images. Start a new conversation with recipient autocomplete, archive or clear conversations, block a sender, and see unread counts in the header.
 - **For You and recommendations**: A `/for-you` feed shows recommended posts, with a row of recommended blogs when available.

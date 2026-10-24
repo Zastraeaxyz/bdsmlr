@@ -2518,6 +2518,13 @@ button:disabled {
   gap: 12px;
 }
 
+.user-dropdown-discord {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
 .messages-panel-title {
   flex: 1;
   min-width: 0;
@@ -2952,6 +2959,10 @@ button:disabled {
   background: var(--bg-card);
 }
 
+.landing-discord {
+  gap: 8px;
+}
+
 .landing-secondary:hover {
   background: var(--bg-hover);
   border-color: var(--accent);
@@ -3146,4 +3157,148 @@ button:disabled {
     align-items: flex-start;
     padding: 20px 16px;
   }
+}
+
+/* ---- Compose ---- */
+
+.compose-blog {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.compose-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.compose-tab {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.compose-tab:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-heading);
+}
+
+.compose-tab.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(88, 166, 255, 0.1);
+}
+
+.compose-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.compose-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.compose-field textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  outline: none;
+  resize: vertical;
+}
+
+.compose-field textarea:focus {
+  border-color: var(--accent);
+}
+
+.compose-field input[type="file"] {
+  width: auto;
+  color: var(--text-muted);
+}
+
+.compose-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compose-inline input {
+  flex: 1;
+}
+
+.compose-files {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.compose-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+.compose-note {
+  margin-top: 14px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 560px) {
+  .compose-inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.compose-legacy {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.compose-legacy h3 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.compose-legacy p {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.compose-legacy-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.compose-legacy-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.compose-legacy-links a:hover {
+  text-decoration: underline;
 }

@@ -2,6 +2,7 @@ import { createEffect, createSignal, For, Show, onCleanup, onMount } from 'solid
 import { useNavigate, A } from '@solidjs/router'
 import { useAuth } from '../lib/useAuth'
 import { useBlogAvatar } from '../lib/blogAvatar'
+import { DiscordIcon } from './Icons'
 import { unreadCount, refreshMessageUnread } from '../lib/messageUnread'
 
 interface HeaderProps {
@@ -65,6 +66,7 @@ export default function Header(props: HeaderProps) {
       {props.children}
       <A href="/home" class="btn-ghost">Home</A>
       <A href="/search" class="btn-ghost">Search</A>
+      <A href="/compose" class="btn-ghost">Post</A>
       <A href="/about" class="btn-ghost">About</A>
       {user() ? (
         <div class="user-dropdown" ref={containerRef}>
@@ -114,6 +116,13 @@ export default function Header(props: HeaderProps) {
                 Activity
               </A>
               <A
+                href="/compose"
+                class="user-dropdown-item"
+                onClick={() => setShowDropdown(false)}
+              >
+                Compose post
+              </A>
+              <A
                 href="/search"
                 class="user-dropdown-item"
                 onClick={() => setShowDropdown(false)}
@@ -137,6 +146,16 @@ export default function Header(props: HeaderProps) {
                   <span class="message-badge">{unreadCount()}</span>
                 </Show>
               </A>
+              <a
+                href="https://discord.gg/w3BkPTwf2d"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="user-dropdown-item user-dropdown-discord"
+                onClick={() => setShowDropdown(false)}
+              >
+                <DiscordIcon class="icon" />
+                <span>Discord community</span>
+              </a>
               <Show when={blogs().length > 1}>
                 <div class="user-dropdown-section">Active blog</div>
                 <For each={blogs()}>

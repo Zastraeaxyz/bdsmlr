@@ -53,6 +53,14 @@ export default function AboutPage() {
               </p>
             </div>
             <div class="about-item">
+              <strong>It can publish posts</strong>
+              <p>
+                When you publish from Compose, the server sends the post to
+                BDSMLR's legacy composer and uploads images, video, or audio on
+                your behalf.
+              </p>
+            </div>
+            <div class="about-item">
               <strong>It builds RSS feeds</strong>
               <p>
                 RSS readers cannot run this app's JavaScript. Our server creates

@@ -36,7 +36,7 @@ Goal: support everything the BDSMLR new web client does, plus the legacy authori
 - Unread counts and badges
 - Recipient autocomplete when starting a new message
 
-## Phase 4: legacy authoring
+## Phase 4: legacy authoring (composer implemented; remaining items below)
 
 These are not in the v2 API. They require the legacy Laravel session and CSRF handling already used for messaging.
 

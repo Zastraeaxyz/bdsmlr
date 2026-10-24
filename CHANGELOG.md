@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Discord community**: The landing page and the profile menu now link to the official Discord invite, opening in a new tab.
+- **Compose posts**: The new `/compose` page can publish text, quote, link, chat, image, video, and audio posts to the active blog. Text, image, and video posts also support queue and draft modes. Queue management, drafts, asks, and settings remain linked to BDSMLR for now.
 - **Landing page**: The root URL now opens a public landing page with a feature overview, share-preview examples, and a login button. The following feed moved to `/home`, and login remains at `/login`.
 - **Social previews**: Links to the site, profiles, and posts now include Open Graph and Twitter preview data for Discord and other social apps. The home page uses a branded preview image, profiles show the blog avatar and description, and posts show the first image from the post.
 - **About page**: A new `/about` page explains in plain language why the app needs a backend, what it does with your login and cookies, and what it does not store or control.

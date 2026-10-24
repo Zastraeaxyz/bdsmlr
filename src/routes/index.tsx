@@ -2,6 +2,7 @@ import { For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { useAuth } from "~/lib/useAuth";
+import { DiscordIcon } from "~/components/Icons";
 
 const FEATURES = [
   {
@@ -63,6 +64,14 @@ export default function LandingPage() {
           <A href="/search" class="landing-nav-link">
             Search
           </A>
+          <a
+            href="https://discord.gg/w3BkPTwf2d"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="landing-nav-link"
+          >
+            Discord
+          </a>
           <A href="/about" class="landing-nav-link">
             About
           </A>
@@ -111,6 +120,15 @@ export default function LandingPage() {
               <A href="#features" class="landing-secondary">
                 See features
               </A>
+              <a
+                href="https://discord.gg/w3BkPTwf2d"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="landing-secondary landing-discord"
+              >
+                <DiscordIcon class="icon" />
+                Discord community
+              </a>
             </div>
             <Show when={user() && activeBlog()}>
               <p class="landing-signed-in">
@@ -182,6 +200,13 @@ export default function LandingPage() {
         <nav>
           <A href="/about">About the backend</A>
           <A href="/search">Search</A>
+          <a
+            href="https://discord.gg/w3BkPTwf2d"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Discord
+          </a>
           <Show when={user()} fallback={<A href="/login">Log in</A>}>
             <A href="/home">Open feed</A>
           </Show>
