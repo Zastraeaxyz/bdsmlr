@@ -23,12 +23,17 @@ For each `mediaRepresentation.items[i]`:
    entry that has both a `url` and a `mimeType`.
 4. If nothing matched, use `original.url` as a last resort.
 
+The selected URL is the primary media candidate. The UI keeps the original and other
+mime-typed alternates as fallbacks. If a video or image fails to load, it tries the next
+candidate, which covers dead mp4 alternates on GIF originals.
+
 ## Cases
 
 | Post | Blog | Expected rendering | Behavior | Test |
 | --- | --- | --- | --- | --- |
 | [868810857](https://bbdsmlr.vercel.app/Thecagestore/post/868810857) | Thecagestore | video (`<video>`) | `original` is a `.gif` with `mimeType: null`; the two `alternates` are live `video/mp4` URLs. GIFs may be served as `video/mp4`, so the mp4 alternate wins. | `GIF_ORIGINAL_WITH_MP4_ALTERNATES` |
 | [873244077](https://bbdsmlr.vercel.app/Thecagestore/post/873244077) | Thecagestore | image (`<img>`) | `original` is a `.webp` with `mimeType: null`; the two `alternates` are `video/mp4` **dead links**. The static-image original must win so the post still displays. | `WEBP_ORIGINAL_WITH_DEAD_MP4_ALTERNATES` |
+| [877023029](https://bdsmlr.zastraea.xyz/Thecagestore/post/877023029) | Thecagestore | image (`<img>`, GIF) | `original` is a live `.gif` with `mimeType: null`; the `video/mp4` alternate is a **dead link**. The video fails to load and the UI falls back to the GIF original. | `GIF_ORIGINAL_WITH_DEAD_MP4_ALTERNATES` |
 
 ## Checking after a change
 

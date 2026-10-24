@@ -3,7 +3,7 @@ import {
   cachedResolveIdentifier,
   fetchPostDetail,
 } from "./rssApi";
-import { getMediaType, getPostMediaUrls } from "./sanitize";
+import { getPostMediaItems } from "./sanitize";
 
 export interface SocialPreview {
   title: string;
@@ -165,8 +165,11 @@ async function postPreview(
         : !bodyText && tagLine
           ? `${blogName}: ${tagLine}`
           : `${blogName} on Better BDSMLR`;
-    const media = getPostMediaUrls(post);
-    const image = media.find((url) => getMediaType(url) === "image");
+    const media = getPostMediaItems(post).flatMap((item) => [
+      item,
+      ...item.fallbacks,
+    ]);
+    const image = media.find((entry) => entry.type === "image")?.url;
 
     let description: string;
     if (isReblog) {

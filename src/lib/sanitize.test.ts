@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   getMediaType,
+  getPostMediaItems,
   getPostMediaUrls,
   transformMediaUrl,
   unwrapMediaUrl,
@@ -8,6 +9,7 @@ import {
 } from '~/lib/sanitize'
 import {
   GIF_ORIGINAL_WITH_MP4_ALTERNATES,
+  GIF_ORIGINAL_WITH_DEAD_MP4_ALTERNATES,
   WEBP_ORIGINAL_WITH_DEAD_MP4_ALTERNATES,
 } from '~/lib/mediaFixtures'
 
@@ -51,6 +53,21 @@ describe('getPostMediaUrls', () => {
   it('prefers a mime-typed alternate for a gif original (gif may be served as video)', () => {
     expect(getPostMediaUrls(GIF_ORIGINAL_WITH_MP4_ALTERNATES)).toEqual([
       'https://ocdn012.bdsmlr.com/uploads/photos/2026/05/170839/bdsmlr-170839-nQ31xdXIZN.mp4?e=1&t=CCCC&cb=DDDD',
+    ])
+  })
+
+  it('provides the gif original as a fallback when the mp4 alternate is dead', () => {
+    expect(getPostMediaItems(GIF_ORIGINAL_WITH_DEAD_MP4_ALTERNATES)).toEqual([
+      {
+        url: 'https://ocdn012.bdsmlr.com/uploads/photos/2026/08/170839/bdsmlr-170839-3pjj815a2w.mp4?e=3&t=KKKK&cb=LLLL',
+        type: 'video',
+        fallbacks: [
+          {
+            url: 'https://ocdn012.bdsmlr.com/uploads/photos/2026/08/170839/bdsmlr-170839-3pjj815a2w.gif?e=3&t=IIII&cb=JJJJ',
+            type: 'image',
+          },
+        ],
+      },
     ])
   })
 

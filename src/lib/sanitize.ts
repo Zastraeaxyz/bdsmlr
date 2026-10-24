@@ -110,12 +110,57 @@ function pickItemUrl(item: {
   return alternateUrl;
 }
 
-export function getPostMediaUrls(post: { mediaRepresentation?: MediaRepresentation }): string[] {
+export interface PostMediaCandidate {
+  url: string
+  type: MediaType
+}
+
+export interface PostMediaItem extends PostMediaCandidate {
+  fallbacks: PostMediaCandidate[]
+}
+
+function candidate(
+  url: string | undefined,
+  mimeType?: string | null,
+): PostMediaCandidate | null {
+  if (!url) return null
+  let type = getMediaType(url)
+  if (mimeType?.startsWith('video/')) type = 'video'
+  else if (mimeType?.startsWith('image/')) type = 'image'
+  return { url, type }
+}
+
+export function getPostMediaItems(post: { mediaRepresentation?: MediaRepresentation }): PostMediaItem[] {
   const items = post.mediaRepresentation?.items
   if (!items || items.length === 0) return []
-  return items
-    .map(pickItemUrl)
-    .filter((url): url is string => !!url)
+
+  const result: PostMediaItem[] = []
+  for (const item of items) {
+    const primaryUrl = pickItemUrl(item)
+    const original = candidate(item.original?.url, item.original?.mimeType)
+    const alternates = (item.alternates ?? [])
+      .map((alt) => candidate(alt.url, alt.mimeType))
+      .filter((alt): alt is PostMediaCandidate => !!alt)
+    const primary =
+      [original, ...alternates].find((entry) => entry?.url === primaryUrl) ??
+      candidate(primaryUrl)
+    if (!primary) continue
+
+    const seen = new Set([primary.url])
+    const fallbacks: PostMediaCandidate[] = []
+    for (const entry of [original, ...alternates]) {
+      if (!entry || seen.has(entry.url)) continue
+      seen.add(entry.url)
+      fallbacks.push(entry)
+    }
+    result.push({ ...primary, fallbacks })
+  }
+
+  return result
+}
+
+export function getPostMediaUrls(post: { mediaRepresentation?: MediaRepresentation }): string[] {
+  return getPostMediaItems(post).map((item) => item.url)
 }
 
 export function processContentHtml(

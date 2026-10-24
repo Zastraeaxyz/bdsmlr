@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **GIF posts with dead video alternates now display**: Some GIF posts expose a `video/mp4` alternate that 404s even though the original GIF is valid. Post cards and detail pages now try the next media candidate when a video or image fails, so these posts fall back to the GIF. Social previews also choose the first working image candidate.
 - **Sort dropdown matches what it shows** — Choosing "Most popular", "Least popular", or a "Most liked/commented/reblogged" option now highlights that same option and loads posts in the expected order. Previously the labels and the actual sort were reversed, so picking "Most popular" could display "Least popular" and return the wrong posts.
 - **Conversations open on the newest message** — Opening a conversation now scrolls to the bottom so you see the most recent messages first, instead of starting at the top of the thread. Sending a reply keeps you at the bottom, while loading older messages keeps your place.
 - **Profile pictures and blog covers display again** — BDSMLR's blog lookup started returning avatar and cover URLs with a broken media proxy prefix, so every profile picture fell back to a letter placeholder. The app now uses the working signed CDN URL from those responses.

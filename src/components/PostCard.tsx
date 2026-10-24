@@ -1,13 +1,11 @@
 import { createSignal, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { PostType, type Post } from "~/lib/api";
-import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import {
   sanitizeHtml,
   processContentHtml,
-  getMediaType,
   getPostMediaUrls,
-  type MediaType,
+  getPostMediaItems,
 } from "~/lib/sanitize";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
@@ -20,6 +18,7 @@ import {
 import { formatRelativeDate } from "~/lib/date";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
+import { PostMedia } from "~/components/PostMedia";
 import { useAuth } from "~/lib/useAuth";
 import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
 
@@ -77,12 +76,7 @@ export function PostCard(props: PostCardProps) {
     }
   };
 
-  const mediaItems = (): { url: string; type: MediaType }[] => {
-    return getPostMediaUrls(post).map((url) => ({
-      url,
-      type: getMediaType(url),
-    }));
-  };
+  const mediaItems = () => getPostMediaItems(post);
 
   const contentHtml = () => {
     const c = post.content;
@@ -133,16 +127,10 @@ export function PostCard(props: PostCardProps) {
         <div class="feed-card-images">
           <For each={mediaItems()}>
             {(item) => (
-              <Show
-                when={item.type === "image"}
-                fallback={<AutoLoopVideo src={item.url} />}
-              >
-                <img
-                  src={item.url}
-                  alt=""
-                  onClick={() => props.onImageClick?.(item.url)}
-                />
-              </Show>
+              <PostMedia
+                item={item}
+                onImageClick={(url) => props.onImageClick?.(url)}
+              />
             )}
           </For>
         </div>

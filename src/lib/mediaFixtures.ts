@@ -61,3 +61,36 @@ export const WEBP_ORIGINAL_WITH_DEAD_MP4_ALTERNATES: Post = {
     ],
   },
 }
+
+export const GIF_ORIGINAL_WITH_DEAD_MP4_ALTERNATES: Post = {
+  id: 877023029,
+  blogId: 163642,
+  blogName: 'Thecagestore',
+  type: 2,
+  variant: 2,
+  originBlogId: 163642,
+  originBlogName: 'Thecagestore',
+  originPostId: 873154076,
+  mediaRepresentation: {
+    kind: 3,
+    items: [
+      {
+        kind: 1,
+        original: {
+          mimeType: null,
+          url: 'https://ocdn012.bdsmlr.com/uploads/photos/2026/08/170839/bdsmlr-170839-3pjj815a2w.gif?e=3&t=IIII&cb=JJJJ',
+        },
+        alternates: [
+          {
+            mimeType: 'video/mp4',
+            url: 'https://ocdn012.bdsmlr.com/uploads/photos/2026/08/170839/bdsmlr-170839-3pjj815a2w.mp4?e=3&t=KKKK&cb=LLLL',
+          },
+          {
+            mimeType: 'video/mp4',
+            url: 'https://ocdn012.bdsmlr.com/uploads/photos/2026/08/170839/bdsmlr-170839-3pjj815a2w.mp4?e=3&t=KKKK&cb=LLLL',
+          },
+        ],
+      },
+    ],
+  },
+}

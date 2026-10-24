@@ -5,17 +5,16 @@ import { getPostDetail, getBlog, deletePost, reportPost, PostType, type Post } f
 import {
   sanitizeHtml,
   processContentHtml,
-  getMediaType,
   getPostMediaUrls,
+  getPostMediaItems,
   upgradeToLightbox,
-  type MediaType,
 } from "~/lib/sanitize";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
-import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
+import { PostMedia } from "~/components/PostMedia";
 import { RelatedPosts } from "~/components/RelatedPosts";
 import { EngagementModal } from "~/components/EngagementModal";
 import {
@@ -219,9 +218,7 @@ function PostDetailView(props: {
     }
   };
 
-  const mediaItems = (): { url: string; type: MediaType }[] => {
-    return getPostMediaUrls(props.post).map((url) => ({ url, type: getMediaType(url) }));
-  };
+  const mediaItems = () => getPostMediaItems(props.post);
 
   const contentHtml = () => {
     const c = props.post.content;
@@ -294,16 +291,10 @@ function PostDetailView(props: {
         <div class="post-detail-images">
           <For each={mediaItems()}>
             {(item) => (
-              <Show
-                when={item.type === "image"}
-                fallback={<AutoLoopVideo src={item.url} />}
-              >
-                <img
-                  src={item.url}
-                  alt=""
-                  onClick={() => props.onImageClick?.(item.url)}
-                />
-              </Show>
+              <PostMedia
+                item={item}
+                onImageClick={(url) => props.onImageClick?.(url)}
+              />
             )}
           </For>
         </div>
