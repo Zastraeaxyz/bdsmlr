@@ -1,7 +1,8 @@
-import { createSignal, For, Show, onCleanup, onMount } from 'solid-js'
+import { createEffect, createSignal, For, Show, onCleanup, onMount } from 'solid-js'
 import { useNavigate, A } from '@solidjs/router'
 import { useAuth } from '../lib/useAuth'
 import { useBlogAvatar } from '../lib/blogAvatar'
+import { unreadCount, refreshMessageUnread } from '../lib/messageUnread'
 
 interface HeaderProps {
   info?: string
@@ -44,6 +45,19 @@ export default function Header(props: HeaderProps) {
     document.removeEventListener('keydown', handleKeydown)
   })
 
+  createEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!user()) return
+    void refreshMessageUnread()
+    const timer = setInterval(() => void refreshMessageUnread(), 60000)
+    const handleFocus = () => void refreshMessageUnread()
+    window.addEventListener('focus', handleFocus)
+    onCleanup(() => {
+      clearInterval(timer)
+      window.removeEventListener('focus', handleFocus)
+    })
+  })
+
   return (
     <header style="view-transition-name: header">
       <h1><A href="/">BDSMLR</A></h1>
@@ -64,6 +78,9 @@ export default function Header(props: HeaderProps) {
               <img class="user-dropdown-avatar" src={avatarUrl()!} alt="" />
             </Show>
             <span>{activeBlog()?.name ?? user()!.blog_name}</span>
+            <Show when={unreadCount() > 0}>
+              <span class="message-badge">{unreadCount()}</span>
+            </Show>
           </button>
           <Show when={showDropdown()}>
             <div class="user-dropdown-menu">
@@ -111,10 +128,13 @@ export default function Header(props: HeaderProps) {
               </A>
               <A
                 href="/messages"
-                class="user-dropdown-item"
+                class="user-dropdown-item user-dropdown-messages"
                 onClick={() => setShowDropdown(false)}
               >
-                Messages
+                <span>Messages</span>
+                <Show when={unreadCount() > 0}>
+                  <span class="message-badge">{unreadCount()}</span>
+                </Show>
               </A>
               <Show when={blogs().length > 1}>
                 <div class="user-dropdown-section">Active blog</div>

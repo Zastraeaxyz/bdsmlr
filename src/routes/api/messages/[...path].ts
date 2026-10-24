@@ -24,11 +24,17 @@ async function proxy(event: APIEvent) {
   headers.delete("referer");
   headers.delete("content-length");
 
-  let body: string | undefined;
+  let body: string | ArrayBuffer | undefined;
   if (method !== "GET" && method !== "HEAD") {
-    body = await event.request.text();
+    const contentType = event.request.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      body = await event.request.text();
+      headers.set("Content-Type", "application/json");
+    } else {
+      body = await event.request.arrayBuffer();
+      if (contentType) headers.set("Content-Type", contentType);
+    }
     headers.set("Accept", "application/json");
-    headers.set("Content-Type", "application/json");
     headers.set("Origin", "https://bdsmlr.com");
     headers.set("Referer", `${BASE}/`);
 
@@ -48,7 +54,12 @@ async function proxy(event: APIEvent) {
     headers.set("X-CSRF-TOKEN", token);
   }
 
-  const upstream = await fetch(target, { method, headers, body, redirect: "manual" });
+  const upstream = await fetch(target, {
+    method,
+    headers,
+    body,
+    redirect: "manual",
+  });
   if (upstream.status >= 300 && upstream.status < 400) {
     return json({ error: "Sign in again to use messages" }, 401);
   }

@@ -29,7 +29,7 @@ Goal: support everything the BDSMLR new web client does, plus the legacy authori
 - Your own activity feed
 - Follower feed
 
-## Phase 3: messaging upgrades
+## Phase 3: messaging upgrades (implemented, pending review)
 
 - Image and media attachments
 - Archive, clear, delete, and block thread actions

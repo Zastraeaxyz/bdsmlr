@@ -20,7 +20,7 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 - **Comments**: Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
-- **Messages**: Open your BDSMLR inbox at `/messages` to read conversations, search threads, and send messages. Start a new conversation by entering a blog name.
+- **Messages**: Open your BDSMLR inbox at `/messages` to read conversations, search threads, and send messages or images. Start a new conversation with recipient autocomplete, archive or clear conversations, block a sender, and see unread counts in the header.
 - **For You and recommendations**: A `/for-you` feed shows recommended posts, with a row of recommended blogs when available.
 - **Related posts**: Post detail pages show a "More like this" feed.
 - **Engagement lists**: Click "Liked by" or "Reblogged by" on a post to see who liked or reblogged it.

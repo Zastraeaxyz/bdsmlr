@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Approximate tag count warning**: When a profile tag search finishes and returns fewer posts than the tag's Top tags count, the page now explains that BDSMLR's tag counts are approximate and can be stale or broader than the blog search. Top tag counts also have a tooltip with the same clarification.
+- **Messaging upgrades**: Messages can now include images, and the conversation header has Block/Unblock, Archive, and Clear actions. New messages show recipient suggestions as you type. Unread conversations add a count badge to the profile menu and the header.
 - **For You and recommendations**: The new `/for-you` feed shows recommended posts and a row of recommended blogs. It is available from the profile menu.
 - **Related posts**: Post detail pages now include a "More like this" section with pagination.
 - **Engagement lists**: Post pages show "Liked by" and "Reblogged by" buttons that open paginated lists of the blogs behind those counts.

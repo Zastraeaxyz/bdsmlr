@@ -35,6 +35,12 @@ export interface MessageThread {
   next_before?: string | null;
 }
 
+export interface MessageSendResponse {
+  thread_id: number;
+  target: { name: string; avatar_url?: string };
+  message: Message;
+}
+
 export class MessagesError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -44,12 +50,13 @@ export class MessagesError extends Error {
 }
 
 async function messageRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const isForm = init?.body instanceof FormData;
   const res = await fetch(`/api/messages${path}`, {
     ...init,
     credentials: "include",
     headers: {
       Accept: "application/json",
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(!isForm && init?.body ? { "Content-Type": "application/json" } : {}),
       ...init?.headers,
     },
   });
@@ -75,10 +82,40 @@ export function getMessageThread(threadId: number, before?: string) {
 }
 
 export function sendMessage(to: string, body: string) {
-  return messageRequest<unknown>("/messages", {
+  return messageRequest<MessageSendResponse>("/messages", {
     method: "POST",
     body: JSON.stringify({ to, body }),
   });
+}
+
+export function sendMessageImage(to: string, image: File) {
+  const form = new FormData();
+  form.append("to", to);
+  form.append("image", image);
+  return messageRequest<MessageSendResponse>("/messages/image", {
+    method: "POST",
+    body: form,
+  });
+}
+
+export function archiveMessageThread(threadId: number) {
+  return messageRequest<{ archived?: boolean }>(
+    `/threads/${threadId}/delete`,
+    { method: "POST" },
+  );
+}
+
+export function clearMessageThread(threadId: number) {
+  return messageRequest<{ ok?: boolean }>(`/threads/${threadId}/clear`, {
+    method: "POST",
+  });
+}
+
+export function blockMessageThread(threadId: number) {
+  return messageRequest<{ blocked?: boolean }>(
+    `/threads/${threadId}/block`,
+    { method: "POST" },
+  );
 }
 
 export async function webLogin(login: string, password: string): Promise<void> {

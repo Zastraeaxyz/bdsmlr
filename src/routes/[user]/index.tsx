@@ -20,7 +20,7 @@ import {
   type Post,
   type TopTag,
 } from "~/lib/api";
-import { GearIcon } from "~/components/Icons";
+import { GearIcon, WarningIcon } from "~/components/Icons";
 import SortDropdown from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
 import SearchHelp from "~/components/SearchHelp";
@@ -41,6 +41,10 @@ import {
 } from "~/lib/searchHistory";
 
 const PAGE_SIZE = 20;
+
+function formatCount(value: number): string {
+  return new Intl.NumberFormat().format(value);
+}
 
 export default function UserFeed() {
   const params = useParams();
@@ -80,6 +84,41 @@ export default function UserFeed() {
     if (!name) return;
     setHideReblogs((prev) => !prev);
     setShowSettings(false);
+  };
+
+  const activeTagName = () => {
+    const match = activeQuery().trim().match(/^tag:(?:"([^"]+)"|(\S+))$/i);
+    const tag = (match?.[1] ?? match?.[2] ?? "").trim();
+    return tag || null;
+  };
+
+  const activeTagCount = () => {
+    const tag = activeTagName();
+    if (!tag) return null;
+    const found = topTags().find(
+      (entry) => entry.name.toLowerCase() === tag.toLowerCase(),
+    );
+    const value = Number(found?.postsCount);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  };
+
+  const tagCountMismatch = () => {
+    const count = activeTagCount();
+    if (count == null || loading() || loadingMore() || error()) {
+      return false;
+    }
+    if (posts().length >= count) return false;
+    return !hasMore() || posts().length < PAGE_SIZE;
+  };
+
+  const emptyMessage = () => {
+    if (!activeQuery()) return "No posts in feed.";
+    const tag = activeTagName();
+    const count = activeTagCount();
+    if (tag && count != null) {
+      return `No posts found for #${tag} in this blog. BDSMLR's tag counts are approximate: Top tags reports ${formatCount(count)}, but the blog search returned none.`;
+    }
+    return "No results found.";
   };
 
   const handleClickOutside = (e: MouseEvent) => {
@@ -357,13 +396,19 @@ export default function UserFeed() {
       {topTags().length > 0 && (
         <section class="top-tags">
           <div class="top-tags-inner">
-            <span class="top-tags-label">Top tags</span>
+            <span
+              class="top-tags-label"
+              title="BDSMLR tag counts are approximate and may not match blog search results."
+            >
+              Top tags
+            </span>
             <div class="top-tags-list">
               <For each={topTags().slice(0, 5)}>
                 {(t) => (
                   <button
                     type="button"
                     class="tag"
+                    title="BDSMLR tag counts are approximate and may not match blog search results."
                     onClick={() => handleTagClick(t.name)}
                   >
                     <span class="tag-name">{t.name}</span>
@@ -407,6 +452,7 @@ export default function UserFeed() {
                   <button
                     type="button"
                     class="tag"
+                    title="BDSMLR tag counts are approximate and may not match blog search results."
                     onClick={() => {
                       handleTagClick(t.name);
                       setShowAllTags(false);
@@ -513,14 +559,22 @@ export default function UserFeed() {
 
         {loading() && <p class="loading">Loading feed…</p>}
 
+        <Show when={tagCountMismatch() && posts().length > 0}>
+          <div class="tag-count-notice">
+            <WarningIcon />
+            <p>
+              BDSMLR's tag counts are approximate. Top tags reports{" "}
+              {formatCount(activeTagCount()!)} posts for #{activeTagName()}, but
+              this blog search returned {formatCount(posts().length)}. The tag
+              index can be stale or broader than the blog search.
+            </p>
+          </div>
+        </Show>
+
         <Show when={!loading()}>
           <Show
             when={posts().length > 0}
-            fallback={
-              <p class="empty">
-                {activeQuery() ? "No results found." : "No posts in feed."}
-              </p>
-            }
+            fallback={<p class="empty">{emptyMessage()}</p>}
           >
             <div
               class={view() === "grid" ? "feed feed-grid" : "feed"}
