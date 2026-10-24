@@ -19,11 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Landing copy**: The hero now highlights the human-built, intuitive UI and contrasts it with the official frontend.
+- **Logged-in visitors skip the landing page**: Opening `/` while signed in now sends you straight to `/home`.
+- **Landing hero**: The hero now shows a real screenshot of the signed-in Following feed instead of a link card preview.
 - **Profile search now matches the global search** — Searching on a profile runs the same tag search as the home feed, scoped to that blog with a `blog:<name>` prefix, instead of a separate filtered activity query. Results use the same sort options and session pagination, so paging through a profile search no longer risks duplicates or skipped pages. You can still clear the search to return to the blog's normal feed.
 - **Profile navigation** — The Feed and Following links on profile pages are now tabs below the profile header, styled like Twitter/Bluesky, with the active tab highlighted by an underline. The BDSMLR and RSS icons are grouped together and right-aligned in the top-right corner of the profile header.
 
 ### Added
 
+- **Age confirmation on the landing page**: First-time visitors now see a full-page 18+ confirmation dialog. Confirming stores the answer in the browser, and the dialog only runs on the landing page.
 - **Feature flags for legacy features**: Compose, drafts, account changes, blog customization, and legacy queue/asks/submissions/settings links are now disabled by default until their BDSMLR backend behavior is verified. Self-hosters can enable each one with a `VITE_FEATURE_*` environment variable.
 - **Account, blog customization, and drafts**: The settings page can now change your email, password, and blog name. A new customization page edits blog title, description, theme, fonts, colors, avatar, header images, display options, and interests. A new drafts page lists saved drafts with Publish, Publish to queue, and Delete actions.
 - **Activity badge**: The Activity item in the profile menu now shows a count when new activity appears on your active blog since you last opened its activity feed.

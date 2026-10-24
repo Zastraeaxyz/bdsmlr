@@ -2805,6 +2805,103 @@ button:disabled {
   color: var(--text-heading);
 }
 
+/* ---- Age gate ---- */
+
+.age-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(6, 10, 15, 0.86);
+  backdrop-filter: blur(10px);
+}
+
+.age-gate-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-card);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.age-gate-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 52px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: rgba(248, 81, 73, 0.14);
+  border: 1px solid rgba(248, 81, 73, 0.45);
+  color: #ff7b72;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.age-gate-card h2 {
+  margin-bottom: 12px;
+  font-size: 24px;
+  letter-spacing: -0.5px;
+}
+
+.age-gate-card p {
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.age-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.age-gate-confirm,
+.age-gate-leave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.age-gate-confirm {
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.age-gate-confirm:hover {
+  background: var(--accent-hover);
+}
+
+.age-gate-leave {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.age-gate-leave:hover {
+  background: var(--bg-hover);
+}
+
+.age-gate-note {
+  margin-top: 18px;
+  font-size: 12px !important;
+}
+
 /* ---- Landing ---- */
 
 .landing-page {
@@ -2929,6 +3026,16 @@ button:disabled {
   color: var(--text-muted);
   font-size: 17px;
   line-height: 1.65;
+}
+
+.landing-dig {
+  max-width: 56ch;
+  margin-top: 16px;
+  padding-left: 14px;
+  border-left: 2px solid var(--accent);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .landing-actions {

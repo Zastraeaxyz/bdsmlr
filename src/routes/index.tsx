@@ -1,8 +1,9 @@
-import { For, Show } from "solid-js";
-import { A } from "@solidjs/router";
+import { createEffect, For, Show } from "solid-js";
+import { A, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { useAuth } from "~/lib/useAuth";
 import { DiscordIcon } from "~/components/Icons";
+import { AgeGate } from "~/components/AgeGate";
 
 const FEATURES = [
   {
@@ -51,10 +52,16 @@ const PREVIEWS = [
 
 export default function LandingPage() {
   const { user, activeBlog } = useAuth();
+  const navigate = useNavigate();
+
+  createEffect(() => {
+    if (user()) navigate("/home", { replace: true });
+  });
 
   return (
     <div class="landing-page">
       <Title>Better BDSMLR</Title>
+      <AgeGate />
       <header class="landing-nav">
         <A href="/" class="landing-brand">
           <span class="landing-brand-mark">BB</span>
@@ -93,7 +100,7 @@ export default function LandingPage() {
       <main class="landing-main">
         <section class="landing-hero">
           <div class="landing-hero-copy">
-            <span class="landing-eyebrow">A front-end for BDSMLR</span>
+            <span class="landing-eyebrow">Intuitive and modern UI</span>
             <h1>
               Browse BDSMLR,
               <br />
@@ -101,8 +108,13 @@ export default function LandingPage() {
             </h1>
             <p class="landing-lede">
               A fast, clean browser client for your feed, search, likes,
-              reblogs, comments, and messages. Sign in with your BDSMLR account
+              reblogs, comments, and messages. Built by a senior developer with
+              an eye for design and detail. Sign in with your BDSMLR account
               and pick up where you left off.
+            </p>
+            <p class="landing-dig">
+              The official frontend is AI slop by comparison: no eye for design
+              and no attention to detail.
             </p>
             <div class="landing-actions">
               <Show
@@ -138,8 +150,8 @@ export default function LandingPage() {
           </div>
           <div class="landing-hero-visual">
             <img
-              src="/previews/preview-site.png"
-              alt="Preview of a Better BDSMLR link card"
+              src="/previews/hero-account.png"
+              alt="The Better BDSMLR Following feed while signed in"
             />
           </div>
         </section>
