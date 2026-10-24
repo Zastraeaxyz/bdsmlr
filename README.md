@@ -4,6 +4,7 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 
 ## Features
 
+- **Landing page** — The public home page at `/` explains the app, lists its features, and shows the social preview cards. Login is at `/login`, and the following feed is at `/home`.
 - **Login** — Authenticate with email/username and password. Includes a legal disclaimer and acknowledgement checkbox.
 - **Following feed** — See recent posts from blogs you follow, with sort and pagination
 - **Blog pages** — View any blog's posts, header, avatar, description, top tags (expandable in a modal), and following count
@@ -20,6 +21,8 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 - **Comments**: Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
+- **Social previews**: Links shared in Discord and other social apps show a branded site card, profile cards with the blog avatar and description, and post cards with the first image.
+- **About the backend**: `/about` explains in plain language why the app needs a server, what happens to your login and cookies, and what the server does not store.
 - **Messages**: Open your BDSMLR inbox at `/messages` to read conversations, search threads, and send messages or images. Start a new conversation with recipient autocomplete, archive or clear conversations, block a sender, and see unread counts in the header.
 - **For You and recommendations**: A `/for-you` feed shows recommended posts, with a row of recommended blogs when available.
 - **Related posts**: Post detail pages show a "More like this" feed.

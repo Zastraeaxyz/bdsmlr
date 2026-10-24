@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Landing page**: The root URL now opens a public landing page with a feature overview, share-preview examples, and a login button. The following feed moved to `/home`, and login remains at `/login`.
+- **Social previews**: Links to the site, profiles, and posts now include Open Graph and Twitter preview data for Discord and other social apps. The home page uses a branded preview image, profiles show the blog avatar and description, and posts show the first image from the post.
+- **About page**: A new `/about` page explains in plain language why the app needs a backend, what it does with your login and cookies, and what it does not store or control.
 - **Approximate tag count warning**: When a profile tag search finishes and returns fewer posts than the tag's Top tags count, the page now explains that BDSMLR's tag counts are approximate and can be stale or broader than the blog search. Top tag counts also have a tooltip with the same clarification.
 - **Messaging upgrades**: Messages can now include images, and the conversation header has Block/Unblock, Archive, and Clear actions. New messages show recipient suggestions as you type. Unread conversations add a count badge to the profile menu and the header.
 - **For You and recommendations**: The new `/for-you` feed shows recommended posts and a row of recommended blogs. It is available from the profile menu.

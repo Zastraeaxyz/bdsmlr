@@ -60,11 +60,12 @@ export default function Header(props: HeaderProps) {
 
   return (
     <header style="view-transition-name: header">
-      <h1><A href="/">BDSMLR</A></h1>
+      <h1><A href="/home">BDSMLR</A></h1>
       {props.info && <span class="user-info">{props.info}</span>}
       {props.children}
-      <A href="/" class="btn-ghost">Home</A>
+      <A href="/home" class="btn-ghost">Home</A>
       <A href="/search" class="btn-ghost">Search</A>
+      <A href="/about" class="btn-ghost">About</A>
       {user() ? (
         <div class="user-dropdown" ref={containerRef}>
           <button

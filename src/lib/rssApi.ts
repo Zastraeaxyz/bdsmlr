@@ -264,3 +264,16 @@ export async function fetchBlogFeed(params: {
     )
   }
 }
+
+export interface ServerPostDetailResponse {
+  post?: Post
+  error?: string
+}
+
+export function fetchPostDetail(postId: number, v2session?: string) {
+  return bdRequest<ServerPostDetailResponse>(
+    '/get-post-detail',
+    { post_id: postId },
+    v2session,
+  )
+}

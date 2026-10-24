@@ -112,6 +112,9 @@ export default function Login() {
             {submitting() ? "Signing in…" : "Sign in"}
           </button>
         </form>
+        <a href="/about" class="login-about-link">
+          About this app and its backend
+        </a>
       </div>
     </>
   );

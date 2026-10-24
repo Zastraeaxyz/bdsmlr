@@ -25,7 +25,7 @@ export default function PostPage() {
   return (
     <div class="home-page">
       <Header info={user()?.blog_name || user()?.username || undefined}>
-        <A href="/" class="btn-ghost">
+        <A href="/home" class="btn-ghost">
           Home
         </A>
         {user() && (
