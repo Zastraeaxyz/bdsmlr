@@ -87,7 +87,21 @@ export default function Header(props: HeaderProps) {
       <Show when={features.legacyCompose}>
         <A href="/compose" class="btn-ghost">Post</A>
       </Show>
-      <A href="/about" class="btn-ghost">About</A>
+      <Show
+        when={!user()}
+        fallback={
+          <a
+            href="https://discord.gg/w3BkPTwf2d"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-ghost"
+          >
+            Discord
+          </a>
+        }
+      >
+        <A href="/about" class="btn-ghost">About</A>
+      </Show>
       {user() ? (
         <div class="user-dropdown" ref={containerRef}>
           <button

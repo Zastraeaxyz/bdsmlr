@@ -2835,30 +2835,14 @@ button:disabled {
   margin-bottom: 10px;
 }
 
-.about-list {
+.about-copy {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.about-item {
-  padding: 12px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.about-item strong {
-  display: block;
-  margin-bottom: 3px;
-  color: var(--text-heading);
-  font-size: 14px;
-}
-
-.about-item p {
+  max-width: 68ch;
   color: var(--text-muted);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .about-callout {

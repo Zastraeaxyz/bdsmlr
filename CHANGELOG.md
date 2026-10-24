@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Simpler About page**: The backend explanation is now a few short conversational paragraphs instead of two long lists.
+- **Discord in the top bar**: Signed-in visitors now see a Discord link where the About link used to be. The About link still appears when signed out.
 - **Profile tag links open in new tabs**: Top tags, the all-tags modal, and post tags on profile pages now use real links. Ctrl-clicking or middle-clicking opens the same tag filter in a new tab.
 - **Softer landing page comparison**: The official frontend comparison now focuses on clutter and polish instead of calling it AI slop.
 - **Post page cleanup**: Removed the duplicate "Liked by" and "Reblogged by" line. A chart icon now opens one combined likes-and-reblogs list. The post report button and the separator lines around the action row are gone. The "More like this" feed now sits outside the post card and keeps loading automatically.
