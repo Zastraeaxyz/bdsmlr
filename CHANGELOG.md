@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Profiles load again and errors stay contained**: Profile pages now load the blog description instead of crashing with a fullscreen "BlogDescription is not defined" error. If a page or the profile header fails unexpectedly, the app shows a friendly retry panel and keeps the rest of the profile available, and navigating elsewhere clears the error.
 - **Reblogs now appear on your blog**: The reblog request was missing the `typerb` field, so BDSMLR updated the reblog count but did not create a reblog post on your profile. Live and queued reblogs now send the correct reblog type, so the post appears in your blog feed.
 - **GIF posts with dead video alternates now display**: Some GIF posts expose a `video/mp4` alternate that 404s even though the original GIF is valid. Post cards and detail pages now try the next media candidate when a video or image fails, so these posts fall back to the GIF. Social previews also choose the first working image candidate.
 - **RSS feeds skip dead video alternates**: Blog RSS feeds now use the image fallback for GIF posts instead of a dead `video/mp4` enclosure, so feed readers receive media that actually loads.

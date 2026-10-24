@@ -23,6 +23,8 @@ import {
 } from '~/lib/api'
 import Header from '~/components/Header'
 import { BdsmlrIcon, RssIcon, WarningIcon } from '~/components/Icons'
+import { BlogDescription } from '~/components/BlogDescription'
+import { AppErrorBoundary } from '~/components/AppErrorBoundary'
 import { FeedSettingsProvider } from '~/lib/feedSettings'
 import { useAuth } from '~/lib/useAuth'
 import {
@@ -281,7 +283,8 @@ export default function UserLayout(props: ParentProps) {
       <Show when={blog()}>
         {(b) => (
           <section class="blog-header">
-            <div class="blog-header-inner">
+            <AppErrorBoundary compact>
+              <div class="blog-header-inner">
               {b().avatarUrl && (
                 <img class="blog-avatar" src={b().avatarUrl} alt="" />
               )}
@@ -383,6 +386,7 @@ export default function UserLayout(props: ParentProps) {
                 </Show>
               </div>
             </div>
+            </AppErrorBoundary>
             <Show when={actionError()}>
               <p class="action-error blog-action-error">{actionError()}</p>
             </Show>
@@ -468,9 +472,11 @@ export default function UserLayout(props: ParentProps) {
           </div>
         </section>
       </Show>
-      <FeedSettingsProvider hideReblogs={hideReblogs} setHideReblogs={setHideReblogs}>
-        {props.children}
-      </FeedSettingsProvider>
+      <AppErrorBoundary compact>
+        <FeedSettingsProvider hideReblogs={hideReblogs} setHideReblogs={setHideReblogs}>
+          {props.children}
+        </FeedSettingsProvider>
+      </AppErrorBoundary>
 
       <Show when={showReport()}>
         <div

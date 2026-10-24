@@ -4,6 +4,7 @@ import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 import { AuthProvider } from "~/lib/useAuth";
 import { Analytics } from "~/components/Analytics";
+import { AppErrorBoundary } from "~/components/AppErrorBoundary";
 import "./index.css";
 
 export default function App() {
@@ -13,7 +14,9 @@ export default function App() {
         <AuthProvider>
           <MetaProvider>
             <Analytics />
-            <Suspense>{props.children}</Suspense>
+            <AppErrorBoundary>
+              <Suspense>{props.children}</Suspense>
+            </AppErrorBoundary>
           </MetaProvider>
         </AuthProvider>
       )}
