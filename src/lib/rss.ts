@@ -1,6 +1,20 @@
 import RSS from 'rss'
 import type { Blog, Post } from './api'
-import { getPostMediaUrls, getMediaType } from './sanitize'
+import { getPostMediaItems } from './sanitize'
+
+function getRssMedia(post: Post) {
+  const seen = new Set<string>()
+  return getPostMediaItems(post)
+    .map((item) => {
+      if (item.type === 'image') return item
+      return item.fallbacks.find((fallback) => fallback.type === 'image') ?? item
+    })
+    .filter((item) => {
+      if (seen.has(item.url)) return false
+      seen.add(item.url)
+      return true
+    })
+}
 
 function getMimeType(url: string): string {
   const ext = url.split('?')[0].split('.').pop()?.toLowerCase()
@@ -111,7 +125,7 @@ export function generateRss({ blog, posts, feedUrl, nextUrl }: RssInput): string
   })
 
   for (const post of posts) {
-    const mediaUrls = getPostMediaUrls(post)
+    const media = getRssMedia(post)
 
     const itemOpts: RSS.ItemOptions = {
       title: postTitle(post),
@@ -123,18 +137,18 @@ export function generateRss({ blog, posts, feedUrl, nextUrl }: RssInput): string
       categories: post.tags,
     }
 
-    if (mediaUrls.length > 0) {
+    if (media.length > 0) {
       itemOpts.enclosure = {
-        url: mediaUrls[0],
-        type: getMimeType(mediaUrls[0]),
+        url: media[0].url,
+        type: getMimeType(media[0].url),
       }
 
-      itemOpts.custom_elements = mediaUrls.map((url) => ({
+      itemOpts.custom_elements = media.map((entry) => ({
         'media:content': {
           _attr: {
-            url,
-            type: getMimeType(url),
-            medium: getMediaType(url) === 'video' ? 'video' : 'image',
+            url: entry.url,
+            type: getMimeType(entry.url),
+            medium: entry.type === 'video' ? 'video' : 'image',
           },
         },
       }))
