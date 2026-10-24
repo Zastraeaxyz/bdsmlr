@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Landing AI spend section simplified**: The per-model breakdown is gone. The section now says that most work uses DeepSeek V4.1 Flash, above the total spend and session count.
 - **Simpler About page**: The backend explanation is now a few short conversational paragraphs instead of two long lists.
 - **Discord in the top bar**: Signed-in visitors now see a Discord link where the About link used to be. The About link still appears when signed out.
 - **Profile tag links open in new tabs**: Top tags, the all-tags modal, and post tags on profile pages now use real links. Ctrl-clicking or middle-clicking opens the same tag filter in a new tab.

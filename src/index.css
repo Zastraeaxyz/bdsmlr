@@ -3309,53 +3309,6 @@ button:disabled {
   letter-spacing: 0.05em;
 }
 
-.landing-ai-models {
-  max-width: 720px;
-}
-
-.landing-ai-models h3 {
-  margin-bottom: 16px;
-  font-size: 16px;
-}
-
-.landing-ai-model {
-  margin-bottom: 16px;
-}
-
-.landing-ai-model-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
-  font-size: 13px;
-  color: var(--text);
-}
-
-.landing-ai-model-head span:last-child {
-  color: var(--text-muted);
-}
-
-.landing-ai-bar {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-}
-
-.landing-ai-bar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #58a6ff, #2f6fbf);
-}
-
-.landing-ai-model-meta {
-  margin-top: 5px;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
 .landing-ai-note {
   margin-top: 20px;
   color: var(--text-muted);

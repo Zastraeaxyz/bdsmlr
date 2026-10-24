@@ -37,20 +37,6 @@ const AI_COST = {
   total: 4.72,
   sessions: 9,
   asOf: "October 24, 2026",
-  models: [
-    {
-      name: "DeepSeek V4.1 Flash",
-      sessions: 6,
-      share: 66.7,
-      cost: 4.66,
-    },
-    {
-      name: "DeepSeek V4 Flash",
-      sessions: 3,
-      share: 33.3,
-      cost: 0.06,
-    },
-  ],
 };
 
 const PREVIEWS = [
@@ -200,9 +186,9 @@ export default function LandingPage() {
             <span class="landing-kicker">AI spend</span>
             <h2>Built with AI, and honest about it</h2>
             <p>
-              This site is built and maintained with OpenCode. Here is the
-              running tally from this repository's local session logs as of{" "}
-              {AI_COST.asOf}.
+              This site is built and maintained with OpenCode, primarily using
+              DeepSeek V4.1 Flash. Here is the running tally from this
+              repository's local session logs as of {AI_COST.asOf}.
             </p>
           </div>
           <div class="landing-ai-stats">
@@ -214,25 +200,6 @@ export default function LandingPage() {
               <span class="landing-ai-value">{AI_COST.sessions}</span>
               <span class="landing-ai-label">OpenCode sessions</span>
             </div>
-          </div>
-          <div class="landing-ai-models">
-            <h3>Models by session share</h3>
-            <For each={AI_COST.models}>
-              {(model) => (
-                <div class="landing-ai-model">
-                  <div class="landing-ai-model-head">
-                    <span>{model.name}</span>
-                    <span>{model.share}% of sessions</span>
-                  </div>
-                  <div class="landing-ai-bar">
-                    <span style={{ width: `${model.share}%` }} />
-                  </div>
-                  <div class="landing-ai-model-meta">
-                    {model.sessions} sessions · ${model.cost.toFixed(2)}
-                  </div>
-                </div>
-              )}
-            </For>
           </div>
           <p class="landing-ai-note">
             Costs come from local OpenCode session records and will change as
