@@ -4,6 +4,7 @@ import {
   fetchPostDetail,
 } from "./rssApi";
 import { getPostMediaItems } from "./sanitize";
+import { RESERVED_TOP_LEVEL } from "./appRoutes";
 
 export interface SocialPreview {
   title: string;
@@ -12,24 +13,6 @@ export interface SocialPreview {
   image: string;
   type: "website" | "profile" | "article";
 }
-
-const RESERVED_TOP_LEVEL = new Set([
-  "about",
-  "activity",
-  "api",
-  "assets",
-  "favicon.svg",
-  "following",
-  "for-you",
-  "icons.svg",
-  "liked",
-  "login",
-  "messages",
-  "og-default.png",
-  "search",
-  "tag",
-  "v2",
-]);
 
 const SOCIAL_BOT =
   /discordbot|twitterbot|facebookexternalhit|slackbot|telegrambot|linkedinbot|pinterest|redditbot|embedly|whatsapp|skypeuripreview|vkshare|applebot|googlebot|bingbot|yandex|bot\b/i;

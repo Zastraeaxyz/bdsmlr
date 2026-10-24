@@ -3,6 +3,7 @@ import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 import { AuthProvider } from "~/lib/useAuth";
+import { Analytics } from "~/components/Analytics";
 import "./index.css";
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
       root={props => (
         <AuthProvider>
           <MetaProvider>
+            <Analytics />
             <Suspense>{props.children}</Suspense>
           </MetaProvider>
         </AuthProvider>
