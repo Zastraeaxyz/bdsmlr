@@ -5,6 +5,7 @@ import { useBlogAvatar } from '../lib/blogAvatar'
 import { DiscordIcon } from './Icons'
 import { unreadCount, refreshMessageUnread } from '../lib/messageUnread'
 import { activityUnreadCount, refreshActivityUnread } from '../lib/activityUnread'
+import { features } from '../lib/features'
 
 interface HeaderProps {
   info?: string
@@ -84,7 +85,9 @@ export default function Header(props: HeaderProps) {
       {props.children}
       <A href="/home" class="btn-ghost">Home</A>
       <A href="/search" class="btn-ghost">Search</A>
-      <A href="/compose" class="btn-ghost">Post</A>
+      <Show when={features.legacyCompose}>
+        <A href="/compose" class="btn-ghost">Post</A>
+      </Show>
       <A href="/about" class="btn-ghost">About</A>
       {user() ? (
         <div class="user-dropdown" ref={containerRef}>
@@ -136,13 +139,15 @@ export default function Header(props: HeaderProps) {
                   <span class="message-badge">{activityUnreadCount()}</span>
                 </Show>
               </A>
-              <A
-                href="/compose"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
-                Compose post
-              </A>
+              <Show when={features.legacyCompose}>
+                <A
+                  href="/compose"
+                  class="user-dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  Compose post
+                </A>
+              </Show>
               <A
                 href="/search"
                 class="user-dropdown-item"
@@ -157,20 +162,24 @@ export default function Header(props: HeaderProps) {
               >
                 Liked
               </A>
-              <A
-                href="/customize"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
-                Customize blog
-              </A>
-              <A
-                href="/drafts"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
-                Drafts
-              </A>
+              <Show when={features.legacyBlogCustomization}>
+                <A
+                  href="/customize"
+                  class="user-dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  Customize blog
+                </A>
+              </Show>
+              <Show when={features.legacyDrafts}>
+                <A
+                  href="/drafts"
+                  class="user-dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  Drafts
+                </A>
+              </Show>
               <A
                 href="/settings"
                 class="user-dropdown-item"

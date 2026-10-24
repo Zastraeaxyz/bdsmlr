@@ -3,6 +3,7 @@ import { createEffect, createSignal, For, Show } from "solid-js";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
 import { useAuth } from "~/lib/useAuth";
+import { features } from "~/lib/features";
 import {
   changeLegacyBlogName,
   changeLegacyEmail,
@@ -106,8 +107,9 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section class="settings-section">
-            <h2 class="social-list-title">Account changes</h2>
+          <Show when={features.legacyAccountSettings}>
+            <section class="settings-section">
+              <h2 class="social-list-title">Account changes</h2>
             <Show when={error()}>
               <p class="error">{error()}</p>
             </Show>
@@ -168,8 +170,9 @@ export default function SettingsPage() {
               >
                 {busy() === "blogname" ? "Saving…" : "Change blog name"}
               </button>
-            </form>
-          </section>
+              </form>
+            </section>
+          </Show>
 
           <section class="settings-section">
             <h2 class="social-list-title">Your blogs</h2>
@@ -187,53 +190,76 @@ export default function SettingsPage() {
           <section class="settings-section">
             <h2 class="social-list-title">More</h2>
             <div class="settings-links">
-              <A href="/customize" class="settings-link">
-                Customize blog
-              </A>
+              <Show when={features.legacyBlogCustomization}>
+                <A href="/customize" class="settings-link">
+                  Customize blog
+                </A>
+              </Show>
               <A href="/blocked" class="settings-link">
                 Blocked blogs
               </A>
-              <A href="/compose" class="settings-link">
-                Compose post
-              </A>
-              <a
-                href="https://bdsmlr.com/settings"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="settings-link"
-              >
-                BDSMLR settings
-              </a>
-              <a
-                href="https://bdsmlr.com/queuev2"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="settings-link"
-              >
-                BDSMLR queue
-              </a>
-              <a
-                href="https://bdsmlr.com/drafts"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="settings-link"
-              >
-                BDSMLR drafts
-              </a>
-              <a
-                href="https://bdsmlr.com/asks"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="settings-link"
-              >
-                BDSMLR asks
-              </a>
+              <Show when={features.legacyCompose}>
+                <A href="/compose" class="settings-link">
+                  Compose post
+                </A>
+              </Show>
+              <Show when={features.legacyAdvancedSettings}>
+                <a
+                  href="https://bdsmlr.com/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="settings-link"
+                >
+                  BDSMLR settings
+                </a>
+              </Show>
+              <Show when={features.legacyQueue}>
+                <a
+                  href="https://bdsmlr.com/queuev2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="settings-link"
+                >
+                  BDSMLR queue
+                </a>
+              </Show>
+              <Show when={features.legacyDrafts}>
+                <a
+                  href="https://bdsmlr.com/drafts"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="settings-link"
+                >
+                  BDSMLR drafts
+                </a>
+              </Show>
+              <Show when={features.legacyAsks}>
+                <a
+                  href="https://bdsmlr.com/asks"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="settings-link"
+                >
+                  BDSMLR asks
+                </a>
+              </Show>
+              <Show when={features.legacySubmissions}>
+                <a
+                  href="https://bdsmlr.com/submissions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="settings-link"
+                >
+                  BDSMLR submissions
+                </a>
+              </Show>
             </div>
           </section>
 
           <p class="compose-note">
-            Most account settings are available here. Some advanced blog
-            options, asks, and queue management still live on BDSMLR.
+            Account changes, customization, drafts, and other legacy tools are
+            hidden until their BDSMLR backend behavior is verified. Self-hosters
+            can enable them with feature flags.
           </p>
         </main>
       </div>

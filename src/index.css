@@ -3570,3 +3570,23 @@ button:disabled {
     height: 180px;
   }
 }
+
+.feature-disabled {
+  max-width: 560px;
+  margin: 40px auto;
+  padding: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.feature-disabled h2 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.feature-disabled p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}

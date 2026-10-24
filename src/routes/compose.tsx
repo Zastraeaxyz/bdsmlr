@@ -3,6 +3,8 @@ import { useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
 import { useAuth } from "~/lib/useAuth";
+import { features } from "~/lib/features";
+import { FeatureDisabled } from "~/components/FeatureDisabled";
 import {
   LegacyError,
   createAudioPost,
@@ -207,6 +209,8 @@ export default function ComposePage() {
   };
 
   const fileMultiple = () => kind() === "photo";
+
+  if (!features.legacyCompose) return <FeatureDisabled title="Compose" />;
 
   return (
     <Show when={!authLoading() && user()} fallback={null}>
@@ -432,43 +436,60 @@ export default function ComposePage() {
             rejects or rate limits the request, wait a moment and try again.
           </p>
 
-          <section class="compose-legacy">
-            <h3>Legacy tools</h3>
-            <p>
-              Queue management, drafts, asks, and blog settings still live on
-              BDSMLR.
-            </p>
-            <div class="compose-legacy-links">
-              <a
-                href="https://bdsmlr.com/queuev2"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Queue
-              </a>
-              <a
-                href="https://bdsmlr.com/drafts"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Drafts
-              </a>
-              <a
-                href="https://bdsmlr.com/asks"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Asks
-              </a>
-              <a
-                href="https://bdsmlr.com/settings"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Settings
-              </a>
-            </div>
-          </section>
+          <Show
+            when={
+              features.legacyQueue ||
+              features.legacyDrafts ||
+              features.legacyAsks ||
+              features.legacyAdvancedSettings
+            }
+          >
+            <section class="compose-legacy">
+              <h3>Legacy tools</h3>
+              <p>
+                Queue management, drafts, asks, and blog settings still live on
+                BDSMLR.
+              </p>
+              <div class="compose-legacy-links">
+                <Show when={features.legacyQueue}>
+                  <a
+                    href="https://bdsmlr.com/queuev2"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Queue
+                  </a>
+                </Show>
+                <Show when={features.legacyDrafts}>
+                  <a
+                    href="https://bdsmlr.com/drafts"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Drafts
+                  </a>
+                </Show>
+                <Show when={features.legacyAsks}>
+                  <a
+                    href="https://bdsmlr.com/asks"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Asks
+                  </a>
+                </Show>
+                <Show when={features.legacyAdvancedSettings}>
+                  <a
+                    href="https://bdsmlr.com/settings"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Settings
+                  </a>
+                </Show>
+              </div>
+            </section>
+          </Show>
         </main>
       </div>
     </Show>

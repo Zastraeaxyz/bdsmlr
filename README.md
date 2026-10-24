@@ -21,11 +21,11 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 - **Comments**: Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
-- **Account and blog settings**: `/settings` can change your email, password, and blog name. `/customize` edits blog title, description, theme, colors, images, display options, and interests. `/drafts` lists drafts and can publish, queue, or delete them.
+- **Account and blog settings**: When enabled by feature flag, `/settings` can change your email, password, and blog name. `/customize` edits blog title, description, theme, colors, images, display options, and interests. `/drafts` lists drafts and can publish, queue, or delete them.
 - **Archive and related tags**: Profiles have an Archive tab with month and post-type filters, and a Related tags row based on tag affinity.
 - **Unread activity badge**: The Activity menu item shows a count when new posts, reblogs, likes, or comments appear since you last opened your activity feed.
 - **Settings and blocked blogs**: `/settings` shows account and blog shortcuts, and `/blocked` lists blocked blogs with an Unblock button.
-- **Compose posts**: The `/compose` page publishes text, quote, link, chat, image, video, and audio posts. Text, image, and video posts can also be saved as drafts or added to the queue.
+- **Compose posts**: When enabled by feature flag, the `/compose` page publishes text, quote, link, chat, image, video, and audio posts. Text, image, and video posts can also be saved as drafts or added to the queue.
 - **Social previews**: Links shared in Discord and other social apps show a branded site card, profile cards with the blog avatar and description, and post cards with the first image.
 - **Discord community**: The landing page and avatar menu link to the official Discord invite.
 - **About the backend**: `/about` explains in plain language why the app needs a server, what happens to your login and cookies, and what the server does not store.
@@ -39,6 +39,22 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Blog social actions**: Follow and unfollow blogs, see followers and other blogs owned by the same user, block or unblock a blog, report a blog, and start a message from a profile.
 - **Post controls**: Report posts, delete posts from the active blog, and use the reblog composer to add a note, add tags, or send the reblog to your queue.
 - **Multiple blogs**: Switch the active blog from the profile menu. Likes, reblogs, comments, follows, blocks, and reports use the active blog.
+
+## Feature flags
+
+Legacy authoring features are disabled by default until their BDSMLR backend behavior is confirmed. Enable them with Vite environment variables:
+
+- `VITE_FEATURE_LEGACY_COMPOSE=true` enables `/compose` and the Post links.
+- `VITE_FEATURE_LEGACY_DRAFTS=true` enables `/drafts` and draft links.
+- `VITE_FEATURE_LEGACY_ACCOUNT_SETTINGS=true` enables email, password, and blog name changes.
+- `VITE_FEATURE_LEGACY_BLOG_CUSTOMIZATION=true` enables `/customize`.
+- `VITE_FEATURE_LEGACY_QUEUE=true` shows the BDSMLR queue link.
+- `VITE_FEATURE_LEGACY_ASKS=true` shows the BDSMLR asks link.
+- `VITE_FEATURE_LEGACY_SUBMISSIONS=true` shows the BDSMLR submissions link.
+- `VITE_FEATURE_LEGACY_ADVANCED_SETTINGS=true` shows the BDSMLR settings link.
+- `VITE_FEATURE_POST_EDITING=true` reserves the published-post editing flag.
+
+Flags are build-time values. Restart the dev server or rebuild after changing them.
 
 ## Disclaimer
 

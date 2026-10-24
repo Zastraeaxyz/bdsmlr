@@ -3,6 +3,8 @@ import { useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
 import { useAuth } from "~/lib/useAuth";
+import { features } from "~/lib/features";
+import { FeatureDisabled } from "~/components/FeatureDisabled";
 import {
   getBlogCustomization,
   LegacyError,
@@ -90,7 +92,7 @@ export default function CustomizePage() {
   };
 
   createEffect(() => {
-    if (authLoading() || !user()) return;
+    if (authLoading() || !user() || !features.legacyBlogCustomization) return;
     activeBlog()?.name;
     void load();
   });
@@ -180,6 +182,10 @@ export default function CustomizePage() {
       if (backgroundInput) backgroundInput.value = "";
     }
   };
+
+  if (!features.legacyBlogCustomization) {
+    return <FeatureDisabled title="Customize blog" />;
+  }
 
   return (
     <Show when={!authLoading() && user()} fallback={null}>

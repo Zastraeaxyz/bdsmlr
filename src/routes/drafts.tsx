@@ -3,6 +3,8 @@ import { useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
 import { useAuth } from "~/lib/useAuth";
+import { features } from "~/lib/features";
+import { FeatureDisabled } from "~/components/FeatureDisabled";
 import {
   deleteLegacyDraft,
   getLegacyDrafts,
@@ -43,7 +45,7 @@ export default function DraftsPage() {
   };
 
   createEffect(() => {
-    if (authLoading() || !user()) return;
+    if (authLoading() || !user() || !features.legacyDrafts) return;
     void load();
   });
 
@@ -81,6 +83,8 @@ export default function DraftsPage() {
       "Draft deleted.",
     );
   };
+
+  if (!features.legacyDrafts) return <FeatureDisabled title="Drafts" />;
 
   return (
     <Show when={!authLoading() && user()} fallback={null}>
