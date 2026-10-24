@@ -32,6 +32,27 @@ const FEATURES = [
   },
 ];
 
+
+const AI_COST = {
+  total: 4.72,
+  sessions: 9,
+  asOf: "October 24, 2026",
+  models: [
+    {
+      name: "DeepSeek V4.1 Flash",
+      sessions: 6,
+      share: 66.7,
+      cost: 4.66,
+    },
+    {
+      name: "DeepSeek V4 Flash",
+      sessions: 3,
+      share: 33.3,
+      cost: 0.06,
+    },
+  ],
+};
+
 const PREVIEWS = [
   {
     src: "/previews/preview-site.png",
@@ -110,8 +131,8 @@ export default function LandingPage() {
               and pick up where you left off.
             </p>
             <p class="landing-dig">
-              The official frontend is AI slop by comparison: no eye for design
-              and no attention to detail.
+              The official frontend feels cluttered by comparison, with less
+              attention to design and detail.
             </p>
             <div class="landing-actions">
               <Show
@@ -174,6 +195,51 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <section class="landing-section landing-ai">
+          <div class="landing-section-head">
+            <span class="landing-kicker">AI spend</span>
+            <h2>Built with AI, and honest about it</h2>
+            <p>
+              This site is built and maintained with OpenCode. Here is the
+              running tally from this repository's local session logs as of{" "}
+              {AI_COST.asOf}.
+            </p>
+          </div>
+          <div class="landing-ai-stats">
+            <div class="landing-ai-stat">
+              <span class="landing-ai-value">${AI_COST.total.toFixed(2)}</span>
+              <span class="landing-ai-label">Total AI spend</span>
+            </div>
+            <div class="landing-ai-stat">
+              <span class="landing-ai-value">{AI_COST.sessions}</span>
+              <span class="landing-ai-label">OpenCode sessions</span>
+            </div>
+          </div>
+          <div class="landing-ai-models">
+            <h3>Models by session share</h3>
+            <For each={AI_COST.models}>
+              {(model) => (
+                <div class="landing-ai-model">
+                  <div class="landing-ai-model-head">
+                    <span>{model.name}</span>
+                    <span>{model.share}% of sessions</span>
+                  </div>
+                  <div class="landing-ai-bar">
+                    <span style={{ width: `${model.share}%` }} />
+                  </div>
+                  <div class="landing-ai-model-meta">
+                    {model.sessions} sessions · ${model.cost.toFixed(2)}
+                  </div>
+                </div>
+              )}
+            </For>
+          </div>
+          <p class="landing-ai-note">
+            Costs come from local OpenCode session records and will change as
+            work continues.
+          </p>
+        </section>
+
         <section class="landing-section landing-previews">
           <div class="landing-section-head">
             <span class="landing-kicker">Share previews</span>
@@ -201,6 +267,28 @@ export default function LandingPage() {
             Discord and X both read the same Open Graph and Twitter metadata.
             No extra setup is needed.
           </p>
+        </section>
+
+        <section class="landing-section landing-contact">
+          <div class="landing-contact-card">
+            <div>
+              <span class="landing-kicker">For the BDSMLR team</span>
+              <h2>Own BDSMLR?</h2>
+              <p>
+                If you like what you see here, reach out on Discord. I would be
+                happy to help improve the official site.
+              </p>
+            </div>
+            <a
+              href="https://discord.gg/w3BkPTwf2d"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="landing-cta landing-contact-link"
+            >
+              <DiscordIcon class="icon" />
+              Message me on Discord
+            </a>
+          </div>
         </section>
       </main>
 

@@ -288,7 +288,7 @@ export default function UserLayout(props: ParentProps) {
               <div class="blog-header-info">
                 {b().title && <h2 class="blog-title">{b().title}</h2>}
                 {b().description && (
-                  <p class="blog-description">{b().description}</p>
+                  <BlogDescription text={b().description!} />
                 )}
                 <p class="blog-stats">
                   {followersCount() ?? b().followersCount ?? 0} followers

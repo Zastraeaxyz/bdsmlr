@@ -26,6 +26,7 @@ export interface PostCardProps {
   post: Post;
   onTagClick?: (tag: string) => void;
   onImageClick?: (url: string) => void;
+  tagHref?: (tag: string) => string;
 }
 
 export function PostCard(props: PostCardProps) {
@@ -143,13 +144,38 @@ export function PostCard(props: PostCardProps) {
                 when={props.onTagClick}
                 fallback={<span class="tag">#{t}</span>}
               >
-                <button
-                  type="button"
-                  class="tag"
-                  onClick={() => props.onTagClick?.(t)}
+                <Show
+                  when={props.tagHref}
+                  fallback={
+                    <button
+                      type="button"
+                      class="tag"
+                      onClick={() => props.onTagClick?.(t)}
+                    >
+                      #{t}
+                    </button>
+                  }
                 >
-                  #{t}
-                </button>
+                  <a
+                    href={props.tagHref!(t)}
+                    class="tag"
+                    onClick={(e) => {
+                      if (
+                        e.metaKey ||
+                        e.ctrlKey ||
+                        e.shiftKey ||
+                        e.altKey ||
+                        e.button !== 0
+                      ) {
+                        return;
+                      }
+                      e.preventDefault();
+                      props.onTagClick?.(t);
+                    }}
+                  >
+                    #{t}
+                  </a>
+                </Show>
               </Show>
             )}
           </For>

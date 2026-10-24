@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Profile tag links open in new tabs**: Top tags, the all-tags modal, and post tags on profile pages now use real links. Ctrl-clicking or middle-clicking opens the same tag filter in a new tab.
+- **Softer landing page comparison**: The official frontend comparison now focuses on clutter and polish instead of calling it AI slop.
 - **Post page cleanup**: Removed the duplicate "Liked by" and "Reblogged by" line. A chart icon now opens one combined likes-and-reblogs list. The post report button and the separator lines around the action row are gone. The "More like this" feed now sits outside the post card and keeps loading automatically.
 - **Related tags removed, tag affinity added to search**: Profiles no longer show the Related tags row. Blog search now shows Tag affinity, based on the tags of posts you liked, with links that run the same tag search from the home feed.
 - **For You is disabled by default**: The For You feed is behind a feature flag for now because it loads slowly and lacks pagination. The Following feed at `/home` remains the default way to browse.
@@ -33,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Landing page AI spend tally**: The landing page now shows the total OpenCode spend for this repository, the number of sessions, and the share of sessions by model.
+- **Expandable blog descriptions**: Long profile descriptions are now truncated to a tweet-length preview. A Show more button reveals the full text, Show less collapses it again, line breaks are preserved, and links are clickable.
+- **Landing page contact**: The landing page now invites the BDSMLR team to reach out on Discord if they want help improving the official site.
 - **Auto-loading pagination**: Every list with a Load more button now fetches the next page automatically when the button scrolls into view. This covers search results, For You, activity, follower feeds, comments, likes and reblogs, related posts, and blog search.
 - **Age confirmation on the landing page**: First-time visitors now see a full-page 18+ confirmation dialog. Confirming stores the answer in the browser, and the dialog only runs on the landing page.
 - **Feature flags for legacy features**: Compose, drafts, account changes, blog customization, and legacy queue/asks/submissions/settings links are now disabled by default until their BDSMLR backend behavior is verified. Each one has a `VITE_FEATURE_*` flag that stays disabled until its backend behavior is verified.

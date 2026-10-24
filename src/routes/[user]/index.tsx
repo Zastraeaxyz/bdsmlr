@@ -382,13 +382,27 @@ export default function UserFeed() {
     runSearch("");
   };
 
-  const handleTagClick = (tag: string) => {
+  const tagQuery = (tag: string) =>
+    (query() ? query() + " " : "") +
+    `tag:${tag.includes(" ") ? `"${tag}"` : tag}`;
+
+  const tagHref = (tag: string) => {
     const name = slug();
-    if (!name) return;
-    const q =
-      (query() ? query() + " " : "") +
-      `tag:${tag.includes(" ") ? `"${tag}"` : tag}`;
-    runSearch(q);
+    if (!name) return "#";
+    return `/${name}?tag_name=${encodeURIComponent(tagQuery(tag))}`;
+  };
+
+  const handleTagClick = (tag: string) => {
+    if (!slug()) return;
+    runSearch(tagQuery(tag));
+  };
+
+  const tagAnchorClick = (e: MouseEvent, tag: string) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      return;
+    }
+    e.preventDefault();
+    handleTagClick(tag);
   };
 
   return (
@@ -405,15 +419,15 @@ export default function UserFeed() {
             <div class="top-tags-list">
               <For each={topTags().slice(0, 5)}>
                 {(t) => (
-                  <button
-                    type="button"
+                  <a
+                    href={tagHref(t.name)}
                     class="tag"
                     title="BDSMLR tag counts are approximate and may not match blog search results."
-                    onClick={() => handleTagClick(t.name)}
+                    onClick={(e) => tagAnchorClick(e, t.name)}
                   >
                     <span class="tag-name">{t.name}</span>
                     <span class="tag-count">{t.postsCount}</span>
-                  </button>
+                  </a>
                 )}
               </For>
               {topTags().length > 5 && (
@@ -449,18 +463,28 @@ export default function UserFeed() {
             <div class="tag-modal-list">
               <For each={topTags().slice(5)}>
                 {(t) => (
-                  <button
-                    type="button"
+                  <a
+                    href={tagHref(t.name)}
                     class="tag"
                     title="BDSMLR tag counts are approximate and may not match blog search results."
-                    onClick={() => {
+                    onClick={(e) => {
+                      if (
+                        e.metaKey ||
+                        e.ctrlKey ||
+                        e.shiftKey ||
+                        e.altKey ||
+                        e.button !== 0
+                      ) {
+                        return;
+                      }
+                      e.preventDefault();
                       handleTagClick(t.name);
                       setShowAllTags(false);
                     }}
                   >
                     <span class="tag-name">{t.name}</span>
                     <span class="tag-count">{t.postsCount}</span>
-                  </button>
+                  </a>
                 )}
               </For>
             </div>
@@ -584,6 +608,7 @@ export default function UserFeed() {
                   <PostCard
                     post={post}
                     onTagClick={handleTagClick}
+                    tagHref={tagHref}
                     onImageClick={(url) =>
                       setLightboxUrl(upgradeToLightbox(url))
                     }
