@@ -2,6 +2,7 @@ import { createContext, createSignal, createEffect, useContext, onCleanup, type 
 import { getCurrentUser, setCurrentUser, login as apiLogin, type AuthUser } from "./api"
 import { fetchAllFollowingIds, setCachedFollowingIds, clearCachedFollowingIds } from "./following"
 import { clearPostInteractions } from "./postInteractions"
+import { clearActivityUnread } from "./activityUnread"
 import { webLogin, webLogout } from "./messages"
 import { activeBlogId, setActiveBlogId, clearActiveBlogId } from "./activeBlog"
 
@@ -106,6 +107,7 @@ export function AuthProvider(props: ParentProps) {
     localStorage.removeItem("user")
     clearCachedFollowingIds()
     clearActiveBlogId()
+    clearActivityUnread()
     clearPostInteractions()
     setUser(null)
   }

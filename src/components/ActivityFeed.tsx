@@ -13,6 +13,7 @@ import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import SortDropdown from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
+import { markActivitySeen } from "~/lib/activityUnread";
 
 const PAGE_SIZE = 20;
 
@@ -109,6 +110,7 @@ export function ActivityFeed(props: { blogName: string }) {
       if (data.error) throw new Error(data.error);
       const incoming = data.timelineItems ?? [];
       setItems(incoming);
+      markActivitySeen(resolved.blogId, incoming);
       nextPageToken = data.page?.nextPageToken ?? null;
       if (incoming.length < PAGE_SIZE) nextPageToken = null;
     } catch (err: unknown) {

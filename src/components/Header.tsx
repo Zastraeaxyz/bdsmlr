@@ -4,6 +4,7 @@ import { useAuth } from '../lib/useAuth'
 import { useBlogAvatar } from '../lib/blogAvatar'
 import { DiscordIcon } from './Icons'
 import { unreadCount, refreshMessageUnread } from '../lib/messageUnread'
+import { activityUnreadCount, refreshActivityUnread } from '../lib/activityUnread'
 
 interface HeaderProps {
   info?: string
@@ -52,6 +53,23 @@ export default function Header(props: HeaderProps) {
     void refreshMessageUnread()
     const timer = setInterval(() => void refreshMessageUnread(), 60000)
     const handleFocus = () => void refreshMessageUnread()
+    window.addEventListener('focus', handleFocus)
+    onCleanup(() => {
+      clearInterval(timer)
+      window.removeEventListener('focus', handleFocus)
+    })
+  })
+
+  createEffect(() => {
+    if (typeof window === 'undefined') return
+    const blog = activeBlog()
+    if (!user() || !blog) return
+    void refreshActivityUnread(blog.id, blog.name)
+    const timer = setInterval(
+      () => void refreshActivityUnread(blog.id, blog.name),
+      120000,
+    )
+    const handleFocus = () => void refreshActivityUnread(blog.id, blog.name)
     window.addEventListener('focus', handleFocus)
     onCleanup(() => {
       clearInterval(timer)
@@ -110,10 +128,13 @@ export default function Header(props: HeaderProps) {
               </A>
               <A
                 href="/activity"
-                class="user-dropdown-item"
+                class="user-dropdown-item user-dropdown-activity"
                 onClick={() => setShowDropdown(false)}
               >
-                Activity
+                <span>Activity</span>
+                <Show when={activityUnreadCount() > 0}>
+                  <span class="message-badge">{activityUnreadCount()}</span>
+                </Show>
               </A>
               <A
                 href="/compose"

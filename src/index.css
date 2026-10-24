@@ -2525,6 +2525,13 @@ button:disabled {
   text-decoration: none;
 }
 
+.user-dropdown-activity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .messages-panel-title {
   flex: 1;
   min-width: 0;
