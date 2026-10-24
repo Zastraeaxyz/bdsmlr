@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Collapsed multi-media posts**: Feed cards with more than two images or media now show the first two and a Show more button, with Show less to collapse them again. The highlighted post on a post detail page still shows all of its media immediately.
 - **Landing page AI spend tally**: The landing page now shows the total OpenCode spend for this repository, the number of sessions, and the share of sessions by model.
 - **Expandable blog descriptions**: Long profile descriptions are now truncated to a tweet-length preview. A Show more button reveals the full text, Show less collapses it again, line breaks are preserved, and links are clickable.
 - **Landing page contact**: The landing page now invites the BDSMLR team to reach out on Discord if they want help improving the official site.

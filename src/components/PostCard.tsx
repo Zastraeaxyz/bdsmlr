@@ -18,7 +18,7 @@ import {
 import { formatRelativeDate } from "~/lib/date";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
-import { PostMedia } from "~/components/PostMedia";
+import { PostMediaList } from "~/components/PostMediaList";
 import { useAuth } from "~/lib/useAuth";
 import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
 
@@ -125,16 +125,11 @@ export function PostCard(props: PostCardProps) {
         />
       )}
       {post.type !== PostType.Text && mediaItems().length > 0 && (
-        <div class="feed-card-images">
-          <For each={mediaItems()}>
-            {(item) => (
-              <PostMedia
-                item={item}
-                onImageClick={(url) => props.onImageClick?.(url)}
-              />
-            )}
-          </For>
-        </div>
+        <PostMediaList
+          items={mediaItems()}
+          class="feed-card-images"
+          onImageClick={props.onImageClick}
+        />
       )}
       {post.tags && post.tags.length > 0 && (
         <div class="feed-card-tags">

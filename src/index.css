@@ -969,6 +969,21 @@ button:disabled {
   margin-bottom: 10px;
 }
 
+.media-toggle {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.media-toggle:hover {
+  text-decoration: underline;
+}
+
 /* ---- Grid feed view ---- */
 
 .feed-grid {

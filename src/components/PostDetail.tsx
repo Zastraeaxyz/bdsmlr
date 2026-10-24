@@ -15,7 +15,7 @@ import { LightBox } from "~/components/LightBox";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
 import { tagSearchHref } from "~/lib/tagLinks";
-import { PostMedia } from "~/components/PostMedia";
+import { PostMediaList } from "~/components/PostMediaList";
 import { RelatedPosts } from "~/components/RelatedPosts";
 import { EngagementModal } from "~/components/EngagementModal";
 import {
@@ -275,16 +275,12 @@ function PostDetailView(props: {
       )}
 
       {props.post.type !== PostType.Text && mediaItems().length > 0 && (
-        <div class="post-detail-images">
-          <For each={mediaItems()}>
-            {(item) => (
-              <PostMedia
-                item={item}
-                onImageClick={(url) => props.onImageClick?.(url)}
-              />
-            )}
-          </For>
-        </div>
+        <PostMediaList
+          items={mediaItems()}
+          class="post-detail-images"
+          showAll
+          onImageClick={props.onImageClick}
+        />
       )}
 
       {props.post.tags && props.post.tags.length > 0 && (
