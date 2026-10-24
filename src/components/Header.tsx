@@ -137,6 +137,20 @@ export default function Header(props: HeaderProps) {
                 Liked
               </A>
               <A
+                href="/settings"
+                class="user-dropdown-item"
+                onClick={() => setShowDropdown(false)}
+              >
+                Settings
+              </A>
+              <A
+                href="/blocked"
+                class="user-dropdown-item"
+                onClick={() => setShowDropdown(false)}
+              >
+                Blocked blogs
+              </A>
+              <A
                 href="/messages"
                 class="user-dropdown-item user-dropdown-messages"
                 onClick={() => setShowDropdown(false)}

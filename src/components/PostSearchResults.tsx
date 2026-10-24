@@ -14,7 +14,11 @@ import { upgradeToLightbox } from "~/lib/sanitize";
 
 const PAGE_SIZE = 20;
 
-export function PostSearchResults(props: { query: string }) {
+export function PostSearchResults(props: {
+  query: string;
+  postTypes?: number[];
+  variants?: number[];
+}) {
   const navigate = useNavigate();
   const [posts, setPosts] = createSignal<Post[]>([]);
   const [loading, setLoading] = createSignal(false);
@@ -30,7 +34,7 @@ export function PostSearchResults(props: { query: string }) {
       tag_name: props.query,
       sort_field: SortField.Date,
       order: SortOrder.Descending,
-      post_types: [
+      post_types: props.postTypes ?? [
         PostType.Text,
         PostType.Image,
         PostType.Video,
@@ -39,7 +43,7 @@ export function PostSearchResults(props: { query: string }) {
         PostType.Chat,
         PostType.Quote,
       ],
-      variants: [1],
+      variants: props.variants ?? [1],
       page,
       ...(session ? { session } : {}),
       page_size: PAGE_SIZE,
@@ -87,6 +91,8 @@ export function PostSearchResults(props: { query: string }) {
 
   createEffect(() => {
     props.query;
+    props.postTypes;
+    props.variants;
     void load();
   });
 

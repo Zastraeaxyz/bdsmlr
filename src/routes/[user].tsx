@@ -271,6 +271,7 @@ export default function UserLayout(props: ParentProps) {
   const activityActive = () => location.pathname === `/${slug()}/activity`
   const followerFeedActive = () =>
     location.pathname === `/${slug()}/follower-feed`
+  const archiveActive = () => location.pathname === `/${slug()}/archive`
 
   return (
     <div class="home-page">
@@ -427,6 +428,13 @@ export default function UserLayout(props: ParentProps) {
                 classList={{ 'blog-nav-tab-active': followerFeedActive() }}
               >
                 Followers' feed
+              </A>
+              <A
+                href={`/${slug()}/archive`}
+                class="blog-nav-tab"
+                classList={{ 'blog-nav-tab-active': archiveActive() }}
+              >
+                Archive
               </A>
             </nav>
           </section>

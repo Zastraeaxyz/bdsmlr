@@ -752,3 +752,44 @@ export function listPostReblogs(
     },
   })
 }
+
+export function resolveIdentifierById(blogId: number) {
+  return request<ResolveIdentifierResponse>(API_BASE, '/resolve-identifier', {
+    blog_id: blogId,
+  })
+}
+
+export function resolveUserById(userId: number) {
+  return request<ResolveIdentifierResponse>(API_BASE, '/resolve-identifier', {
+    user_id: userId,
+  })
+}
+
+export interface TagAffinityItem {
+  count?: number
+  tag?: string
+}
+
+export interface TagAffinityResponse {
+  blogId?: number
+  blogName?: string
+  tagAffinity?: {
+    all?: {
+      both?: TagAffinityItem[]
+      likes?: TagAffinityItem[]
+      reblogs?: TagAffinityItem[]
+    }
+    recent?: {
+      both?: TagAffinityItem[]
+      likes?: TagAffinityItem[]
+      reblogs?: TagAffinityItem[]
+    }
+  }
+  error?: string
+}
+
+export function blogTagAffinity(blogName: string) {
+  return request<TagAffinityResponse>(API_BASE, '/blog-tag-affinity', {
+    blog_name: blogName,
+  })
+}

@@ -49,7 +49,7 @@ These are not in the v2 API. They require the legacy Laravel session and CSRF ha
 - Blog customization: avatar, header, title, description, theme, privacy
 - Account settings and password changes
 
-## Phase 5: remaining parity
+## Phase 5: remaining parity (archive, affinity, blocked blogs, and settings view implemented; notifications badge still pending)
 
 - Blog archive view with month/type filters
 - Blog top tags and affinity display

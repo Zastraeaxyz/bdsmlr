@@ -3302,3 +3302,92 @@ button:disabled {
 .compose-legacy-links a:hover {
   text-decoration: underline;
 }
+
+.archive-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.archive-month {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.archive-month input {
+  width: auto;
+}
+
+.blocked-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.blocked-item .following-item-name {
+  text-decoration: none;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.settings-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.settings-facts span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.settings-facts strong {
+  color: var(--text-heading);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.settings-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.settings-link:hover {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}

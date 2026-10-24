@@ -21,6 +21,8 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Deleted post flair** — Posts from deleted authors show a "DELETED" badge; permalinks are hidden
 - **Like and reblog** — Like or unlike posts with one click and reblog them to your primary blog. Buttons reflect the current state and update the counts immediately.
 - **Comments**: Read comments on any post, load older comments, and post your own from a feed card or the post detail page.
+- **Archive and related tags**: Profiles have an Archive tab with month and post-type filters, and a Related tags row based on tag affinity.
+- **Settings and blocked blogs**: `/settings` shows account and blog shortcuts, and `/blocked` lists blocked blogs with an Unblock button.
 - **Compose posts**: The `/compose` page publishes text, quote, link, chat, image, video, and audio posts. Text, image, and video posts can also be saved as drafts or added to the queue.
 - **Social previews**: Links shared in Discord and other social apps show a branded site card, profile cards with the blog avatar and description, and post cards with the first image.
 - **Discord community**: The landing page and avatar menu link to the official Discord invite.
