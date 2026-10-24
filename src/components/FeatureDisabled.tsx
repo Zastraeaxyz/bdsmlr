@@ -9,7 +9,7 @@ export function FeatureDisabled(props: { title: string }) {
           <h2>{props.title} is disabled</h2>
           <p>
             This feature is waiting until its BDSMLR backend behavior has been
-            verified. Self-hosters can enable it with the matching feature flag.
+            verified.
           </p>
         </div>
       </main>

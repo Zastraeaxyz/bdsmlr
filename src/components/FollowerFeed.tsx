@@ -7,8 +7,10 @@ import {
 } from "~/lib/api";
 import { fetchAllFollowerIds } from "~/lib/following";
 import { PostCard } from "~/components/PostCard";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
 import { upgradeToLightbox } from "~/lib/sanitize";
+import { tagSearchHref } from "~/lib/tagLinks";
 
 const PAGE_SIZE = 20;
 
@@ -75,7 +77,7 @@ export function FollowerFeed(props: { blogName: string }) {
   };
 
   const openTag = (tag: string) => {
-    navigate(`/tag/${encodeURIComponent(tag)}`);
+    navigate(tagSearchHref(tag));
   };
 
   return (
@@ -103,15 +105,7 @@ export function FollowerFeed(props: { blogName: string }) {
         </Show>
       </Show>
       <Show when={nextPageToken}>
-        <button
-          type="button"
-          class="btn-ghost"
-          style="display:block;margin:24px auto"
-          onClick={loadMore}
-          disabled={loadingMore()}
-        >
-          {loadingMore() ? "Loading more" : "Load more"}
-        </button>
+        <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
       </Show>
       <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
     </div>

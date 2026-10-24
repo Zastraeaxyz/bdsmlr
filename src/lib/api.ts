@@ -92,6 +92,21 @@ export function blogFollowGraph(
   })
 }
 
+function responseErrorMessage(err: unknown, fallback: string): string {
+  if (typeof err === 'string') return err
+  if (err && typeof err === 'object') {
+    const record = err as Record<string, unknown>
+    if (typeof record.message === 'string') return record.message
+    if (typeof record.error === 'string') return record.error
+    const nested = record.error
+    if (nested && typeof nested === 'object') {
+      const nestedRecord = nested as Record<string, unknown>
+      if (typeof nestedRecord.message === 'string') return nestedRecord.message
+    }
+  }
+  return fallback
+}
+
 export class FetchError extends Error {
   status: number
   constructor(message: string, status: number) {
@@ -113,7 +128,7 @@ async function request<T>(base: string, path: string, body: unknown, v2session?:
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }))
-    throw new Error(err.message || err.error || `HTTP ${res.status}`)
+    throw new Error(responseErrorMessage(err, `HTTP ${res.status}`))
   }
 
   return res.json()
@@ -138,7 +153,7 @@ async function requestGet<T>(base: string, path: string, params: Record<string, 
     .then(async (res) => {
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(err.message || err.error || `HTTP ${res.status}`)
+        throw new Error(responseErrorMessage(err, `HTTP ${res.status}`))
       }
       return res.json()
     })
@@ -438,10 +453,12 @@ export function reblogPost(
   actingBlogId: number,
   opts: { mode?: 'live' | 'queue'; comment?: string; tags?: string[] } = {},
 ) {
+  const mode = opts.mode ?? 'live'
   return request<ReblogPostResponse>(API_BASE, '/internal-write/reblog', {
     postId,
     actingBlogId,
-    mode: opts.mode ?? 'live',
+    mode,
+    typerb: mode === 'queue' ? 1 : 0,
     ...(opts.comment ? { comment: opts.comment } : {}),
     ...(opts.tags && opts.tags.length > 0 ? { tags: opts.tags } : {}),
   })

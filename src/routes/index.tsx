@@ -12,7 +12,7 @@ const FEATURES = [
   },
   {
     title: "Search and discovery",
-    body: "Search posts and blogs, browse tag pages, and use the For You feed to find new blogs to follow.",
+    body: "Search posts and blogs, browse tags, and find new blogs to follow from profiles.",
   },
   {
     title: "Likes, reblogs, and comments",
@@ -68,9 +68,6 @@ export default function LandingPage() {
           <span>Better BDSMLR</span>
         </A>
         <nav class="landing-nav-links">
-          <A href="/search" class="landing-nav-link">
-            Search
-          </A>
           <a
             href="https://discord.gg/w3BkPTwf2d"
             target="_blank"
@@ -211,7 +208,6 @@ export default function LandingPage() {
         <span>Better BDSMLR</span>
         <nav>
           <A href="/about">About the backend</A>
-          <A href="/search">Search</A>
           <a
             href="https://discord.gg/w3BkPTwf2d"
             target="_blank"

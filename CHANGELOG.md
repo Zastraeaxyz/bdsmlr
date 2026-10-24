@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Reblogs now appear on your blog**: The reblog request was missing the `typerb` field, so BDSMLR updated the reblog count but did not create a reblog post on your profile. Live and queued reblogs now send the correct reblog type, so the post appears in your blog feed.
 - **GIF posts with dead video alternates now display**: Some GIF posts expose a `video/mp4` alternate that 404s even though the original GIF is valid. Post cards and detail pages now try the next media candidate when a video or image fails, so these posts fall back to the GIF. Social previews also choose the first working image candidate.
 - **RSS feeds skip dead video alternates**: Blog RSS feeds now use the image fallback for GIF posts instead of a dead `video/mp4` enclosure, so feed readers receive media that actually loads.
 - **Sort dropdown matches what it shows** — Choosing "Most popular", "Least popular", or a "Most liked/commented/reblogged" option now highlights that same option and loads posts in the expected order. Previously the labels and the actual sort were reversed, so picking "Most popular" could display "Least popular" and return the wrong posts.
@@ -19,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Post page cleanup**: Removed the duplicate "Liked by" and "Reblogged by" line. A chart icon now opens one combined likes-and-reblogs list. The post report button and the separator lines around the action row are gone. The "More like this" feed now sits outside the post card and keeps loading automatically.
+- **Related tags removed, tag affinity added to search**: Profiles no longer show the Related tags row. Blog search now shows Tag affinity, based on the tags of posts you liked, with links that run the same tag search from the home feed.
+- **For You is disabled by default**: The For You feed is behind a feature flag for now because it loads slowly and lacks pagination. The Following feed at `/home` remains the default way to browse.
+- **Documentation cleanup**: Removed obsolete setup instructions from the README and simplified the disabled-feature messages.
+- **Tag links and search pages**: Tag pills now run their search on the home feed instead of opening a separate tag page. The standalone `/search` page has been removed. Blog search is now `/blog-search` and lives in the avatar menu. Old `/search` URLs redirect to the new destinations.
 - **Landing copy**: The hero now highlights the human-built, intuitive UI and contrasts it with the official frontend.
 - **Logged-in visitors skip the landing page**: Opening `/` while signed in now sends you straight to `/home`.
 - **Landing hero**: The hero now shows a real screenshot of the signed-in Following feed instead of a link card preview.
@@ -27,8 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Auto-loading pagination**: Every list with a Load more button now fetches the next page automatically when the button scrolls into view. This covers search results, For You, activity, follower feeds, comments, likes and reblogs, related posts, and blog search.
 - **Age confirmation on the landing page**: First-time visitors now see a full-page 18+ confirmation dialog. Confirming stores the answer in the browser, and the dialog only runs on the landing page.
-- **Feature flags for legacy features**: Compose, drafts, account changes, blog customization, and legacy queue/asks/submissions/settings links are now disabled by default until their BDSMLR backend behavior is verified. Self-hosters can enable each one with a `VITE_FEATURE_*` environment variable.
+- **Feature flags for legacy features**: Compose, drafts, account changes, blog customization, and legacy queue/asks/submissions/settings links are now disabled by default until their BDSMLR backend behavior is verified. Each one has a `VITE_FEATURE_*` flag that stays disabled until its backend behavior is verified.
 - **Account, blog customization, and drafts**: The settings page can now change your email, password, and blog name. A new customization page edits blog title, description, theme, fonts, colors, avatar, header images, display options, and interests. A new drafts page lists saved drafts with Publish, Publish to queue, and Delete actions.
 - **Activity badge**: The Activity item in the profile menu now shows a count when new activity appears on your active blog since you last opened its activity feed.
 - **Archive, related tags, settings, and blocked blogs**: Profiles now have an Archive tab with month and post-type filters, plus a Related tags row based on tag affinity. The new `/settings` page shows account and blog shortcuts, and `/blocked` lists blocked blogs with an Unblock button.
@@ -81,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **GIFs with no original mime type now render** — When a post's `mediaRepresentation` item has an `original` URL whose `mimeType` is missing (common for older GIFs served as `video/mp4`), the app now falls back to the item's `alternates` and renders the first one that declares a mime type. If there are no usable alternates, it still renders the `original` URL, guessing the type from the file extension.
 - **Static-image posts with dead video alternates now display** — When an `original` has no mime type but a static-image extension (e.g. `webp`), the original is now preferred over `video/mp4` alternates, which are sometimes dead links. GIF originals still defer to a mime-typed alternate, since they may be served as `video/mp4`.
 - **Unit tests for media handling** — `pnpm test` runs Vitest coverage over the media URL selection logic (`getMediaType`, `getPostMediaUrls`, proxy rewriting) using real posts as fixtures. `docs/media-cases.md` lists the known weird `mediaRepresentation` shapes for manual spot-checks.
-- **Vercel deployments now serve the app** — The build now emits a Vercel-compatible serverless output when built on Vercel (`VERCEL=1`), so deployments respond with the app instead of a `404 NOT_FOUND`. Docker and local builds are unchanged.
+- **Vercel deployments now serve the app** — The build now emits a Vercel-compatible serverless output when built on Vercel (`VERCEL=1`), so deployments respond with the app instead of a `404 NOT_FOUND`. Local builds are unchanged.
 - **Lightbox close button now always visible** — The close button uses `position: fixed` instead of `position: absolute` so it stays pinned to the viewport's top-right corner, even when the image is taller than the screen.
 
 - **Login session cookies now persist correctly** — The API proxy now strips the `Domain` attribute from `Set-Cookie` headers returned by BDSMLR's login endpoint. Previously, the cookie was rejected by the browser because its domain (`bdsmlr.com`) didn't match the app domain. You can now sign in and access protected blogs that require authentication.
@@ -95,9 +102,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Hide reblogs toggle on profile** — A gear icon next to the search bar now opens a settings dropdown with a "Hide reblogs" checkbox. When checked, only original posts from the creator are shown; reblogged content is hidden.
 
-- **Windows desktop app** — A single-executable Windows app is now available. Run `BetterBDSMLR.exe` and it lives in the system tray. Right-click the tray icon to open the app in your browser or quit. No Docker or Node.js installation required.
+- **Windows desktop app** — A single-executable Windows app is now available. Run `BetterBDSMLR.exe` and it lives in the system tray. Right-click the tray icon to open the app in your browser or quit. No extra installation required.
 
-- **HTTP request logging** — Docker container logs now show every incoming HTTP request (`--> GET /path`) and its response (`<-- GET /path 200 12ms`), making it easier to observe server activity and diagnose issues.
+- **HTTP request logging** — Server logs now show every incoming HTTP request (`--> GET /path`) and its response (`<-- GET /path 200 12ms`), making it easier to observe server activity and diagnose issues.
 
 - **Search posts by tag now sends `post_types` and `variants`** — The tag search API request now includes the `post_types` array (defaulting to all post types) and a `variants` field, aligning with the API spec and improving result accuracy.
 
@@ -105,7 +112,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Docker support** — The app can now be deployed with Docker. A multi-stage `Dockerfile` produces a lean production image, and `docker-compose.yml` wires it together with a persistent SQLite volume.
 - **SQLite database infrastructure** — Added a SQLite database layer with Drizzle ORM, laying the groundwork for persisting server-side state such as download jobs.
 - **Header view transition** — The header now animates smoothly during page navigations using the View Transitions API.
 - **User dropdown in navbar** — The navbar now shows your avatar and username instead of a plain "Sign out" button. Clicking it opens a dropdown with a "Following" shortcut and a "Sign out" button. The dropdown closes on outside click or Escape.
@@ -123,9 +129,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Avatar refetch on navigation** — The header no longer re-fetches the current user's avatar on every page navigation; the result is cached for the session.
 - **Null-safe avatar** — Fixed a guard against null `title` and `blogName` in the avatar placeholder. Blogs without avatars now correctly show a letter placeholder.
 - **Pagination in blog-follow-graph** — The blog-follow-graph request now fetches all pages instead of stopping after the first page.
-- **Dockerfile duplicate install** — Removed duplicate `pnpm install` from the Dockerfile final stage.
-- **Server startup** — The Docker image now runs the built server directly instead of via `pnpm start`.
-- **PORT environment** — The Docker Compose file explicitly sets `PORT=3000` to match the container's exposed port.
 
 ## [0.2.0] - 2026-06-15
 

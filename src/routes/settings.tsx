@@ -258,8 +258,7 @@ export default function SettingsPage() {
 
           <p class="compose-note">
             Account changes, customization, drafts, and other legacy tools are
-            hidden until their BDSMLR backend behavior is verified. Self-hosters
-            can enable them with feature flags.
+            hidden until their BDSMLR backend behavior is verified.
           </p>
         </main>
       </div>

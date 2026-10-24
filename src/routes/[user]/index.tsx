@@ -12,7 +12,6 @@ import {
   resolveIdentifier,
   listBlogActivity,
   listBlogTopTags,
-  blogTagAffinity,
   searchPostsByTag,
   searchResultPosts,
   PostVariant,
@@ -20,7 +19,6 @@ import {
   SortOrder,
   type Post,
   type TopTag,
-  type TagAffinityItem,
 } from "~/lib/api";
 import { GearIcon, WarningIcon } from "~/components/Icons";
 import SortDropdown from "~/components/SortDropdown";
@@ -55,7 +53,6 @@ export default function UserFeed() {
 
   const [posts, setPosts] = createSignal<Post[]>([]);
   const [topTags, setTopTags] = createSignal<TopTag[]>([]);
-  const [affinity, setAffinity] = createSignal<TagAffinityItem[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
@@ -281,23 +278,8 @@ export default function UserFeed() {
         await loadPage(name);
       }
 
-      const [tagsRes, affinityRes] = await Promise.all([
-        listBlogTopTags(name),
-        blogTagAffinity(name).catch(() => null),
-      ]);
-      const tags = tagsRes.tags ?? [];
-      setTopTags(tags);
-      const topNames = new Set(
-        tags.slice(0, 5).map((tag) => tag.name.toLowerCase()),
-      );
-      setAffinity(
-        (affinityRes?.tagAffinity?.all?.both ?? [])
-          .filter(
-            (item) =>
-              item.tag && !topNames.has(item.tag.toLowerCase()),
-          )
-          .slice(0, 12),
-      );
+      const tagsRes = await listBlogTopTags(name);
+      setTopTags(tagsRes.tags ?? []);
     } catch (err: unknown) {
       setError((err as Error)?.message || "Failed to load feed");
     } finally {
@@ -447,28 +429,6 @@ export default function UserFeed() {
           </div>
         </section>
       )}
-      <Show when={affinity().length > 0}>
-        <section class="top-tags tag-affinity">
-          <div class="top-tags-inner">
-            <span class="top-tags-label">Related tags</span>
-            <div class="top-tags-list">
-              <For each={affinity()}>
-                {(item) => (
-                  <button
-                    type="button"
-                    class="tag"
-                    title="Tags often used by this blog"
-                    onClick={() => item.tag && handleTagClick(item.tag)}
-                  >
-                    <span class="tag-name">{item.tag}</span>
-                    <span class="tag-count">{item.count ?? 0}</span>
-                  </button>
-                )}
-              </For>
-            </div>
-          </div>
-        </section>
-      </Show>
       <Show when={showAllTags()}>
         <div
           class="tag-modal-backdrop"

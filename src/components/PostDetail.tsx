@@ -1,7 +1,7 @@
 import { createSignal, createEffect, For, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import { getPostDetail, getBlog, deletePost, reportPost, PostType, type Post } from "~/lib/api";
+import { getPostDetail, getBlog, deletePost, PostType, type Post } from "~/lib/api";
 import {
   sanitizeHtml,
   processContentHtml,
@@ -14,6 +14,7 @@ import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
+import { tagSearchHref } from "~/lib/tagLinks";
 import { PostMedia } from "~/components/PostMedia";
 import { RelatedPosts } from "~/components/RelatedPosts";
 import { EngagementModal } from "~/components/EngagementModal";
@@ -22,6 +23,7 @@ import {
   ChatIcon,
   ReblogIcon,
   BdsmlrIcon,
+  ChartNoAxesColumnIcon,
 } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
 import { getCachedPost, setCachedPost } from "~/lib/postCache";
@@ -120,6 +122,9 @@ export default function PostDetail(props: {
           blogGone={blogGone()}
           onImageClick={(url) => setLightboxUrl(upgradeToLightbox(url))}
         />
+        <Show when={post()!.id}>
+          <RelatedPosts postId={post()!.id} />
+        </Show>
       </Show>
       <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
     </>
@@ -138,8 +143,7 @@ function PostDetailView(props: {
   const [actionError, setActionError] = createSignal("");
   const [notice, setNotice] = createSignal("");
   const [showReblog, setShowReblog] = createSignal(false);
-  const [showLikes, setShowLikes] = createSignal(false);
-  const [showReblogs, setShowReblogs] = createSignal(false);
+  const [showEngagement, setShowEngagement] = createSignal(false);
   const [commentsCount, setCommentsCount] = createSignal(
     props.post.commentsCount ?? 0,
   );
@@ -162,23 +166,6 @@ function PostDetailView(props: {
       navigate(props.post.blogName ? `/${props.post.blogName}` : "/");
     } catch (err: unknown) {
       setActionError((err as Error)?.message || "Could not delete post");
-    }
-  };
-
-  const handleReport = async () => {
-    const actor = activeBlogId();
-    if (!actor) return;
-    if (!window.confirm(`Report post ${props.post.id}?`)) return;
-    setActionError("");
-    setNotice("");
-    try {
-      const res = await reportPost(actor, props.post.id);
-      if (res.ok === false || res.error) {
-        throw new Error(res.error?.message || "Could not report post");
-      }
-      setNotice("Report submitted. Thank you.");
-    } catch (err: unknown) {
-      setActionError((err as Error)?.message || "Could not report post");
     }
   };
 
@@ -304,7 +291,7 @@ function PostDetailView(props: {
         <div class="post-detail-tags">
           <For each={props.post.tags}>
             {(t) => (
-              <A href={`/tag/${encodeURIComponent(t)}`} class="tag">
+              <A href={tagSearchHref(t)} class="tag">
                 #{t}
               </A>
             )}
@@ -360,6 +347,17 @@ function PostDetailView(props: {
           </button>
         </Show>
         <Show when={props.post.id}>
+          <button
+            type="button"
+            class="download-btn"
+            onClick={() => setShowEngagement(true)}
+            title="Likes and reblogs"
+            aria-label="View likes and reblogs"
+          >
+            <ChartNoAxesColumnIcon />
+          </button>
+        </Show>
+        <Show when={props.post.id}>
           <a
             href={`https://bdsmlr.com/post/${props.post.id}`}
             target="_blank"
@@ -369,15 +367,6 @@ function PostDetailView(props: {
           >
             <BdsmlrIcon />
           </a>
-        </Show>
-        <Show when={user() && props.post.id && !ownsPost()}>
-          <button
-            type="button"
-            class="download-btn post-meta-action"
-            onClick={handleReport}
-          >
-            Report
-          </button>
         </Show>
         <Show when={ownsPost()}>
           <button
@@ -395,22 +384,6 @@ function PostDetailView(props: {
       <Show when={notice()}>
         <p class="action-notice">{notice()}</p>
       </Show>
-      <div class="post-engagement-links">
-        <button
-          type="button"
-          class="engagement-link"
-          onClick={() => setShowLikes(true)}
-        >
-          Liked by {interaction().likesCount}
-        </button>
-        <button
-          type="button"
-          class="engagement-link"
-          onClick={() => setShowReblogs(true)}
-        >
-          Reblogged by {interaction().reblogsCount}
-        </button>
-      </div>
       <Show when={showReblog()}>
         <ReblogComposer
           post={props.post}
@@ -424,21 +397,10 @@ function PostDetailView(props: {
           onCountChange={setCommentsCount}
         />
       </Show>
-      <Show when={props.post.id}>
-        <RelatedPosts postId={props.post.id} />
-      </Show>
-      <Show when={showLikes()}>
+      <Show when={showEngagement()}>
         <EngagementModal
           postId={props.post.id}
-          kind="likes"
-          onClose={() => setShowLikes(false)}
-        />
-      </Show>
-      <Show when={showReblogs()}>
-        <EngagementModal
-          postId={props.post.id}
-          kind="reblogs"
-          onClose={() => setShowReblogs(false)}
+          onClose={() => setShowEngagement(false)}
         />
       </Show>
     </article>

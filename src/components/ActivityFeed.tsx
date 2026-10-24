@@ -9,10 +9,12 @@ import {
   type Post,
 } from "~/lib/api";
 import { PostCard } from "~/components/PostCard";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import SortDropdown from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
+import { tagSearchHref } from "~/lib/tagLinks";
 import { markActivitySeen } from "~/lib/activityUnread";
 
 const PAGE_SIZE = 20;
@@ -157,7 +159,7 @@ export function ActivityFeed(props: { blogName: string }) {
   };
 
   const openTag = (tag: string) => {
-    navigate(`/tag/${encodeURIComponent(tag)}`);
+    navigate(tagSearchHref(tag));
   };
 
   return (
@@ -286,15 +288,7 @@ export function ActivityFeed(props: { blogName: string }) {
         </Show>
       </Show>
       <Show when={nextPageToken}>
-        <button
-          type="button"
-          class="btn-ghost"
-          style="display:block;margin:24px auto"
-          onClick={loadMore}
-          disabled={loadingMore()}
-        >
-          {loadingMore() ? "Loading more" : "Load more"}
-        </button>
+        <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
       </Show>
       <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
     </div>

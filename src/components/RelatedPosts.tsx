@@ -3,8 +3,10 @@ import { useNavigate } from "@solidjs/router";
 import { relatedPosts, type Post } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
 import { PostCard } from "~/components/PostCard";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
 import { upgradeToLightbox } from "~/lib/sanitize";
+import { tagSearchHref } from "~/lib/tagLinks";
 
 const PAGE_SIZE = 6;
 
@@ -24,6 +26,10 @@ export function RelatedPosts(props: { postId: number }) {
     setError("");
     setPosts([]);
     nextPageToken = null;
+    if (!activeBlog()) {
+      setLoading(false);
+      return;
+    }
     try {
       const data = await relatedPosts(
         props.postId,
@@ -70,7 +76,7 @@ export function RelatedPosts(props: { postId: number }) {
   };
 
   const openTag = (tag: string) => {
-    navigate(`/tag/${encodeURIComponent(tag)}`);
+    navigate(tagSearchHref(tag));
   };
 
   return (
@@ -99,15 +105,12 @@ export function RelatedPosts(props: { postId: number }) {
         </Show>
       </Show>
       <Show when={nextPageToken}>
-        <button
-          type="button"
-          class="btn-ghost"
+        <AutoLoadMore
+          onLoad={loadMore}
+          loading={loadingMore()}
           style="display:block;margin:16px auto 0"
-          onClick={loadMore}
-          disabled={loadingMore()}
-        >
-          {loadingMore() ? "Loading more" : "Load more related posts"}
-        </button>
+          label="Load more related posts"
+        />
       </Show>
       <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
     </section>

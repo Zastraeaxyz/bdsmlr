@@ -1427,8 +1427,6 @@ button:disabled {
   gap: 20px;
   font-size: 14px;
   color: var(--text-muted);
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
 }
 
 .icon {
@@ -1821,8 +1819,6 @@ button:disabled {
 
 .comments {
   margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
 }
 
 .comments-modal {
@@ -2295,28 +2291,6 @@ button:disabled {
   background: rgba(88, 166, 255, 0.1);
 }
 
-.post-engagement-links {
-  display: flex;
-  gap: 16px;
-  margin-top: 10px;
-  font-size: 13px;
-}
-
-.engagement-link {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 0;
-  font: inherit;
-  font-weight: 400;
-  cursor: pointer;
-}
-
-.engagement-link:hover:not(:disabled) {
-  color: var(--accent);
-  background: transparent;
-}
-
 .engagement-modal {
   max-width: 420px;
   padding-top: 36px;
@@ -2352,6 +2326,20 @@ button:disabled {
   color: var(--text);
 }
 
+.engagement-action-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.engagement-icon {
+  width: 13px;
+  height: 13px;
+}
+
 .engagement-time {
   font-size: 11px;
   color: var(--text-muted);
@@ -2364,8 +2352,6 @@ button:disabled {
 
 .related-posts {
   margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
 }
 
 .activity-controls {

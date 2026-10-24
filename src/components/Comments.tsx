@@ -7,6 +7,7 @@ import {
 } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
 import { BlogAvatar } from "~/components/BlogAvatar";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { formatRelativeDate } from "~/lib/date";
 
 const PAGE_SIZE = 20;
@@ -198,14 +199,13 @@ export function Comments(props: CommentsProps) {
             </For>
           </div>
           <Show when={nextPageToken}>
-            <button
-              type="button"
-              class="btn-ghost comments-more"
-              onClick={loadMore}
-              disabled={loadingMore()}
-            >
-              {loadingMore() ? "Loading more…" : "Load more comments"}
-            </button>
+            <AutoLoadMore
+              onLoad={loadMore}
+              loading={loadingMore()}
+              class="comments-more"
+              label="Load more comments"
+              loadingLabel="Loading more…"
+            />
           </Show>
         </Show>
       </Show>

@@ -20,4 +20,5 @@ export const features = {
     import.meta.env.VITE_FEATURE_LEGACY_ADVANCED_SETTINGS,
   ),
   postEditing: enabled(import.meta.env.VITE_FEATURE_POST_EDITING),
+  forYou: enabled(import.meta.env.VITE_FEATURE_FOR_YOU),
 } as const;

@@ -84,7 +84,6 @@ export default function Header(props: HeaderProps) {
       {props.info && <span class="user-info">{props.info}</span>}
       {props.children}
       <A href="/home" class="btn-ghost">Home</A>
-      <A href="/search" class="btn-ghost">Search</A>
       <Show when={features.legacyCompose}>
         <A href="/compose" class="btn-ghost">Post</A>
       </Show>
@@ -115,13 +114,15 @@ export default function Header(props: HeaderProps) {
               >
                 My blog
               </A>
-              <A
-                href="/for-you"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
-                For you
-              </A>
+              <Show when={features.forYou}>
+                <A
+                  href="/for-you"
+                  class="user-dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  For you
+                </A>
+              </Show>
               <A
                 href="/following"
                 class="user-dropdown-item"
@@ -149,11 +150,11 @@ export default function Header(props: HeaderProps) {
                 </A>
               </Show>
               <A
-                href="/search"
+                href="/blog-search"
                 class="user-dropdown-item"
                 onClick={() => setShowDropdown(false)}
               >
-                Search
+                Blog search
               </A>
               <A
                 href="/liked"

@@ -2,7 +2,10 @@ import { createEffect, createSignal, For, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
+import { FeatureDisabled } from "~/components/FeatureDisabled";
+import { features } from "~/lib/features";
 import { PostCard } from "~/components/PostCard";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { BlogCard } from "~/components/BlogCard";
 import { LightBox } from "~/components/LightBox";
 import { useAuth } from "~/lib/useAuth";
@@ -13,10 +16,13 @@ import {
   type Post,
 } from "~/lib/api";
 import { upgradeToLightbox } from "~/lib/sanitize";
+import { tagSearchHref } from "~/lib/tagLinks";
 
 const PAGE_SIZE = 20;
 
 export default function ForYouPage() {
+  if (!features.forYou) return <FeatureDisabled title="For you" />;
+
   const navigate = useNavigate();
   const { user, loading: authLoading, activeBlog } = useAuth();
   const [posts, setPosts] = createSignal<Post[]>([]);
@@ -89,7 +95,7 @@ export default function ForYouPage() {
   };
 
   const openTag = (tag: string) => {
-    navigate(`/tag/${encodeURIComponent(tag)}`);
+    navigate(tagSearchHref(tag));
   };
 
   return (
@@ -133,15 +139,7 @@ export default function ForYouPage() {
             </Show>
           </Show>
           <Show when={nextPageToken}>
-            <button
-              type="button"
-              class="btn-ghost"
-              style="display:block;margin:24px auto"
-              onClick={loadMore}
-              disabled={loadingMore()}
-            >
-              {loadingMore() ? "Loading more" : "Load more"}
-            </button>
+            <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
           </Show>
         </main>
         <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
