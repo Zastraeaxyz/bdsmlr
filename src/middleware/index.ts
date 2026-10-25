@@ -1,6 +1,7 @@
 import { createMiddleware } from "@solidjs/start/middleware";
 import { buildSocialPreview, isSocialBot } from "~/lib/socialPreview";
 import type { SocialPreview } from "~/lib/socialPreview";
+import { hasCookie } from "~/lib/cookies";
 
 export default createMiddleware({
   onRequest: async (event) => {
@@ -8,9 +9,22 @@ export default createMiddleware({
     if (method !== "GET" && method !== "HEAD") return;
 
     const userAgent = event.request.headers.get("user-agent") ?? "";
-    if (!isSocialBot(userAgent)) return;
-
+    const socialBot = isSocialBot(userAgent);
     const requestUrl = new URL(event.request.url);
+    const isAuthPage =
+      requestUrl.pathname === "/" || requestUrl.pathname === "/home";
+
+    event.locals.authed =
+      !socialBot &&
+      hasCookie(event.request.headers.get("cookie"), "v2_session");
+
+    if (isAuthPage) {
+      event.response.headers.set("Vary", "Cookie");
+      event.response.headers.set("Cache-Control", "private, no-store");
+    }
+
+    if (!socialBot) return;
+
     if (
       requestUrl.pathname.startsWith("/_build/") ||
       requestUrl.pathname.startsWith("/assets/") ||

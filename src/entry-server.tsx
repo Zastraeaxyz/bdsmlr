@@ -9,11 +9,12 @@ export default createHandler(() => (
   <StartServer
     document={({ assets, children, scripts }) => {
       const event = getRequestEvent() as
-        | { locals?: { socialPreview?: SocialPreview } }
+        | { locals?: { socialPreview?: SocialPreview; authed?: boolean } }
         | undefined;
       const socialPreview = event?.locals?.socialPreview;
+      const authed = event?.locals?.authed === true;
       return (
-        <html lang="en">
+        <html lang="en" data-authed={authed ? "true" : undefined}>
           <head>
             <meta charset="utf-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />

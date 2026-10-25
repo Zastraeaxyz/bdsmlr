@@ -10,6 +10,7 @@ function cookieNames(cookie: string): string[] {
 export function POST(event: APIEvent) {
   const names = new Set([
     "bdsmlr7_session",
+    "v2_session",
     "XSRF-TOKEN",
     ...cookieNames(event.request.headers.get("cookie") ?? "").filter((name) =>
       name.startsWith("remember_web_"),

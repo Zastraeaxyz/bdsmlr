@@ -4,7 +4,7 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 
 ## Features
 
-- **Landing page** — The public home page at `/` explains the app, lists its features, and shows the social preview cards. Login is at `/login`, and the following feed is at `/home`.
+- **Landing page** — The public home page at `/` explains the app, lists its features, and shows the social preview cards. Signed-in visitors see the following feed there and the URL updates to `/home`. Login is at `/login`, and the following feed is also at `/home`.
 - **Login** — Authenticate with email/username and password. Includes a legal disclaimer and acknowledgement checkbox.
 - **Following feed** — See recent posts from blogs you follow, with sort and pagination
 - **Blog pages** — View any blog's posts, header, avatar, description, top tags (expandable in a modal), and following count

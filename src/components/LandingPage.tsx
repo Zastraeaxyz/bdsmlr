@@ -1,5 +1,5 @@
-import { createEffect, For, Show } from "solid-js";
-import { A, useNavigate } from "@solidjs/router";
+import { For, Show } from "solid-js";
+import { A } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { useAuth } from "~/lib/useAuth";
 import { DiscordIcon } from "~/components/Icons";
@@ -59,11 +59,6 @@ const PREVIEWS = [
 
 export default function LandingPage() {
   const { user, activeBlog } = useAuth();
-  const navigate = useNavigate();
-
-  createEffect(() => {
-    if (user()) navigate("/home", { replace: true });
-  });
 
   return (
     <div class="landing-page">
