@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Landing page tone**: Removed comparisons that criticized the official BDSMLR frontend. The page now presents the app as a community effort and keeps the offer to work with the BDSMLR team in a professional capacity.
 - **Landing AI spend section simplified**: The per-model breakdown is gone. The section now says that most work uses DeepSeek V4.1 Flash, above the total spend and session count.
 - **Simpler About page**: The backend explanation is now a few short conversational paragraphs instead of two long lists.
 - **Discord in the top bar**: Signed-in visitors now see a Discord link where the About link used to be. The About link still appears when signed out.

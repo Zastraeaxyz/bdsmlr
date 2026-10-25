@@ -106,19 +106,19 @@ export default function LandingPage() {
           <div class="landing-hero-copy">
             <span class="landing-eyebrow">Intuitive and modern UI</span>
             <h1>
-              Browse BDSMLR,
+              BDSMLR,
               <br />
-              <span class="landing-accent">without the noise.</span>
+              <span class="landing-accent">a fresh view.</span>
             </h1>
             <p class="landing-lede">
               A fast, clean browser client for your feed, search, likes,
-              reblogs, comments, and messages. Built by a senior developer with
-              an eye for design and detail. Sign in with your BDSMLR account
-              and pick up where you left off.
+              reblogs, comments, and messages. It is a community project made
+              by people who use BDSMLR every day. Sign in with your BDSMLR
+              account and pick up where you left off.
             </p>
             <p class="landing-dig">
-              The official frontend feels cluttered by comparison, with less
-              attention to design and detail.
+              The goal is a focused, comfortable place to browse, and a project
+              the BDSMLR community can help shape.
             </p>
             <div class="landing-actions">
               <Show
@@ -165,8 +165,8 @@ export default function LandingPage() {
             <span class="landing-kicker">Features</span>
             <h2>Everything you use, in one place</h2>
             <p>
-              Built for daily browsing. No extra tabs, no clutter, and no
-              missing basics.
+              Built for daily browsing, with your feed, search, and messages
+              close at hand.
             </p>
           </div>
           <div class="landing-feature-grid">
@@ -242,8 +242,11 @@ export default function LandingPage() {
               <span class="landing-kicker">For the BDSMLR team</span>
               <h2>Own BDSMLR?</h2>
               <p>
-                If you like what you see here, reach out on Discord. I would be
-                happy to help improve the official site.
+                This is a community project, and it is meant to support the
+                site rather than compete with it. If you like what you see,
+                reach out on Discord. I would be glad to help the BDSMLR team in
+                a professional capacity, whether that means improving the
+                official site or finding another way to work together.
               </p>
             </div>
             <a
