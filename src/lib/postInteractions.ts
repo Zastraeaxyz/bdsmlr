@@ -3,12 +3,12 @@ import {
   batchGetLikeStates,
   batchGetReblogStates,
   likePost,
-  reblogPost,
   requireUser,
   unlikePost,
   type Post,
 } from "./api";
 import { currentActorBlogId } from "./activeBlog";
+import { submitReblog } from "./reblog";
 
 export interface PostInteractionState {
   liked: boolean;
@@ -149,10 +149,13 @@ export async function reblog(
   const [, setState] = signalFor(post);
   const mode = opts.mode ?? "live";
 
-  const res = await reblogPost(post.id, actorId, { ...opts, mode });
-  if (res.ok === false || res.error) {
-    throw new Error(res.error?.message || "Could not reblog post");
-  }
+  await submitReblog(post.id, {
+    blogId: actorId,
+    originPostId: post.originPostId,
+    note: opts.comment,
+    tags: opts.tags,
+    mode,
+  });
   if (mode === "live") {
     const current = signalFor(post)[0]();
     setState({
