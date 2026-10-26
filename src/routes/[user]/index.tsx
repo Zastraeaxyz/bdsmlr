@@ -39,6 +39,7 @@ import {
   addSearchHistory,
   removeSearchHistory,
 } from "~/lib/searchHistory";
+import { freshPosts } from "~/lib/feedPagination";
 
 const PAGE_SIZE = 20;
 
@@ -149,6 +150,7 @@ export default function UserFeed() {
   let nextPageToken: string | null = null;
   let searchPage = 1;
   let searchSession: string | null = null;
+  let loadedIds = new Set<number>();
   let loadMoreRef: HTMLButtonElement | undefined;
 
   const requestSearch = (
@@ -198,7 +200,14 @@ export default function UserFeed() {
       const timelinePosts = (data.timelineItems ?? [])
         .filter((item) => item.type === 1 && item.post)
         .map((item) => item.post as Post);
-      let incoming = timelinePosts;
+      const fresh = timelinePosts.filter((post) => !loadedIds.has(post.id));
+      if (fresh.length === 0) {
+        nextPageToken = null;
+        setHasMore(false);
+        return;
+      }
+      for (const post of fresh) loadedIds.add(post.id);
+      let incoming = fresh;
       if (hideReblogs()) {
         incoming = incoming.filter((p) => p.variant !== PostVariant.Reblog);
       }
@@ -234,6 +243,7 @@ export default function UserFeed() {
     nextPageToken = null;
     searchPage = 1;
     searchSession = null;
+    loadedIds = new Set();
     try {
       const resolved = await resolveIdentifier(name);
       if (!resolved.blogId) {
@@ -313,7 +323,12 @@ export default function UserFeed() {
         }
         const data = await requestSearch(name, q, searchPage, searchSession);
         const incoming = searchResultPosts(data);
-        setPosts((prev) => [...prev, ...incoming]);
+        const fresh = freshPosts(posts(), incoming);
+        if (fresh.length === 0) {
+          setHasMore(false);
+          return;
+        }
+        setPosts((prev) => [...prev, ...fresh]);
         searchSession = data.sessionId ?? searchSession;
         const loadedPage = searchPage;
         searchPage++;

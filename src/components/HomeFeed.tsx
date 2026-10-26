@@ -15,6 +15,7 @@ import {
   getCachedFollowingIds,
   setCachedFollowingIds,
 } from "~/lib/following";
+import { freshPosts } from "~/lib/feedPagination";
 import { useAuth } from "~/lib/useAuth";
 import SortDropdown from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
@@ -208,7 +209,12 @@ export default function HomeFeed() {
         }
         const data = await requestSearch(q, searchPage, searchSession);
         const incoming = searchResultPosts(data);
-        setPosts((prev) => [...prev, ...incoming]);
+        const fresh = freshPosts(posts(), incoming);
+        if (fresh.length === 0) {
+          setHasMore(false);
+          return;
+        }
+        setPosts((prev) => [...prev, ...fresh]);
         searchSession = data.sessionId ?? searchSession;
         const loadedPage = searchPage;
         searchPage++;
@@ -229,7 +235,13 @@ export default function HomeFeed() {
           token,
         );
         const incoming = data.posts ?? [];
-        setPosts((prev) => [...prev, ...incoming]);
+        const fresh = freshPosts(posts(), incoming);
+        if (fresh.length === 0) {
+          setHasMore(false);
+          syncUrl();
+          return;
+        }
+        setPosts((prev) => [...prev, ...fresh]);
         nextPageToken = data.page?.nextPageToken ?? null;
         if (!nextPageToken) setHasMore(false);
         syncUrl();

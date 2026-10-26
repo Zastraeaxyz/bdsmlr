@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Profiles load again and errors stay contained**: Profile pages now load the blog description instead of crashing with a fullscreen "BlogDescription is not defined" error. If a page or the profile header fails unexpectedly, the app shows a friendly retry panel and keeps the rest of the profile available, and navigating elsewhere clears the error.
+- **Pagination stops when BDSMLR repeats a page**: With "Most popular" sorting, the API can return the same page again when you load more. The app now notices that a page has no new posts, stops paginating, and never appends duplicate cards.
 - **Reblog works again**: BDSMLR now rejects the API reblog endpoint for signed-in browser sessions with a "session required" error, so the button did nothing. Reblogs now go through the same web-session reblog flow as the official site, including notes, tags, and queued reblogs, and the post appears on your blog again.
 - **GIF posts with dead video alternates now display**: Some GIF posts expose a `video/mp4` alternate that 404s even though the original GIF is valid. Post cards and detail pages now try the next media candidate when a video or image fails, so these posts fall back to the GIF. Social previews also choose the first working image candidate.
 - **RSS feeds skip dead video alternates**: Blog RSS feeds now use the image fallback for GIF posts instead of a dead `video/mp4` enclosure, so feed readers receive media that actually loads.
