@@ -32,6 +32,19 @@ import {
   removeCachedFollowingId,
 } from '~/lib/following'
 
+const DEFAULT_FAVICON = '/favicon.ico'
+
+function setFavicon(href: string) {
+  if (typeof document === 'undefined') return
+  let link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'icon'
+    document.head.appendChild(link)
+  }
+  if (link.getAttribute('href') !== href) link.setAttribute('href', href)
+}
+
 export default function UserLayout(props: ParentProps) {
   const params = useParams()
   const slug = () => params.user
@@ -107,6 +120,13 @@ export default function UserLayout(props: ParentProps) {
         setLoading(false)
       })
     })
+  })
+
+  createEffect(() => {
+    const avatar = blog()?.avatarUrl
+    if (typeof document === 'undefined') return
+    setFavicon(avatar || DEFAULT_FAVICON)
+    onCleanup(() => setFavicon(DEFAULT_FAVICON))
   })
 
   createEffect(
