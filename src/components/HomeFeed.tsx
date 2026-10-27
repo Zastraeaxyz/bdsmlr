@@ -17,7 +17,7 @@ import {
 } from "~/lib/following";
 import { freshPosts } from "~/lib/feedPagination";
 import { useAuth } from "~/lib/useAuth";
-import SortDropdown from "~/components/SortDropdown";
+import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
 import Header from "~/components/Header";
 import SearchHelp from "~/components/SearchHelp";
@@ -25,6 +25,7 @@ import { LightBox } from "~/components/LightBox";
 import SearchHistory from "~/components/SearchHistory";
 import ViewDropdown from "~/components/ViewDropdown";
 import { PostCard } from "~/components/PostCard";
+import { countBucket, trackEvent } from "~/lib/analytics";
 import {
   loadFeedView,
   saveFeedView,
@@ -142,6 +143,12 @@ export default function HomeFeed() {
         }
         const incoming = searchResultPosts(data);
         setPosts(incoming);
+        if (targetPage === 1) {
+          trackEvent("search-results", {
+            surface: "following",
+            count: countBucket(incoming.length),
+          });
+        }
         searchSession = data.sessionId ?? resumeSession;
         searchPage = targetPage + 1;
         if (
@@ -284,10 +291,15 @@ export default function HomeFeed() {
 
   const doSearch = (e: Event) => {
     e.preventDefault();
+    trackEvent("search", {
+      surface: "following",
+      mode: query().trim() ? "query" : "clear",
+    });
     runSearch(query());
   };
 
   const clearSearch = () => {
+    trackEvent("search", { surface: "following", mode: "clear" });
     runSearch("");
   };
 
@@ -306,6 +318,10 @@ export default function HomeFeed() {
             <SortDropdown
               value={`${sortField()}-${sortOrder()}`}
               onChange={(sf, so) => {
+                trackEvent("sort-change", {
+                  surface: "following",
+                  sort: sortOptionLabel(sf, so),
+                });
                 setSortField(sf);
                 setSortOrder(so);
                 nextPageToken = null;
@@ -352,6 +368,7 @@ export default function HomeFeed() {
             <ViewDropdown
               value={view()}
               onChange={(v) => {
+                trackEvent("view-change", { surface: "following", view: v });
                 setView(v);
                 saveFeedView(v);
               }}
@@ -393,7 +410,10 @@ export default function HomeFeed() {
 
           <button
             ref={loadMoreRef}
-            onClick={loadMore}
+            onClick={() => {
+              trackEvent("load-more", { surface: "following" });
+              void loadMore();
+            }}
             disabled={loadingMore()}
             class="btn-ghost"
             style="display:block;margin:24px auto"

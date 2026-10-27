@@ -1,6 +1,8 @@
 import { createSignal, Show } from "solid-js";
 import type { Post } from "~/lib/api";
 import { reblog } from "~/lib/postInteractions";
+import { postTypeName } from "~/lib/postTypes";
+import { surfaceForPath, trackEvent } from "~/lib/analytics";
 
 export function ReblogComposer(props: {
   post: Post;
@@ -34,6 +36,16 @@ export function ReblogComposer(props: {
         tags: tagList(),
       });
       setStatus(mode === "queue" ? "Queued." : "Reblogged.");
+      trackEvent("reblog", {
+        surface:
+          typeof window === "undefined"
+            ? "post"
+            : surfaceForPath(window.location.pathname),
+        postType: postTypeName(props.post.type),
+        mode,
+        hasNote: note().trim().length > 0,
+        tagCount: tagList().length,
+      });
       props.onDone?.(mode);
       props.onClose();
     } catch (err: unknown) {

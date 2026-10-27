@@ -8,7 +8,7 @@ import {
   type Post,
 } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
-import SortDropdown from "~/components/SortDropdown";
+import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
 import Header from "~/components/Header";
 import { LightBox } from "~/components/LightBox";
@@ -19,6 +19,7 @@ import {
   saveFeedView,
   type FeedView,
 } from "~/lib/feedView";
+import { trackEvent } from "~/lib/analytics";
 
 export default function LikedPosts() {
   const { user, activeBlogId } = useAuth();
@@ -131,6 +132,7 @@ export default function LikedPosts() {
           <SortDropdown
             value={`${sortField()}-${sortOrder()}`}
             onChange={(sf, so) => {
+              trackEvent("sort-change", { surface: "liked", sort: sortOptionLabel(sf, so) });
               setSortField(sf);
               setSortOrder(so);
               nextPageToken = null;
@@ -142,6 +144,7 @@ export default function LikedPosts() {
           <ViewDropdown
             value={view()}
             onChange={(v) => {
+              trackEvent("view-change", { surface: "liked", view: v });
               setView(v);
               saveFeedView(v);
             }}

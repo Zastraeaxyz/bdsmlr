@@ -12,10 +12,11 @@ import { PostCard } from "~/components/PostCard";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
-import SortDropdown from "~/components/SortDropdown";
+import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
 import { tagSearchHref } from "~/lib/tagLinks";
 import { markActivitySeen } from "~/lib/activityUnread";
+import { trackEvent } from "~/lib/analytics";
 
 const PAGE_SIZE = 20;
 
@@ -81,6 +82,7 @@ export function ActivityFeed(props: { blogName: string }) {
   const visible = () => items().filter(matches);
 
   const toggleKind = (kind: ActivityKind) => {
+    trackEvent("activity-filter", { filter: kind });
     setSelected((prev) =>
       prev.includes(kind)
         ? prev.filter((value) => value !== kind)
@@ -195,6 +197,7 @@ export function ActivityFeed(props: { blogName: string }) {
         <SortDropdown
           value={`${sortField()}-${sortOrder()}`}
           onChange={(sf, so) => {
+            trackEvent("sort-change", { surface: "activity", sort: sortOptionLabel(sf, so) });
             setSortField(sf);
             setSortOrder(so);
           }}

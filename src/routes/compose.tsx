@@ -5,6 +5,7 @@ import Header from "~/components/Header";
 import { useAuth } from "~/lib/useAuth";
 import { features } from "~/lib/features";
 import { FeatureDisabled } from "~/components/FeatureDisabled";
+import { countBucket, trackEvent } from "~/lib/analytics";
 import {
   LegacyError,
   createAudioPost,
@@ -166,6 +167,12 @@ export default function ComposePage() {
             ? "Saved to your drafts."
             : "Post published.",
       );
+      trackEvent("compose-submit", {
+        postType: kind(),
+        mode,
+        tagCount: tagList.length,
+        mediaCount: countBucket(files().length),
+      });
       setTitle("");
       setContent("");
       setUrl("");
@@ -175,6 +182,11 @@ export default function ComposePage() {
       setFiles([]);
     } catch (err: unknown) {
       const status = err instanceof LegacyError ? err.status : 0;
+      trackEvent("compose-failure", {
+        postType: kind(),
+        mode,
+        reason: status === 429 ? "rate-limited" : "error",
+      });
       setError(
         status === 429
           ? "BDSMLR temporarily blocked the request. Wait a moment and try again."

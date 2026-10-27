@@ -29,6 +29,8 @@ import { formatRelativeDate } from "~/lib/date";
 import { getCachedPost, setCachedPost } from "~/lib/postCache";
 import { useAuth } from "~/lib/useAuth";
 import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
+import { postTypeName } from "~/lib/postTypes";
+import { trackEvent } from "~/lib/analytics";
 
 export default function PostDetail(props: {
   postId: number;
@@ -41,6 +43,18 @@ export default function PostDetail(props: {
   const [blogGone, setBlogGone] = createSignal(false);
   const [blogCheckDone, setBlogCheckDone] = createSignal(false);
   const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
+  let trackedPostId: number | null = null;
+
+  createEffect(() => {
+    const p = post();
+    if (!p || loading() || error()) return;
+    if (trackedPostId === p.id) return;
+    trackedPostId = p.id;
+    trackEvent("post-view", {
+      postType: postTypeName(p.type),
+      reblog: !!p.originPostId,
+    });
+  });
 
   createEffect(() => {
     const postId = Number(props.postId);
@@ -182,28 +196,7 @@ function PostDetailView(props: {
     }
   };
 
-  const postTypeLabel = (type?: number) => {
-    switch (type) {
-      case 0:
-        return "General";
-      case 1:
-        return "Text";
-      case 2:
-        return "Image";
-      case 3:
-        return "Video";
-      case 4:
-        return "Audio";
-      case 5:
-        return "Link";
-      case 6:
-        return "Poll";
-      case 7:
-        return "Quote";
-      default:
-        return "Post";
-    }
-  };
+  const postTypeLabel = (type?: number) => postTypeName(type);
 
   const mediaItems = () => getPostMediaItems(props.post);
 
@@ -215,6 +208,28 @@ function PostDetailView(props: {
         ? processContentHtml(c.html, getPostMediaUrls(props.post))
         : c.html;
     return sanitizeHtml(processed);
+  };
+
+  const handleLike = () => {
+    trackEvent("like", {
+      surface: "post",
+      postType: postTypeName(props.post.type),
+      action: interaction().liked ? "unlike" : "like",
+    });
+    runAction(toggleLike);
+  };
+
+  const handleEngagement = () => {
+    trackEvent("engagement-open", { kind: "likes-reblogs" });
+    setShowEngagement(true);
+  };
+
+  const handleTagClick = () => {
+    trackEvent("tag-click", { surface: "post" });
+  };
+
+  const handleOutbound = () => {
+    trackEvent("outbound-bdsmlr", { surface: "post" });
   };
 
   return (
@@ -287,7 +302,7 @@ function PostDetailView(props: {
         <div class="post-detail-tags">
           <For each={props.post.tags}>
             {(t) => (
-              <A href={tagSearchHref(t)} class="tag">
+              <A href={tagSearchHref(t)} class="tag" onClick={handleTagClick}>
                 #{t}
               </A>
             )}
@@ -307,7 +322,7 @@ function PostDetailView(props: {
           <button
             type="button"
             class={interaction().liked ? "post-action active" : "post-action"}
-            onClick={() => runAction(toggleLike)}
+            onClick={handleLike}
             disabled={busy()}
             title={interaction().liked ? "Unlike" : "Like"}
             aria-label={interaction().liked ? "Unlike post" : "Like post"}
@@ -346,7 +361,7 @@ function PostDetailView(props: {
           <button
             type="button"
             class="download-btn"
-            onClick={() => setShowEngagement(true)}
+            onClick={handleEngagement}
             title="Likes and reblogs"
             aria-label="View likes and reblogs"
           >
@@ -360,6 +375,7 @@ function PostDetailView(props: {
             rel="noopener noreferrer"
             class="download-btn"
             title="Open on BDSMLR"
+            onClick={handleOutbound}
           >
             <BdsmlrIcon />
           </a>

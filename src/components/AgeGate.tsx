@@ -1,5 +1,6 @@
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import { confirmAge, hasConfirmedAge } from "~/lib/ageGate";
+import { trackEvent } from "~/lib/analytics";
 
 export function AgeGate() {
   const [visible, setVisible] = createSignal(false);
@@ -21,8 +22,13 @@ export function AgeGate() {
 
   const accept = () => {
     confirmAge();
+    trackEvent("age-gate-accept");
     unlockScroll();
     setVisible(false);
+  };
+
+  const leave = () => {
+    trackEvent("age-gate-leave");
   };
 
   return (
@@ -45,7 +51,7 @@ export function AgeGate() {
             <button type="button" class="age-gate-confirm" onClick={accept} autofocus>
               I am 18 or older
             </button>
-            <a class="age-gate-leave" href="https://www.google.com">
+            <a class="age-gate-leave" href="https://www.google.com" onClick={leave}>
               Leave
             </a>
           </div>

@@ -27,6 +27,7 @@ export default createHandler(() => (
               src="https://umami-production-6edd.up.railway.app/script.js"
               data-website-id="19de5ccc-4af5-4220-85ff-b83209ffa29e"
               data-auto-pageview="false"
+              data-do-not-track="true"
             ></script>
             {assets}
           </head>

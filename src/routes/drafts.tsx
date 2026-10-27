@@ -12,6 +12,7 @@ import {
   publishLegacyDraft,
 } from "~/lib/legacy";
 import type { LegacyDraft } from "~/lib/legacyDrafts";
+import { trackEvent } from "~/lib/analytics";
 
 function imageUrl(value?: string): string {
   if (!value) return "";
@@ -61,6 +62,7 @@ export default function DraftsPage() {
     setNotice("");
     try {
       await action();
+      trackEvent("draft-action", { action: label });
       setNotice(success);
       setDrafts((prev) => prev.filter((draft) => draft.id !== id));
     } catch (err: unknown) {

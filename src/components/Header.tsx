@@ -6,6 +6,7 @@ import { DiscordIcon } from './Icons'
 import { unreadCount, refreshMessageUnread } from '../lib/messageUnread'
 import { activityUnreadCount, refreshActivityUnread } from '../lib/activityUnread'
 import { features } from '../lib/features'
+import { trackEvent } from '../lib/analytics'
 
 interface HeaderProps {
   info?: string
@@ -22,6 +23,7 @@ export default function Header(props: HeaderProps) {
 
   const handleSignOut = () => {
     setShowDropdown(false)
+    trackEvent('login', { result: 'logout' })
     logout()
     navigate('/login', { replace: true })
   }

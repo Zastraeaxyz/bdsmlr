@@ -13,6 +13,7 @@ import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
 import { upgradeToLightbox } from "~/lib/sanitize";
 import { tagSearchHref } from "~/lib/tagLinks";
+import { countBucket, trackEvent } from "~/lib/analytics";
 
 const PAGE_SIZE = 20;
 
@@ -79,6 +80,10 @@ export function PostSearchResults(props: {
       }
       const incoming = searchResultPosts(data);
       setPosts(incoming);
+      trackEvent("search-results", {
+        surface: "profile",
+        count: countBucket(incoming.length),
+      });
       searchSession = data.sessionId ?? null;
       searchPage = 2;
       hasMore =
@@ -118,6 +123,7 @@ export function PostSearchResults(props: {
   };
 
   const openTag = (tag: string) => {
+    trackEvent("tag-click", { surface: "profile" });
     navigate(tagSearchHref(tag));
   };
 

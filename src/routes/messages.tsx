@@ -25,6 +25,7 @@ import {
 import { searchBlogs, type Blog } from "~/lib/api";
 import { setUnreadFromThreads } from "~/lib/messageUnread";
 import { formatRelativeDate } from "~/lib/date";
+import { trackEvent } from "~/lib/analytics";
 
 function messageTime(value?: string): string {
   if (!value) return "";
@@ -232,6 +233,7 @@ export default function Messages() {
     setNotice("");
     try {
       const data = await sendMessage(current.thread.name, body);
+      trackEvent("message-send", { mode: "reply" });
       appendSent(data);
       setDraft("");
     } catch (err: unknown) {
@@ -251,6 +253,7 @@ export default function Messages() {
     setNotice("");
     try {
       const data = await sendMessageImage(current.thread.name, file);
+      trackEvent("message-image");
       appendSent(data);
     } catch (err: unknown) {
       setError((err as Error)?.message || "Could not upload image");
@@ -271,6 +274,7 @@ export default function Messages() {
     setNotice("");
     try {
       const data = await sendMessage(to, body);
+      trackEvent("message-send", { mode: "new" });
       setShowNew(false);
       setNewTo("");
       setNewBody("");
@@ -325,6 +329,7 @@ export default function Messages() {
     setNotice("");
     try {
       await archiveMessageThread(current.thread.id);
+      trackEvent("conversation-action", { action: "archive" });
       updateThreads((prev) =>
         prev.map((t) =>
           t.id === current.thread.id ? { ...t, archived: true } : t,
@@ -354,6 +359,7 @@ export default function Messages() {
     setNotice("");
     try {
       await clearMessageThread(current.thread.id);
+      trackEvent("conversation-action", { action: "clear" });
       updateThreads((prev) =>
         prev.filter((t) => t.id !== current.thread.id),
       );
@@ -376,6 +382,9 @@ export default function Messages() {
     try {
       const data = await blockMessageThread(current.thread.id);
       const isBlocked = !!data.blocked;
+      trackEvent("conversation-action", {
+        action: isBlocked ? "block" : "unblock",
+      });
       setThread((prev) =>
         prev
           ? { ...prev, thread: { ...prev.thread, blocked: isBlocked } }

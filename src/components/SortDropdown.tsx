@@ -53,6 +53,11 @@ const ALL_OPTIONS: SortOption[] = [
   },
 ];
 
+export function sortOptionLabel(field: number, order: number): string {
+  const value = `${field}-${order}`;
+  return ALL_OPTIONS.find((option) => option.value === value)?.label ?? value;
+}
+
 export interface SortDropdownProps {
   value: string;
   onChange: (field: number, order: number) => void;

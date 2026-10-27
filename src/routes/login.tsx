@@ -2,6 +2,7 @@ import { createSignal, createEffect, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { useAuth } from "~/lib/useAuth";
+import { trackEvent } from "~/lib/analytics";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -25,8 +26,10 @@ export default function Login() {
     setError("");
     try {
       const u = await authLogin(email(), password());
+      trackEvent("login", { result: "success" });
       navigate(`/${u.blog_name}`, { replace: true });
     } catch (err: unknown) {
+      trackEvent("login", { result: "failure" });
       setError((err as Error)?.message || "Login failed");
     } finally {
       setSubmitting(false);

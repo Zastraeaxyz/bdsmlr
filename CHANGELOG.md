@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Expanded, privacy-conscious usage analytics**: The app now records coarse, anonymous events such as likes, reblogs, searches, comments, sign-ins, follows, and feed view changes, so the next round of work can follow how people actually use the app. Events never include post content, comments, messages, search text, tag names, blog names, emails, or passwords. Do Not Track is honored.
 - **Landing page tone**: Removed comparisons that criticized the official BDSMLR frontend. The page now presents the app as a community effort and keeps the offer to work with the BDSMLR team in a professional capacity.
 - **Landing AI spend section simplified**: The per-model breakdown is gone. The section now says that most work uses DeepSeek V4.1 Flash, above the total spend and session count.
 - **Simpler About page**: The backend explanation is now a few short conversational paragraphs instead of two long lists.

@@ -1,5 +1,6 @@
 import { Show, createEffect, onCleanup } from 'solid-js'
 import { getMediaType } from '../lib/sanitize'
+import { surfaceForPath, trackEvent } from '../lib/analytics'
 import { AutoLoopVideo } from './AutoLoopVideo'
 
 interface LightBoxProps {
@@ -8,6 +9,14 @@ interface LightBoxProps {
 }
 
 export function LightBox(props: LightBoxProps) {
+  createEffect(() => {
+    if (props.url === null) return
+    trackEvent("media-open", {
+      surface: surfaceForPath(window.location.pathname),
+      mediaType: getMediaType(props.url),
+    })
+  })
+
   createEffect(() => {
     if (props.url === null) return
     const handler = (e: KeyboardEvent) => {

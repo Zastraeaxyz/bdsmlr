@@ -7,6 +7,7 @@ import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { searchBlogs, blogTagAffinity, type Blog, type TagAffinityItem } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
 import { tagSearchHref } from "~/lib/tagLinks";
+import { countBucket, trackEvent } from "~/lib/analytics";
 
 const PAGE_SIZE = 20;
 
@@ -56,6 +57,12 @@ export default function BlogSearchPage() {
     try {
       const data = await searchBlogs(q, PAGE_SIZE, token);
       const incoming = data.blogs ?? [];
+      if (!token) {
+        trackEvent("search-results", {
+          surface: "blogs",
+          count: countBucket(incoming.length),
+        });
+      }
       setBlogs((prev) => (token ? [...prev, ...incoming] : incoming));
       setNextPageToken(data.page?.nextPageToken ?? null);
       if (incoming.length < PAGE_SIZE) setNextPageToken(null);
@@ -76,6 +83,10 @@ export default function BlogSearchPage() {
   const submit = (e: Event) => {
     e.preventDefault();
     const q = query().trim();
+    trackEvent("search", {
+      surface: "blogs",
+      mode: q ? "query" : "clear",
+    });
     setSearchParams({ q: q || undefined }, { replace: true });
   };
 
@@ -106,6 +117,7 @@ export default function BlogSearchPage() {
                       href={tagSearchHref(item.tag!)}
                       class="tag"
                       title={`Search posts tagged ${item.tag}`}
+                      onClick={() => trackEvent("tag-click", { surface: "blog-search" })}
                     >
                       <span class="tag-name">{item.tag}</span>
                       <span class="tag-count">{item.count ?? 0}</span>

@@ -61,6 +61,41 @@ export default function AboutPage() {
         </section>
 
         <section class="about-section">
+          <h3>Analytics</h3>
+          <div class="about-copy">
+            <p>
+              Better BDSMLR uses Umami, a cookieless analytics tool. It tells us
+              which parts of the app get used, so we know where to spend time
+              and what to fix.
+            </p>
+            <p>
+              We record page views, approximate location such as country, and
+              coarse actions. That includes likes and unlikes, reblogs and their
+              mode, comments by length only, that a search happened, follows,
+              sign-ins, sort and view changes, and similar feature use. Profile
+              page views are recorded so we can see which profiles are popular.
+              None of this is linked to your account.
+            </p>
+          </div>
+          <div class="about-callout">
+            <p>
+              Analytics does not collect your account or blog identity, post
+              content, comment text, messages, search terms, tag names, email
+              addresses, or passwords. There is no session recording, no
+              advertising pixel, no cross-site tracking, and we do not sell
+              data.
+            </p>
+          </div>
+          <div class="about-copy">
+            <p>
+              Umami does not use cookies. The tracker honors Do Not Track, so if
+              your browser sends it, nothing is recorded. The goal is to
+              understand the app, not the people using it.
+            </p>
+          </div>
+        </section>
+
+        <section class="about-section">
           <h3>When something breaks</h3>
           <div class="about-callout">
             <p>

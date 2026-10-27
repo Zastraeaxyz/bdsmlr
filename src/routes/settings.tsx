@@ -10,6 +10,7 @@ import {
   changeLegacyPassword,
   LegacyError,
 } from "~/lib/legacy";
+import { trackEvent } from "~/lib/analytics";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function SettingsPage() {
     setNotice("");
     try {
       await action();
+      trackEvent("settings-save", { field: label });
       setNotice(success);
     } catch (err: unknown) {
       setError(

@@ -21,7 +21,7 @@ import {
   type TopTag,
 } from "~/lib/api";
 import { GearIcon, WarningIcon } from "~/components/Icons";
-import SortDropdown from "~/components/SortDropdown";
+import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
 import { upgradeToLightbox } from "~/lib/sanitize";
 import SearchHelp from "~/components/SearchHelp";
 import { LightBox } from "~/components/LightBox";
@@ -40,6 +40,7 @@ import {
   removeSearchHistory,
 } from "~/lib/searchHistory";
 import { freshPosts } from "~/lib/feedPagination";
+import { countBucket, trackEvent } from "~/lib/analytics";
 
 const PAGE_SIZE = 20;
 
@@ -271,6 +272,12 @@ export default function UserFeed() {
         }
         const incoming = searchResultPosts(data);
         setPosts(incoming);
+        if (targetPage === 1) {
+          trackEvent("search-results", {
+            surface: "profile",
+            count: countBucket(incoming.length),
+          });
+        }
         searchSession = data.sessionId ?? resumeSession;
         searchPage = targetPage + 1;
         if (
@@ -388,12 +395,17 @@ export default function UserFeed() {
     e.preventDefault();
     const name = slug();
     if (!name) return;
+    trackEvent("search", {
+      surface: "profile",
+      mode: query().trim() ? "query" : "clear",
+    });
     runSearch(query());
   };
 
   const clearSearch = () => {
     const name = slug();
     if (!name) return;
+    trackEvent("search", { surface: "profile", mode: "clear" });
     runSearch("");
   };
 
@@ -417,6 +429,7 @@ export default function UserFeed() {
       return;
     }
     e.preventDefault();
+    trackEvent("tag-click", { surface: "profile" });
     handleTagClick(tag);
   };
 
@@ -493,6 +506,7 @@ export default function UserFeed() {
                         return;
                       }
                       e.preventDefault();
+                      trackEvent("tag-click", { surface: "profile" });
                       handleTagClick(t.name);
                       setShowAllTags(false);
                     }}
@@ -511,6 +525,10 @@ export default function UserFeed() {
           <SortDropdown
             value={`${sortField()}-${sortOrder()}`}
             onChange={(sf, so) => {
+              trackEvent("sort-change", {
+                surface: "profile",
+                sort: sortOptionLabel(sf, so),
+              });
               setSortField(sf);
               setSortOrder(so);
               nextPageToken = null;
@@ -588,6 +606,7 @@ export default function UserFeed() {
           <ViewDropdown
             value={view()}
             onChange={(v) => {
+              trackEvent("view-change", { surface: "profile", view: v });
               setView(v);
               saveFeedView(v);
             }}

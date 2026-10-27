@@ -31,6 +31,7 @@ import {
   addCachedFollowingId,
   removeCachedFollowingId,
 } from '~/lib/following'
+import { trackEvent } from '~/lib/analytics'
 
 const DEFAULT_FAVICON = '/favicon.ico'
 
@@ -207,6 +208,7 @@ export default function UserLayout(props: ParentProps) {
       }
       setFollowed(next)
       setFollowersCount((count) => Math.max(0, (count ?? 0) + (next ? 1 : -1)))
+      trackEvent('follow', { action: next ? 'follow' : 'unfollow' })
       if (next) addCachedFollowingId(target, actor)
       else removeCachedFollowingId(target, actor)
     } catch (err: unknown) {
@@ -240,6 +242,7 @@ export default function UserLayout(props: ParentProps) {
         throw new Error(res.error?.message || 'Could not update block')
       }
       setBlocked(next)
+      trackEvent('block', { action: next ? 'block' : 'unblock' })
       if (next) {
         setFollowed(false)
         removeCachedFollowingId(target, actor)
@@ -266,6 +269,7 @@ export default function UserLayout(props: ParentProps) {
         throw new Error(res.error?.message || 'Could not submit report')
       }
       setReportDone(true)
+      trackEvent('report', { target: 'blog' })
       setShowReport(false)
       setReportReason('')
     } catch (err: unknown) {
@@ -381,6 +385,7 @@ export default function UserLayout(props: ParentProps) {
                   rel="noopener noreferrer"
                   class="download-btn"
                   title="Open on BDSMLR"
+                  onClick={() => trackEvent('outbound-bdsmlr', { surface: 'profile' })}
                 >
                   <BdsmlrIcon />
                 </a>
@@ -389,6 +394,7 @@ export default function UserLayout(props: ParentProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   class="download-btn"
+                  onClick={() => trackEvent('rss-open')}
                   classList={{
                     'download-btn-active': location.pathname === `/${slug()}/rss`,
                   }}
@@ -415,6 +421,7 @@ export default function UserLayout(props: ParentProps) {
                 href={`/${slug()}`}
                 class="blog-nav-tab"
                 classList={{ 'blog-nav-tab-active': feedActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'feed' })}
               >
                 Feed
               </A>
@@ -422,6 +429,7 @@ export default function UserLayout(props: ParentProps) {
                 href={`/${slug()}/following`}
                 class="blog-nav-tab"
                 classList={{ 'blog-nav-tab-active': followingActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'following' })}
               >
                 Following
               </A>
@@ -429,6 +437,7 @@ export default function UserLayout(props: ParentProps) {
                 href={`/${slug()}/followers`}
                 class="blog-nav-tab"
                 classList={{ 'blog-nav-tab-active': followersActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'followers' })}
               >
                 Followers
               </A>
@@ -436,6 +445,7 @@ export default function UserLayout(props: ParentProps) {
                 href={`/${slug()}/siblings`}
                 class="blog-nav-tab"
                 classList={{ 'blog-nav-tab-active': siblingsActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'siblings' })}
               >
                 Other blogs
               </A>
@@ -443,6 +453,7 @@ export default function UserLayout(props: ParentProps) {
                 href={`/${slug()}/activity`}
                 class="blog-nav-tab"
                 classList={{ 'blog-nav-tab-active': activityActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'activity' })}
               >
                 Activity
               </A>
@@ -450,6 +461,7 @@ export default function UserLayout(props: ParentProps) {
                 href={`/${slug()}/follower-feed`}
                 class="blog-nav-tab"
                 classList={{ 'blog-nav-tab-active': followerFeedActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'follower-feed' })}
               >
                 Followers' feed
               </A>
@@ -457,6 +469,7 @@ export default function UserLayout(props: ParentProps) {
                 href={`/${slug()}/archive`}
                 class="blog-nav-tab"
                 classList={{ 'blog-nav-tab-active': archiveActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'archive' })}
               >
                 Archive
               </A>
@@ -477,6 +490,7 @@ export default function UserLayout(props: ParentProps) {
                 rel="noopener noreferrer"
                 class="download-btn"
                 title="RSS feed"
+                onClick={() => trackEvent('rss-open')}
               >
                 <RssIcon />
               </a>

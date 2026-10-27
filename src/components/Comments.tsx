@@ -9,6 +9,7 @@ import { useAuth } from "~/lib/useAuth";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { formatRelativeDate } from "~/lib/date";
+import { surfaceForPath, textLengthBucket, trackEvent } from "~/lib/analytics";
 
 const PAGE_SIZE = 20;
 
@@ -130,6 +131,13 @@ export function Comments(props: CommentsProps) {
       };
       setComments((prev) => [posted, ...prev]);
       updateCount(count() + 1);
+      trackEvent("comment-submit", {
+        surface:
+          typeof window === "undefined"
+            ? "post"
+            : surfaceForPath(window.location.pathname),
+        length: textLengthBucket(text.length),
+      });
       setDraft("");
     } catch (err: unknown) {
       setError((err as Error)?.message || "Could not post comment");

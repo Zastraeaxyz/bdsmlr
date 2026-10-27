@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { pageviewPath } from "./analytics";
+import {
+  countBucket,
+  pageviewPath,
+  sanitizeEventProps,
+  surfaceForPath,
+  textLengthBucket,
+} from "./analytics";
 
 const STATIC_PAGES = [
   "/",
@@ -81,5 +87,89 @@ describe("pageviewPath", () => {
     expect(pageviewPath("/previews")).toBeNull();
     expect(pageviewPath("/assets")).toBeNull();
     expect(pageviewPath("/post")).toBeNull();
+  });
+});
+
+describe("sanitizeEventProps", () => {
+  it("keeps only props allowed for the event", () => {
+    const props = sanitizeEventProps("like", {
+      surface: "following",
+      postType: "Image",
+      action: "like",
+      secret: "should not appear",
+    });
+    expect(props).toEqual({
+      surface: "following",
+      postType: "Image",
+      action: "like",
+    });
+  });
+
+  it("drops free text that is not an allowed prop", () => {
+    const props = sanitizeEventProps("comment-submit", {
+      surface: "post",
+      length: "short",
+      text: "a private comment",
+    });
+    expect(props).toEqual({ surface: "post", length: "short" });
+  });
+
+  it("normalizes booleans, numbers, and unsafe strings", () => {
+    expect(
+      sanitizeEventProps("reblog", {
+        hasNote: true,
+        tagCount: 2.9,
+        mode: "queue",
+      }),
+    ).toEqual({ mode: "queue", hasNote: "true", tagCount: 2 });
+
+    expect(
+      sanitizeEventProps("like", {
+        action: "  like\u0000  ",
+      }),
+    ).toEqual({ action: "like" });
+  });
+
+  it("returns an empty object for events without props", () => {
+    expect(sanitizeEventProps("age-gate-accept")).toEqual({});
+    expect(
+      sanitizeEventProps("age-gate-accept", {
+        surface: "landing",
+      }),
+    ).toEqual({});
+  });
+});
+
+describe("surfaceForPath", () => {
+  it("maps coarse surfaces", () => {
+    expect(surfaceForPath("/")).toBe("landing");
+    expect(surfaceForPath("/home")).toBe("following");
+    expect(surfaceForPath("/for-you")).toBe("for-you");
+    expect(surfaceForPath("/liked")).toBe("liked");
+    expect(surfaceForPath("/activity")).toBe("activity");
+    expect(surfaceForPath("/blog-search")).toBe("blog-search");
+    expect(surfaceForPath("/post/123")).toBe("post");
+    expect(surfaceForPath("/dodenial/post/123")).toBe("post");
+    expect(surfaceForPath("/dodenial")).toBe("profile");
+    expect(surfaceForPath("/dodenial/archive")).toBe("profile");
+  });
+});
+
+describe("buckets", () => {
+  it("buckets counts", () => {
+    expect(countBucket(0)).toBe("0");
+    expect(countBucket(1)).toBe("1-5");
+    expect(countBucket(5)).toBe("1-5");
+    expect(countBucket(6)).toBe("6-10");
+    expect(countBucket(11)).toBe("11-20");
+    expect(countBucket(21)).toBe("20+");
+  });
+
+  it("buckets text length", () => {
+    expect(textLengthBucket(0)).toBe("short");
+    expect(textLengthBucket(139)).toBe("short");
+    expect(textLengthBucket(140)).toBe("medium");
+    expect(textLengthBucket(499)).toBe("medium");
+    expect(textLengthBucket(500)).toBe("long");
   });
 });

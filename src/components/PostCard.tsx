@@ -21,6 +21,8 @@ import { ReblogComposer } from "~/components/ReblogComposer";
 import { PostMediaList } from "~/components/PostMediaList";
 import { useAuth } from "~/lib/useAuth";
 import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
+import { postTypeName } from "~/lib/postTypes";
+import { surfaceForPath, trackEvent } from "~/lib/analytics";
 
 export interface PostCardProps {
   post: Post;
@@ -54,27 +56,44 @@ export function PostCard(props: PostCardProps) {
     }
   };
 
-  const postTypeLabel = (type?: number) => {
-    switch (type) {
-      case 0:
-        return "General";
-      case 1:
-        return "Text";
-      case 2:
-        return "Image";
-      case 3:
-        return "Video";
-      case 4:
-        return "Audio";
-      case 5:
-        return "Link";
-      case 6:
-        return "Poll";
-      case 7:
-        return "Quote";
-      default:
-        return "Post";
-    }
+  const postTypeLabel = (type?: number) => postTypeName(type);
+
+  const surface = () =>
+    typeof window === "undefined"
+      ? "post"
+      : surfaceForPath(window.location.pathname);
+
+  const handleLike = () => {
+    trackEvent("like", {
+      surface: surface(),
+      postType: postTypeName(post.type),
+      action: interaction().liked ? "unlike" : "like",
+    });
+    runAction(toggleLike);
+  };
+
+  const handleCommentsOpen = () => {
+    trackEvent("comments-open", {
+      surface: surface(),
+      postType: postTypeName(post.type),
+    });
+    setShowComments(true);
+  };
+
+  const handleTagClick = (tag: string) => {
+    trackEvent("tag-click", { surface: surface() });
+    props.onTagClick?.(tag);
+  };
+
+  const handlePermalink = () => {
+    trackEvent("post-open", {
+      surface: surface(),
+      postType: postTypeName(post.type),
+    });
+  };
+
+  const handleOutbound = () => {
+    trackEvent("outbound-bdsmlr", { surface: surface() });
   };
 
   const mediaItems = () => getPostMediaItems(post);
@@ -145,7 +164,7 @@ export function PostCard(props: PostCardProps) {
                     <button
                       type="button"
                       class="tag"
-                      onClick={() => props.onTagClick?.(t)}
+                      onClick={() => handleTagClick(t)}
                     >
                       #{t}
                     </button>
@@ -165,7 +184,7 @@ export function PostCard(props: PostCardProps) {
                         return;
                       }
                       e.preventDefault();
-                      props.onTagClick?.(t);
+                      handleTagClick(t);
                     }}
                   >
                     #{t}
@@ -188,7 +207,7 @@ export function PostCard(props: PostCardProps) {
           <button
             type="button"
             class={interaction().liked ? "post-action active" : "post-action"}
-            onClick={() => runAction(toggleLike)}
+            onClick={handleLike}
             disabled={busy()}
             title={interaction().liked ? "Unlike" : "Like"}
             aria-label={interaction().liked ? "Unlike post" : "Like post"}
@@ -208,7 +227,7 @@ export function PostCard(props: PostCardProps) {
           <button
             type="button"
             class="post-action"
-            onClick={() => setShowComments(true)}
+            onClick={handleCommentsOpen}
             title="View comments"
             aria-label={`View ${commentsCount()} comments`}
           >
@@ -245,6 +264,7 @@ export function PostCard(props: PostCardProps) {
             rel="noopener noreferrer"
             class="download-btn"
             title="Open on BDSMLR"
+            onClick={handleOutbound}
           >
             <BdsmlrIcon />
           </a>
@@ -257,6 +277,7 @@ export function PostCard(props: PostCardProps) {
                 : `/post/${post.id}`
             }
             class="feed-card-permalink"
+            onClick={handlePermalink}
           >
             Permalink
           </A>

@@ -2,6 +2,7 @@ import { For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { useAuth } from "~/lib/useAuth";
+import { trackEvent } from "~/lib/analytics";
 import { DiscordIcon } from "~/components/Icons";
 import { AgeGate } from "~/components/AgeGate";
 
@@ -60,6 +61,9 @@ const PREVIEWS = [
 export default function LandingPage() {
   const { user, activeBlog } = useAuth();
 
+  const cta = (target: string, location: string) => () =>
+    trackEvent("cta-click", { target, location });
+
   return (
     <div class="landing-page">
       <Title>Better BDSMLR</Title>
@@ -75,6 +79,7 @@ export default function LandingPage() {
             target="_blank"
             rel="noopener noreferrer"
             class="landing-nav-link"
+            onClick={cta("discord", "nav")}
           >
             Discord
           </a>
@@ -84,12 +89,12 @@ export default function LandingPage() {
           <Show
             when={user()}
             fallback={
-              <A href="/login" class="landing-login">
+              <A href="/login" class="landing-login" onClick={cta("login", "nav")}>
                 Log in
               </A>
             }
           >
-            <A href="/home" class="landing-login">
+            <A href="/home" class="landing-login" onClick={cta("feed", "nav")}>
               Open feed
             </A>
           </Show>
@@ -119,16 +124,16 @@ export default function LandingPage() {
               <Show
                 when={user()}
                 fallback={
-                  <A href="/login" class="landing-cta">
+                  <A href="/login" class="landing-cta" onClick={cta("login", "hero")}>
                     Log in
                   </A>
                 }
               >
-                <A href="/home" class="landing-cta">
+                <A href="/home" class="landing-cta" onClick={cta("feed", "hero")}>
                   Open feed
                 </A>
               </Show>
-              <A href="#features" class="landing-secondary">
+              <A href="#features" class="landing-secondary" onClick={cta("features", "hero")}>
                 See features
               </A>
               <a
@@ -136,6 +141,7 @@ export default function LandingPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 class="landing-secondary landing-discord"
+                onClick={cta("discord", "hero")}
               >
                 <DiscordIcon class="icon" />
                 Discord community
@@ -249,6 +255,7 @@ export default function LandingPage() {
               target="_blank"
               rel="noopener noreferrer"
               class="landing-cta landing-contact-link"
+              onClick={cta("discord", "contact")}
             >
               <DiscordIcon class="icon" />
               Message me on Discord
@@ -265,11 +272,12 @@ export default function LandingPage() {
             href="https://discord.gg/w3BkPTwf2d"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={cta("discord", "footer")}
           >
             Discord
           </a>
-          <Show when={user()} fallback={<A href="/login">Log in</A>}>
-            <A href="/home">Open feed</A>
+          <Show when={user()} fallback={<A href="/login" onClick={cta("login", "footer")}>Log in</A>}>
+            <A href="/home" onClick={cta("feed", "footer")}>Open feed</A>
           </Show>
         </nav>
       </footer>
