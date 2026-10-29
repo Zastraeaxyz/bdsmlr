@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Draft editing**: Drafts now have an Edit action that opens the composer with the saved title, body, and tags, then saves back to BDSMLR.
 - **Post editing**: Your own posts now show an Edit action that opens the composer with the existing title, body, tags, and link details.
 - **Back-to-top button**: Feed pages now show a small floating button in the lower-left corner after you scroll down. Click it to return smoothly to the top of the feed.
+- **Upload previews**: Image, video, and audio posts now have a drop zone in the composer. Choose a file or drag it in and you see a preview right away: a thumbnail for images (click to enlarge), a player for video and audio, the file name and size, and a button to remove it before publishing.
 
 ### Fixed
 

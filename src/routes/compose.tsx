@@ -1,7 +1,8 @@
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
+import { LightBox } from "~/components/LightBox";
 import { useAuth } from "~/lib/useAuth";
 import { features } from "~/lib/features";
 import { countBucket, trackEvent } from "~/lib/analytics";
@@ -39,6 +40,34 @@ const TYPES: { id: LegacyPostType; label: string }[] = [
 ];
 
 type EditScope = "draft" | "queue" | "post";
+
+type UploadEntry = { file: File; url: string };
+
+const PHOTO_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+]);
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kilobytes = bytes / 1024;
+  if (kilobytes < 1024) return `${kilobytes.toFixed(kilobytes < 10 ? 1 : 0)} KB`;
+  const megabytes = kilobytes / 1024;
+  return `${megabytes.toFixed(megabytes < 10 ? 1 : 0)} MB`;
+}
+
+function fileMatchesKind(file: File, kind: LegacyPostType): boolean {
+  if (kind === "photo") {
+    return PHOTO_TYPES.has(file.type) || /\.(jpe?g|png|gif|webp)$/i.test(file.name);
+  }
+  if (kind === "video") return file.type === "video/mp4" || /\.mp4$/i.test(file.name);
+  if (kind === "audio") {
+    return file.type === "audio/mpeg" || /\.mp3$/i.test(file.name);
+  }
+  return true;
+}
 
 function parseTags(value: string): string[] {
   return [...new Set(
@@ -105,7 +134,10 @@ export default function ComposePage() {
   const [description, setDescription] = createSignal("");
   const [image, setImage] = createSignal("");
   const [tags, setTags] = createSignal("");
-  const [files, setFiles] = createSignal<File[]>([]);
+  const [uploads, setUploads] = createSignal<UploadEntry[]>([]);
+  const files = () => uploads().map((entry) => entry.file);
+  const [dragging, setDragging] = createSignal(false);
+  const [previewUrl, setPreviewUrl] = createSignal<string | null>(null);
   const [busy, setBusy] = createSignal(false);
   const [previewBusy, setPreviewBusy] = createSignal(false);
   const [error, setError] = createSignal("");
@@ -196,7 +228,7 @@ export default function ComposePage() {
     setDescription("");
     setImage("");
     setTags("");
-    setFiles([]);
+    clearUploads();
   };
 
   const targetBlogId = () => {
@@ -291,7 +323,7 @@ export default function ComposePage() {
       setDescription("");
       setImage("");
       setTags("");
-      setFiles([]);
+      clearUploads();
     } catch (err: unknown) {
       const status = err instanceof LegacyError ? err.status : 0;
       trackEvent(scope ? "post-edit-failure" : "compose-failure", {
@@ -346,6 +378,77 @@ export default function ComposePage() {
   };
 
   const fileMultiple = () => kind() === "photo";
+
+  const fileAcceptLabel = () => {
+    if (kind() === "photo") return "JPG, PNG, GIF or WebP. You can add several.";
+    if (kind() === "video") return "MP4";
+    return "MP3";
+  };
+
+  const revokeUploads = (entries: UploadEntry[]) => {
+    for (const entry of entries) URL.revokeObjectURL(entry.url);
+  };
+
+  const clearUploads = () => {
+    revokeUploads(uploads());
+    setUploads([]);
+    setPreviewUrl(null);
+  };
+
+  const removeUpload = (index: number) => {
+    const entry = uploads()[index];
+    if (!entry) return;
+    if (previewUrl() === entry.url) setPreviewUrl(null);
+    URL.revokeObjectURL(entry.url);
+    setUploads((previous) =>
+      previous.filter((_, position) => position !== index),
+    );
+  };
+
+  const addUploads = (list: FileList | null) => {
+    if (!list || list.length === 0) return;
+    const incoming = Array.from(list);
+    const allowed = incoming.filter((file) => fileMatchesKind(file, kind()));
+    const rejected = incoming.filter((file) => !fileMatchesKind(file, kind()));
+
+    if (rejected.length > 0) {
+      const names = rejected.map((file) => file.name).join(", ");
+      setError(
+        `${names} ${rejected.length === 1 ? "is not a supported file type" : "are not supported file types"} for ${typeLabel().toLowerCase()} posts.`,
+      );
+    } else {
+      setError("");
+    }
+
+    if (allowed.length === 0) return;
+
+    const entries = allowed.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+
+    if (fileMultiple()) {
+      setUploads((previous) => [...previous, ...entries]);
+    } else {
+      revokeUploads(uploads());
+      setPreviewUrl(null);
+      setUploads(entries.slice(0, 1));
+    }
+  };
+
+  const uploadNoun = () => {
+    const count = uploads().length;
+    if (kind() === "photo") return count === 1 ? "image" : "images";
+    if (kind() === "video") return "video";
+    return "audio";
+  };
+
+  const uploadTotalSize = () =>
+    formatBytes(
+      uploads().reduce((total, entry) => total + entry.file.size, 0),
+    );
+
+  onCleanup(() => revokeUploads(uploads()));
 
   const typeLabel = () =>
     TYPES.find((type) => type.id === kind())?.label ?? "Post";
@@ -523,7 +626,7 @@ export default function ComposePage() {
                     </p>
                   }
                 >
-                  <label class="compose-field">
+                  <div class="compose-field">
                     <span>
                       {kind() === "photo"
                         ? "Images"
@@ -531,19 +634,121 @@ export default function ComposePage() {
                           ? "Video"
                           : "Audio"}
                     </span>
-                    <input
-                      type="file"
-                      accept={fileAccept()}
-                      multiple={fileMultiple()}
-                      onChange={(e) =>
-                        setFiles(Array.from(e.currentTarget.files ?? []))
-                      }
-                    />
-                  </label>
-                  <Show when={files().length > 0}>
-                    <p class="compose-files">
-                      Selected: {files().map((file) => file.name).join(", ")}
-                    </p>
+                    <div
+                      class="compose-drop"
+                      classList={{ "compose-drop-active": dragging() }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragging(true);
+                      }}
+                      onDragLeave={() => setDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragging(false);
+                        addUploads(e.dataTransfer?.files ?? null);
+                      }}
+                    >
+                      <input
+                        class="compose-drop-input"
+                        type="file"
+                        accept={fileAccept()}
+                        multiple={fileMultiple()}
+                        aria-label={
+                          fileMultiple() ? "Choose images" : "Choose a file"
+                        }
+                        onChange={(e) => {
+                          addUploads(e.currentTarget.files);
+                          e.currentTarget.value = "";
+                        }}
+                      />
+                      <strong>
+                        {fileMultiple() ? "Choose images" : "Choose a file"}
+                      </strong>
+                      <span>or drag and drop {fileMultiple() ? "them" : "it"} here</span>
+                      <span class="compose-drop-hint">{fileAcceptLabel()}</span>
+                    </div>
+                  </div>
+                  <Show when={uploads().length > 0}>
+                    <div class="compose-upload-summary">
+                      <span>
+                        {uploads().length} {uploadNoun()} · {uploadTotalSize()}
+                      </span>
+                      <button
+                        type="button"
+                        class="btn-ghost compose-upload-clear"
+                        onClick={clearUploads}
+                      >
+                        Remove all
+                      </button>
+                    </div>
+                    <ul
+                      class="compose-previews"
+                      classList={{
+                        "compose-previews-single": !fileMultiple(),
+                      }}
+                    >
+                      <For each={uploads()}>
+                        {(entry, index) => (
+                          <li class="compose-preview">
+                            <Show
+                              when={kind() === "photo"}
+                              fallback={
+                                <Show
+                                  when={kind() === "video"}
+                                  fallback={
+                                    <div class="compose-preview-audio">
+                                      <audio
+                                        src={entry.url}
+                                        controls
+                                        preload="metadata"
+                                      />
+                                    </div>
+                                  }
+                                >
+                                  <video
+                                    class="compose-preview-media"
+                                    src={entry.url}
+                                    controls
+                                    preload="metadata"
+                                    playsinline
+                                  />
+                                </Show>
+                              }
+                            >
+                              <button
+                                type="button"
+                                class="compose-preview-thumb"
+                                onClick={() => setPreviewUrl(entry.url)}
+                                aria-label={`Enlarge ${entry.file.name}`}
+                              >
+                                <img
+                                  src={entry.url}
+                                  alt={entry.file.name}
+                                  loading="lazy"
+                                />
+                              </button>
+                            </Show>
+                            <div class="compose-preview-meta">
+                              <span
+                                class="compose-preview-name"
+                                title={entry.file.name}
+                              >
+                                {entry.file.name}
+                              </span>
+                              <span>{formatBytes(entry.file.size)}</span>
+                            </div>
+                            <button
+                              type="button"
+                              class="compose-preview-remove"
+                              onClick={() => removeUpload(index())}
+                              aria-label={`Remove ${entry.file.name}`}
+                            >
+                              ✕
+                            </button>
+                          </li>
+                        )}
+                      </For>
+                    </ul>
                   </Show>
                 </Show>
                 <label class="compose-field">
@@ -662,6 +867,7 @@ export default function ComposePage() {
             </Show>
           </Show>
         </main>
+        <LightBox url={previewUrl()} onClose={() => setPreviewUrl(null)} />
       </div>
     </Show>
   );
