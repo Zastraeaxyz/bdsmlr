@@ -3,10 +3,14 @@ import type { APIEvent } from "@solidjs/start/server";
 const BASE = "https://bdsmlr.com";
 
 function csrfToken(html: string): string | null {
+  return html.match(/<meta name="csrf-token" content="([^"]+)"/)?.[1] ?? null;
+}
+
+function composerToken(html: string): string | null {
   return (
-    html.match(/<meta name="csrf-token" content="([^"]+)"/)?.[1] ??
-    html.match(/id="token" type="hidden" value="([^"]+)"/)?.[1] ??
-    null
+    html.match(/id="token"[^>]*value="([^"]+)"/)?.[1] ??
+    html.match(/<input[^>]*value="([^"]+)"[^>]*id="token"/)?.[1] ??
+    csrfToken(html)
   );
 }
 
@@ -67,9 +71,9 @@ async function tokenResponse(event: APIEvent): Promise<Response> {
     return json({ error: "BDSMLR temporarily blocked the request. Try again shortly." }, 429);
   }
   const html = await page.text();
-  const token = csrfToken(html);
+  const token = composerToken(html);
   if (!token) return json({ error: "Could not start the upload" }, 502);
-  return json({ token }, 200);
+  return json({ token, csrf }, 200);
 }
 
 async function proxy(event: APIEvent): Promise<Response> {

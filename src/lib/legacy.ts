@@ -54,9 +54,14 @@ export async function legacyRequest(
   return legacyResponse(res);
 }
 
-export async function getLegacyUploadToken(
+export interface LegacyComposerToken {
+  token: string;
+  csrf: string;
+}
+
+export async function getLegacyComposerToken(
   kind: "photo" | "video" | "music",
-): Promise<string> {
+): Promise<LegacyComposerToken> {
   const res = await fetch(`/api/legacy/token?kind=${kind}`, {
     credentials: "include",
   });
@@ -67,7 +72,7 @@ export async function getLegacyUploadToken(
       res.status,
     );
   }
-  return data.token as string;
+  return { token: data.token as string, csrf: (data.csrf as string) || "" };
 }
 
 export async function legacyUpload(
@@ -139,33 +144,51 @@ export async function createTextPost(
   });
 }
 
-export async function createQuotePost(input: LegacyPostInput) {
-  return legacyRequest("/savequote", {
-    thispost: input.source ?? "",
-    blog: input.blogId,
-    tags: input.tags,
-    title: input.title ?? "",
-  });
+export async function createQuotePost(
+  input: LegacyPostInput,
+  mode: LegacyPostMode,
+) {
+  return legacyRequest(
+    modeEndpoint("/savequote", "/savequotequeue", "/savequotedraft", mode),
+    {
+      thispost: input.source ?? "",
+      blog: input.blogId,
+      tags: input.tags,
+      title: input.title ?? "",
+    },
+  );
 }
 
-export async function createChatPost(input: LegacyPostInput) {
-  return legacyRequest("/savechat", {
-    thispost: input.content ?? "",
-    blog: input.blogId,
-    tags: input.tags,
-    title: input.title ?? "",
-  });
+export async function createChatPost(
+  input: LegacyPostInput,
+  mode: LegacyPostMode,
+) {
+  return legacyRequest(
+    modeEndpoint("/savechat", "/savechatqueue", "/savechatdraft", mode),
+    {
+      thispost: input.content ?? "",
+      blog: input.blogId,
+      tags: input.tags,
+      title: input.title ?? "",
+    },
+  );
 }
 
-export async function createLinkPost(input: LegacyPostInput) {
-  return legacyRequest("/savelink", {
-    blog: input.blogId,
-    description: input.description ?? "",
-    image: input.image ?? "",
-    tags: input.tags,
-    title: input.title ?? "",
-    url: input.url ?? "",
-  });
+export async function createLinkPost(
+  input: LegacyPostInput,
+  mode: LegacyPostMode,
+) {
+  return legacyRequest(
+    modeEndpoint("/savelink", "/savelinkqueue", "/savelinkdraft", mode),
+    {
+      blog: input.blogId,
+      description: input.description ?? "",
+      image: input.image ?? "",
+      tags: input.tags,
+      title: input.title ?? "",
+      url: input.url ?? "",
+    },
+  );
 }
 
 export async function createPhotoPost(
@@ -204,12 +227,18 @@ export async function createVideoPost(
   });
 }
 
-export async function createAudioPost(input: LegacyPostInput) {
-  return legacyRequest("/saveaudio", {
-    comment: textHtml(input.content ?? ""),
-    blog: input.blogId,
-    tags: input.tags,
-  });
+export async function createAudioPost(
+  input: LegacyPostInput,
+  mode: LegacyPostMode,
+) {
+  return legacyRequest(
+    modeEndpoint("/saveaudio", "/saveaudioqueue", "/saveaudiodraft", mode),
+    {
+      comment: textHtml(input.content ?? ""),
+      blog: input.blogId,
+      tags: input.tags,
+    },
+  );
 }
 
 export async function changeLegacyEmail(email: string) {
@@ -295,6 +324,96 @@ export async function getLegacyDrafts() {
     throw new LegacyError(data?.error || "Could not load drafts", res.status);
   }
   return data.drafts as import("./legacyDrafts").LegacyDraft[];
+}
+
+async function getLegacyEditor(
+  scope: "draft" | "queue",
+  id: string,
+): Promise<import("./legacyDrafts").LegacyEditablePost> {
+  const res = await fetch(
+    `/api/legacy/${scope === "draft" ? "drafts" : "queue"}?id=${encodeURIComponent(id)}`,
+    { credentials: "include" },
+  );
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.editor) {
+    throw new LegacyError(
+      data?.error || "Could not load the editor",
+      res.status,
+    );
+  }
+  return data.editor as import("./legacyDrafts").LegacyEditablePost;
+}
+
+export function getLegacyDraftEditor(id: string) {
+  return getLegacyEditor("draft", id);
+}
+
+export function getLegacyQueueEditor(id: string) {
+  return getLegacyEditor("queue", id);
+}
+
+export async function saveLegacyEditablePost(
+  scope: "draft" | "queue" | "post",
+  editor: import("./legacyDrafts").LegacyEditablePost,
+  kind: LegacyPostType,
+  input: LegacyPostInput,
+) {
+  const html = textHtml(input.content ?? "");
+  const fields: Record<string, string | number | string[] | undefined> = {
+    thispost: kind === "quote" ? input.source ?? "" : html,
+    blog: editor.blogId,
+    tags: input.tags,
+    type: editor.type || kind,
+    title: input.title ?? "",
+    textpost: html,
+    postid: editor.postId,
+    nocomment: editor.comment ? "false" : "true",
+    textpostcase: html,
+    blogid: editor.blogId,
+    earlier: editor.earlier || "1",
+  };
+  if (kind === "link") {
+    fields.url = input.url ?? "";
+    fields.description = input.description ?? "";
+    fields.image = input.image ?? "";
+  }
+  const endpoint =
+    scope === "draft"
+      ? "/editdraftpost/"
+      : scope === "queue"
+        ? "/editqueuepost/"
+        : `/editpost/${editor.postId}`;
+  return legacyRequest(endpoint, fields);
+}
+
+export async function getLegacyQueue() {
+  const res = await fetch("/api/legacy/queue", { credentials: "include" });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new LegacyError(data?.error || "Could not load the queue", res.status);
+  }
+  return data.queue as import("./legacyQueue").LegacyQueue;
+}
+
+export async function publishLegacyQueueItem(id: string) {
+  return legacyRequest("/publishpost", { id });
+}
+
+export async function deleteLegacyQueueItem(id: string) {
+  return legacyRequest("/queuedelete", { id });
+}
+
+export async function scheduleLegacyQueueItem(
+  id: string,
+  date: Date,
+) {
+  return legacyRequest("/queueCalendar", {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+    hour: date.getHours(),
+    postId: id,
+  });
 }
 
 export async function publishLegacyDraft(id: string, queue: boolean) {

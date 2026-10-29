@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Queue page**: `/queue` now lists scheduled posts with their time and blog. You can publish a post now, edit it, remove it, or reschedule it. Queue settings control pause, posting hours, interval, random order, and timezone.
+- **Draft editing**: Drafts now have an Edit action that opens the composer with the saved title, body, and tags, then saves back to BDSMLR.
+- **Post editing**: Your own posts now show an Edit action that opens the composer with the existing title, body, tags, and link details.
 - **Back-to-top button**: Feed pages now show a small floating button in the lower-left corner after you scroll down. Click it to return smoothly to the top of the feed.
 
 ### Fixed
 
+- **Photo posts upload and publish again**: Photo uploads and the photo post call were starting a separate composer and sending the wrong token. They now share the same composer token, so images upload and appear in the post.
+- **Draft actions show server errors clearly**: When BDSMLR returns a server error for a draft action, the page now says so instead of showing a generic failure.
 - **Profiles load again and errors stay contained**: Profile pages now load the blog description instead of crashing with a fullscreen "BlogDescription is not defined" error. If a page or the profile header fails unexpectedly, the app shows a friendly retry panel and keeps the rest of the profile available, and navigating elsewhere clears the error.
 - **Pagination stops when BDSMLR repeats a page**: With "Most popular" sorting, the API can return the same page again when you load more. The app now notices that a page has no new posts, stops paginating, and never appends duplicate cards.
 - **Reblog works again**: BDSMLR now rejects the API reblog endpoint for signed-in browser sessions with a "session required" error, so the button did nothing. Reblogs now go through the same web-session reblog flow as the official site, including notes, tags, and queued reblogs, and the post appears on your blog again.
@@ -26,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Posting tools are on by default**: Compose, drafts, queue, and post editing no longer need feature flags.
+- **Every post type supports drafts and queue**: Quote, link, chat, and audio posts can now be saved as drafts or added to the queue, matching text, image, and video posts.
 - **Expanded, privacy-conscious usage analytics**: The app now records coarse, anonymous events such as likes, reblogs, searches, comments, sign-ins, follows, and feed view changes, so the next round of work can follow how people actually use the app. Events never include post content, comments, messages, search text, tag names, blog names, emails, or passwords. Do Not Track is honored.
 - **Landing page tone**: Removed comparisons that criticized the official BDSMLR frontend. The page now presents the app as a community effort and keeps the offer to work with the BDSMLR team in a professional capacity.
 - **Landing AI spend section simplified**: The per-model breakdown is gone. The section now says that most work uses DeepSeek V4.1 Flash, above the total spend and session count.

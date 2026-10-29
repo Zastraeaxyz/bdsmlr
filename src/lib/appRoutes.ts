@@ -20,6 +20,7 @@ export const TRACKED_STATIC_PAGES = new Set([
   "/liked",
   "/login",
   "/messages",
+  "/queue",
   "/settings",
 ]);
 
@@ -45,6 +46,7 @@ export const RESERVED_TOP_LEVEL = new Set([
   "og-default.png",
   "post",
   "previews",
+  "queue",
   "search",
   "settings",
   "tag",

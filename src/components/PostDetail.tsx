@@ -381,6 +381,12 @@ function PostDetailView(props: {
           </a>
         </Show>
         <Show when={ownsPost()}>
+          <A
+            href={`/compose?post=${props.post.id}`}
+            class="download-btn post-meta-action"
+          >
+            Edit
+          </A>
           <button
             type="button"
             class="download-btn post-meta-action danger-text"

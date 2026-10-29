@@ -3,8 +3,6 @@ import { useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
 import { useAuth } from "~/lib/useAuth";
-import { features } from "~/lib/features";
-import { FeatureDisabled } from "~/components/FeatureDisabled";
 import {
   deleteLegacyDraft,
   getLegacyDrafts,
@@ -46,7 +44,7 @@ export default function DraftsPage() {
   };
 
   createEffect(() => {
-    if (authLoading() || !user() || !features.legacyDrafts) return;
+    if (authLoading() || !user()) return;
     void load();
   });
 
@@ -69,7 +67,9 @@ export default function DraftsPage() {
       setError(
         err instanceof LegacyError && err.status === 429
           ? "BDSMLR temporarily blocked the request. Wait a moment and try again."
-          : (err as Error)?.message || "Draft action failed",
+          : err instanceof LegacyError && err.status === 500
+            ? "BDSMLR returned a server error for this draft action. Try again later."
+            : (err as Error)?.message || "Draft action failed",
       );
     } finally {
       setBusy("");
@@ -85,8 +85,6 @@ export default function DraftsPage() {
       "Draft deleted.",
     );
   };
-
-  if (!features.legacyDrafts) return <FeatureDisabled title="Drafts" />;
 
   return (
     <Show when={!authLoading() && user()} fallback={null}>
@@ -129,6 +127,14 @@ export default function DraftsPage() {
                           </div>
                         </Show>
                         <div class="draft-actions">
+                          <button
+                            type="button"
+                            class="btn-ghost"
+                            onClick={() => navigate(`/compose?draft=${encodeURIComponent(draft.id)}`)}
+                            disabled={busy() !== ""}
+                          >
+                            Edit
+                          </button>
                           <button
                             type="button"
                             onClick={() =>
@@ -175,8 +181,8 @@ export default function DraftsPage() {
             </Show>
           </Show>
           <p class="compose-note">
-            Draft editing still uses BDSMLR's legacy editor. This page supports
-            listing, publishing, moving to the queue, and deleting drafts.
+            Drafts use BDSMLR's legacy editor. You can edit, publish, move to
+            the queue, or delete a draft here.
           </p>
         </main>
       </div>

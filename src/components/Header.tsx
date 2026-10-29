@@ -86,9 +86,7 @@ export default function Header(props: HeaderProps) {
       {props.info && <span class="user-info">{props.info}</span>}
       {props.children}
       <A href="/home" class="btn-ghost">Home</A>
-      <Show when={features.legacyCompose}>
-        <A href="/compose" class="btn-ghost">Post</A>
-      </Show>
+      <A href="/compose" class="btn-ghost">Post</A>
       <Show
         when={!user()}
         fallback={
@@ -156,15 +154,13 @@ export default function Header(props: HeaderProps) {
                   <span class="message-badge">{activityUnreadCount()}</span>
                 </Show>
               </A>
-              <Show when={features.legacyCompose}>
-                <A
-                  href="/compose"
-                  class="user-dropdown-item"
-                  onClick={() => setShowDropdown(false)}
-                >
-                  Compose post
-                </A>
-              </Show>
+              <A
+                href="/compose"
+                class="user-dropdown-item"
+                onClick={() => setShowDropdown(false)}
+              >
+                Compose post
+              </A>
               <A
                 href="/blog-search"
                 class="user-dropdown-item"
@@ -188,15 +184,20 @@ export default function Header(props: HeaderProps) {
                   Customize blog
                 </A>
               </Show>
-              <Show when={features.legacyDrafts}>
-                <A
-                  href="/drafts"
-                  class="user-dropdown-item"
-                  onClick={() => setShowDropdown(false)}
-                >
-                  Drafts
-                </A>
-              </Show>
+              <A
+                href="/drafts"
+                class="user-dropdown-item"
+                onClick={() => setShowDropdown(false)}
+              >
+                Drafts
+              </A>
+              <A
+                href="/queue"
+                class="user-dropdown-item"
+                onClick={() => setShowDropdown(false)}
+              >
+                Queue
+              </A>
               <A
                 href="/settings"
                 class="user-dropdown-item"

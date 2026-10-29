@@ -36,14 +36,11 @@ Goal: support everything the BDSMLR new web client does, plus the legacy authori
 - Unread counts and badges
 - Recipient autocomplete when starting a new message
 
-## Phase 4: legacy authoring (composer, account settings, blog customization, and drafts implemented; remaining items below)
+## Phase 4: legacy authoring (composer, post editing, drafts, queue, account settings, and blog customization implemented; remaining items below)
 
 These are not in the v2 API. They require the legacy Laravel session and CSRF handling already used for messaging.
 
 - Create posts: text, picture, quote, link, chat, audio, video
-- Edit posts
-- Drafts
-- Queue management and scheduled posts
 - Ask/questions inbox and answering asks
 - Submissions
 - Blog customization: avatar, header, title, description, theme, privacy

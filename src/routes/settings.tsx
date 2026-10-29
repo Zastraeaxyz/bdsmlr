@@ -200,11 +200,9 @@ export default function SettingsPage() {
               <A href="/blocked" class="settings-link">
                 Blocked blogs
               </A>
-              <Show when={features.legacyCompose}>
-                <A href="/compose" class="settings-link">
-                  Compose post
-                </A>
-              </Show>
+              <A href="/compose" class="settings-link">
+                Compose post
+              </A>
               <Show when={features.legacyAdvancedSettings}>
                 <a
                   href="https://bdsmlr.com/settings"
@@ -215,26 +213,12 @@ export default function SettingsPage() {
                   BDSMLR settings
                 </a>
               </Show>
-              <Show when={features.legacyQueue}>
-                <a
-                  href="https://bdsmlr.com/queuev2"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="settings-link"
-                >
-                  BDSMLR queue
-                </a>
-              </Show>
-              <Show when={features.legacyDrafts}>
-                <a
-                  href="https://bdsmlr.com/drafts"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="settings-link"
-                >
-                  BDSMLR drafts
-                </a>
-              </Show>
+              <A href="/queue" class="settings-link">
+                Queue
+              </A>
+              <A href="/drafts" class="settings-link">
+                Drafts
+              </A>
               <Show when={features.legacyAsks}>
                 <a
                   href="https://bdsmlr.com/asks"
