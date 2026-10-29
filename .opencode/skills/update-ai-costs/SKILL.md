@@ -75,5 +75,6 @@ If asked to commit, use a conventional commit such as:
 chore: update landing AI spend tally
 ```
 
-Routine number refreshes do not need a `CHANGELOG.md` entry. Add one only when
-the computation, labels, or presentation of the tally changes.
+Routine number refreshes do not need a changelog entry. Add one to
+`src/lib/changelog.ts` only when the computation, labels, or presentation of
+the tally changes.

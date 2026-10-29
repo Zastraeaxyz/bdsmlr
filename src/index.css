@@ -2945,6 +2945,129 @@ button:disabled {
   color: var(--text-heading);
 }
 
+/* ---- Changelog ---- */
+
+.changelog-page main {
+  max-width: 760px;
+}
+
+.changelog-hero {
+  margin-bottom: 24px;
+}
+
+.changelog-hero h2 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.changelog-lede {
+  max-width: 68ch;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.changelog-releases {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.changelog-release {
+  padding: 18px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.changelog-release-latest {
+  border-color: rgba(88, 166, 255, 0.45);
+}
+
+.changelog-release-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.changelog-version {
+  font-size: 18px;
+  color: var(--text-heading);
+}
+
+.changelog-date {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.changelog-section + .changelog-section {
+  margin-top: 18px;
+}
+
+.changelog-section-title {
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.changelog-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.changelog-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.changelog-item-title {
+  color: var(--text-heading);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.changelog-item-body {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.changelog-item-body code {
+  padding: 1px 5px;
+  color: var(--text);
+  background: var(--bg-hover);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.changelog-item-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.changelog-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .changelog-release {
+    padding: 16px;
+  }
+}
+
 /* ---- Age gate ---- */
 
 .age-gate {

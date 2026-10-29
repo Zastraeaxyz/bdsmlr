@@ -131,6 +131,9 @@ export default function Header(props: HeaderProps) {
                 <A href="/about" class="user-dropdown-item" onClick={closeDropdown}>
                   About
                 </A>
+                <A href="/changelog" class="user-dropdown-item" onClick={closeDropdown}>
+                  Changelog
+                </A>
                 <A href="/login" class="user-dropdown-item" onClick={closeDropdown}>
                   Sign in
                 </A>
@@ -235,6 +238,9 @@ export default function Header(props: HeaderProps) {
               </A>
               <A href="/blocked" class="user-dropdown-item" onClick={closeDropdown}>
                 Blocked blogs
+              </A>
+              <A href="/changelog" class="user-dropdown-item" onClick={closeDropdown}>
+                Changelog
               </A>
               <A
                 href="/messages"

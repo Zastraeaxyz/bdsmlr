@@ -77,6 +77,7 @@ These are not in the v2 API. They require the legacy Laravel session and CSRF ha
 
 ## Working rules
 
-- Every user-facing change gets a CHANGELOG entry.
+- Every user-facing change gets an entry in `src/lib/changelog.ts`, which the
+  in-app `/changelog` page renders.
 - Keep new API quirks documented in AGENTS.md.
 - Do not commit until reviewed.
