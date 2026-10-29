@@ -1,0 +1,5 @@
+# mise tasks for this repository. Run `mise tasks` to list them.
+
+[tasks.deploy]
+description = "Deploy the current directory to Railway (service bbdmslr, production)"
+run = "railway up --service bbdmslr --environment production"
