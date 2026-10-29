@@ -314,7 +314,7 @@ export default function HomeFeed() {
       <div class="home-page">
         <Header info="Following feed" />
         <main>
-          <form class="search-bar" onSubmit={doSearch}>
+          <form class="search-bar search-bar-feed" onSubmit={doSearch}>
             <SortDropdown
               value={`${sortField()}-${sortOrder()}`}
               onChange={(sf, so) => {

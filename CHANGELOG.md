@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Mobile navigation and search**: On phones the top bar now shows only the brand and your avatar. Home, Post, Discord, and the other top-bar links moved into the avatar menu, and a signed-out visitor gets a compact "Menu" button in the same spot. The search bar now wraps to its own row with a full-width search field, so the sort, search, help, and view controls fit on narrow screens instead of overflowing. Post card headers also wrap instead of pushing the timestamp off screen.
 - **Posting tools are on by default**: Compose, drafts, queue, and post editing no longer need feature flags.
 - **Every post type supports drafts and queue**: Quote, link, chat, and audio posts can now be saved as drafts or added to the queue, matching text, image, and video posts.
 - **Expanded, privacy-conscious usage analytics**: The app now records coarse, anonymous events such as likes, reblogs, searches, comments, sign-ins, follows, and feed view changes, so the next round of work can follow how people actually use the app. Events never include post content, comments, messages, search text, tag names, blog names, emails, or passwords. Do Not Track is honored.

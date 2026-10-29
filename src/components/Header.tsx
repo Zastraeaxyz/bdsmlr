@@ -13,6 +13,8 @@ interface HeaderProps {
   children?: any
 }
 
+const DISCORD_URL = 'https://discord.gg/w3BkPTwf2d'
+
 export default function Header(props: HeaderProps) {
   const navigate = useNavigate()
   const { user, logout, blogs, activeBlogId, activeBlog, setActiveBlog } = useAuth()
@@ -80,29 +82,73 @@ export default function Header(props: HeaderProps) {
     })
   })
 
+  const closeDropdown = () => setShowDropdown(false)
+
   return (
     <header style="view-transition-name: header">
       <h1><A href="/home">BDSMLR</A></h1>
       {props.info && <span class="user-info">{props.info}</span>}
       {props.children}
-      <A href="/home" class="btn-ghost">Home</A>
-      <A href="/compose" class="btn-ghost">Post</A>
+      <nav class="nav-desktop">
+        <A href="/home" class="btn-ghost">Home</A>
+        <A href="/compose" class="btn-ghost">Post</A>
+        <Show when={!user()}>
+          <A href="/about" class="btn-ghost">About</A>
+        </Show>
+        <Show when={!user()}>
+          <A href="/login" class="btn-ghost">Sign in</A>
+        </Show>
+        <a
+          href={DISCORD_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-ghost"
+        >
+          Discord
+        </a>
+      </nav>
       <Show
-        when={!user()}
+        when={user()}
         fallback={
-          <a
-            href="https://discord.gg/w3BkPTwf2d"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn-ghost"
-          >
-            Discord
-          </a>
+          <div class="user-dropdown nav-mobile-only" ref={containerRef}>
+            <button
+              type="button"
+              class="btn-ghost user-dropdown-trigger"
+              onClick={() => setShowDropdown(!showDropdown())}
+              aria-haspopup="true"
+              aria-expanded={showDropdown()}
+            >
+              <span>Menu</span>
+            </button>
+            <Show when={showDropdown()}>
+              <div class="user-dropdown-menu">
+                <A href="/home" class="user-dropdown-item" onClick={closeDropdown}>
+                  Home
+                </A>
+                <A href="/compose" class="user-dropdown-item" onClick={closeDropdown}>
+                  Post
+                </A>
+                <A href="/about" class="user-dropdown-item" onClick={closeDropdown}>
+                  About
+                </A>
+                <A href="/login" class="user-dropdown-item" onClick={closeDropdown}>
+                  Sign in
+                </A>
+                <a
+                  href={DISCORD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="user-dropdown-item user-dropdown-discord"
+                  onClick={closeDropdown}
+                >
+                  <DiscordIcon class="icon" />
+                  <span>Discord</span>
+                </a>
+              </div>
+            </Show>
+          </div>
         }
       >
-        <A href="/about" class="btn-ghost">About</A>
-      </Show>
-      {user() ? (
         <div class="user-dropdown" ref={containerRef}>
           <button
             type="button"
@@ -114,108 +160,86 @@ export default function Header(props: HeaderProps) {
             <Show when={avatarUrl()}>
               <img class="user-dropdown-avatar" src={avatarUrl()!} alt="" />
             </Show>
-            <span>{activeBlog()?.name ?? user()!.blog_name}</span>
+            <span class="user-dropdown-name">{activeBlog()?.name ?? user()!.blog_name}</span>
             <Show when={unreadCount() > 0}>
               <span class="message-badge">{unreadCount()}</span>
             </Show>
           </button>
           <Show when={showDropdown()}>
             <div class="user-dropdown-menu">
+              <div class="nav-mobile-only user-dropdown-mobile-nav">
+                <A href="/home" class="user-dropdown-item" onClick={closeDropdown}>
+                  Home
+                </A>
+                <A href="/compose" class="user-dropdown-item" onClick={closeDropdown}>
+                  Post
+                </A>
+                <a
+                  href={DISCORD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="user-dropdown-item user-dropdown-discord"
+                  onClick={closeDropdown}
+                >
+                  <DiscordIcon class="icon" />
+                  <span>Discord</span>
+                </a>
+              </div>
               <A
                 href={`/${activeBlog()?.name ?? user()!.blog_name}`}
                 class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
+                onClick={closeDropdown}
               >
                 My blog
               </A>
               <Show when={features.forYou}>
-                <A
-                  href="/for-you"
-                  class="user-dropdown-item"
-                  onClick={() => setShowDropdown(false)}
-                >
+                <A href="/for-you" class="user-dropdown-item" onClick={closeDropdown}>
                   For you
                 </A>
               </Show>
-              <A
-                href="/following"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
+              <A href="/following" class="user-dropdown-item" onClick={closeDropdown}>
                 Following
               </A>
               <A
                 href="/activity"
                 class="user-dropdown-item user-dropdown-activity"
-                onClick={() => setShowDropdown(false)}
+                onClick={closeDropdown}
               >
                 <span>Activity</span>
                 <Show when={activityUnreadCount() > 0}>
                   <span class="message-badge">{activityUnreadCount()}</span>
                 </Show>
               </A>
-              <A
-                href="/compose"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
+              <A href="/compose" class="user-dropdown-item" onClick={closeDropdown}>
                 Compose post
               </A>
-              <A
-                href="/blog-search"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
+              <A href="/blog-search" class="user-dropdown-item" onClick={closeDropdown}>
                 Blog search
               </A>
-              <A
-                href="/liked"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
+              <A href="/liked" class="user-dropdown-item" onClick={closeDropdown}>
                 Liked
               </A>
               <Show when={features.legacyBlogCustomization}>
-                <A
-                  href="/customize"
-                  class="user-dropdown-item"
-                  onClick={() => setShowDropdown(false)}
-                >
+                <A href="/customize" class="user-dropdown-item" onClick={closeDropdown}>
                   Customize blog
                 </A>
               </Show>
-              <A
-                href="/drafts"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
+              <A href="/drafts" class="user-dropdown-item" onClick={closeDropdown}>
                 Drafts
               </A>
-              <A
-                href="/queue"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
+              <A href="/queue" class="user-dropdown-item" onClick={closeDropdown}>
                 Queue
               </A>
-              <A
-                href="/settings"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
+              <A href="/settings" class="user-dropdown-item" onClick={closeDropdown}>
                 Settings
               </A>
-              <A
-                href="/blocked"
-                class="user-dropdown-item"
-                onClick={() => setShowDropdown(false)}
-              >
+              <A href="/blocked" class="user-dropdown-item" onClick={closeDropdown}>
                 Blocked blogs
               </A>
               <A
                 href="/messages"
                 class="user-dropdown-item user-dropdown-messages"
-                onClick={() => setShowDropdown(false)}
+                onClick={closeDropdown}
               >
                 <span>Messages</span>
                 <Show when={unreadCount() > 0}>
@@ -223,11 +247,11 @@ export default function Header(props: HeaderProps) {
                 </Show>
               </A>
               <a
-                href="https://discord.gg/w3BkPTwf2d"
+                href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="user-dropdown-item user-dropdown-discord"
-                onClick={() => setShowDropdown(false)}
+                class="user-dropdown-item user-dropdown-discord mobile-hide"
+                onClick={closeDropdown}
               >
                 <DiscordIcon class="icon" />
                 <span>Discord community</span>
@@ -242,7 +266,7 @@ export default function Header(props: HeaderProps) {
                       classList={{ active: blog.id === activeBlogId() }}
                       onClick={() => {
                         setActiveBlog(blog.id)
-                        setShowDropdown(false)
+                        closeDropdown()
                         window.location.reload()
                       }}
                     >
@@ -264,9 +288,7 @@ export default function Header(props: HeaderProps) {
             </div>
           </Show>
         </div>
-      ) : (
-        <A href="/login" class="btn-ghost">Sign in</A>
-      )}
+      </Show>
     </header>
   )
 }

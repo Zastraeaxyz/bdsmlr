@@ -551,7 +551,7 @@ export default function UserFeed() {
         </div>
       </Show>
       <main>
-        <form class="search-bar" onSubmit={doSearch}>
+        <form class="search-bar search-bar-feed" onSubmit={doSearch}>
           <SortDropdown
             value={`${sortField()}-${sortOrder()}`}
             onChange={(sf, so) => {
