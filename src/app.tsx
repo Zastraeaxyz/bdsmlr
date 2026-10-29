@@ -5,6 +5,7 @@ import { Suspense } from "solid-js";
 import { AuthProvider } from "~/lib/useAuth";
 import { Analytics } from "~/components/Analytics";
 import { AppErrorBoundary } from "~/components/AppErrorBoundary";
+import { ScrollToTop } from "~/components/ScrollToTop";
 import "./index.css";
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
             <Analytics />
             <AppErrorBoundary>
               <Suspense>{props.children}</Suspense>
+              <ScrollToTop />
             </AppErrorBoundary>
           </MetaProvider>
         </AuthProvider>

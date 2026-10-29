@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Back-to-top button**: Feed pages now show a small floating button in the lower-left corner after you scroll down. Click it to return smoothly to the top of the feed.
+
 ### Fixed
 
 - **Profiles load again and errors stay contained**: Profile pages now load the blog description instead of crashing with a fullscreen "BlogDescription is not defined" error. If a page or the profile header fails unexpectedly, the app shows a friendly retry panel and keeps the rest of the profile available, and navigating elsewhere clears the error.
