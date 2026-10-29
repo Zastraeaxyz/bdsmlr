@@ -7,6 +7,7 @@ import {
   type ListBlogActivityResponse,
   type ResolveIdentifierResponse,
 } from './api'
+import { removeRepeatingMediaFromPosts } from './repeatingImages'
 
 export { FetchError } from './api'
 
@@ -210,6 +211,7 @@ export async function fetchBlogFeed(params: {
   page?: number
   v2session?: string
   includeReblogs?: boolean
+  hideRepeatingImages?: boolean
 }): Promise<BlogFeed> {
   const page = Math.max(1, params.page || 1)
   const v2session = params.v2session || undefined
@@ -253,7 +255,12 @@ export async function fetchBlogFeed(params: {
 
     // The server keeps echoing a nextPageToken after the last page, so a page
     // with no post/reblog timeline items means we've reached the end.
-    const posts = extractTimelinePosts(activity, includeReblogs)
+    const extracted = extractTimelinePosts(activity, includeReblogs)
+    // Detection is per RSS page: page 1 uses the blog's actual three newest
+    // image posts, and later pages use the three newest on that page.
+    const posts = params.hideRepeatingImages
+      ? removeRepeatingMediaFromPosts(extracted)
+      : extracted
 
     return { blog: blogData.blog, posts, page, hasNext: hasNextPage(activity) }
   } catch (e) {

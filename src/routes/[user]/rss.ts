@@ -27,10 +27,13 @@ export async function GET(event: APIEvent) {
       page: Number(url.searchParams.get('page')) || undefined,
       v2session,
       includeReblogs: url.searchParams.get('include_reblogs') === '1',
+      hideRepeatingImages:
+        url.searchParams.get('hide_repeating_images') === '1',
     })
 
-    // Preserve the caller's query params (v2_session, include_reblogs) so
-    // feed readers can follow the next link with the same context.
+    // Preserve the caller's query params (v2_session, include_reblogs,
+    // hide_repeating_images) so feed readers can follow the next link with the
+    // same context.
     const nextUrl = feed.hasNext ? new URL(url.href) : null
     if (nextUrl) nextUrl.searchParams.set('page', String(feed.page + 1))
 

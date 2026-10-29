@@ -1,6 +1,7 @@
 import {
   createSignal,
   createEffect,
+  createMemo,
   For,
   Show,
   onCleanup,
@@ -40,9 +41,11 @@ import {
   removeSearchHistory,
 } from "~/lib/searchHistory";
 import { freshPosts } from "~/lib/feedPagination";
+import { findRepeatingImageIdentities } from "~/lib/repeatingImages";
 import { countBucket, trackEvent } from "~/lib/analytics";
 
 const PAGE_SIZE = 20;
+const EMPTY_IMAGE_IDENTITIES: ReadonlySet<string> = new Set();
 
 function formatCount(value: number): string {
   return new Intl.NumberFormat().format(value);
@@ -70,7 +73,12 @@ export default function UserFeed() {
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
   const [view, setView] = createSignal<FeedView>(loadFeedView());
-  const { hideReblogs, setHideReblogs } = useFeedSettings();
+  const {
+    hideReblogs,
+    setHideReblogs,
+    hideRepeatingImages,
+    setHideRepeatingImages,
+  } = useFeedSettings();
   const [showSettings, setShowSettings] = createSignal(false);
   let settingsRef: HTMLDivElement | undefined;
 
@@ -87,6 +95,17 @@ export default function UserFeed() {
     setHideReblogs((prev) => !prev);
     setShowSettings(false);
   };
+
+  const toggleHideRepeatingImages = () => {
+    setHideRepeatingImages((prev) => !prev);
+    setShowSettings(false);
+  };
+
+  const repeatingImageIdentities = createMemo(() =>
+    hideRepeatingImages()
+      ? findRepeatingImageIdentities(posts())
+      : EMPTY_IMAGE_IDENTITIES,
+  );
 
   const activeTagName = () => {
     const match = activeQuery().trim().match(/^tag:(?:"([^"]+)"|(\S+))$/i);
@@ -600,6 +619,17 @@ export default function UserFeed() {
                   />
                   Hide reblogs
                 </label>
+                <label
+                  class="settings-dropdown-item"
+                  title="BDSMLR sometimes repeats the same images in many posts, such as on the Rectrix blog. This hides images shared by the three most recent image posts."
+                >
+                  <input
+                    type="checkbox"
+                    checked={hideRepeatingImages()}
+                    onChange={toggleHideRepeatingImages}
+                  />
+                  Hide repeating images
+                </label>
               </div>
             </Show>
           </div>
@@ -641,6 +671,7 @@ export default function UserFeed() {
                 {(post) => (
                   <PostCard
                     post={post}
+                    hiddenImageIdentities={repeatingImageIdentities()}
                     onTagClick={handleTagClick}
                     tagHref={tagHref}
                     onImageClick={(url) =>

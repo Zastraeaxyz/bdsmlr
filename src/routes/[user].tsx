@@ -56,6 +56,7 @@ export default function UserLayout(props: ParentProps) {
   const [loading, setLoading] = createSignal(true)
   const [error, setError] = createSignal('')
   const [hideReblogs, setHideReblogs] = createSignal(false)
+  const [hideRepeatingImages, setHideRepeatingImages] = createSignal(false)
   const [privateBlog, setPrivateBlog] = createSignal(false)
   const [v2session, setV2session] = createSignal<string | null>(null)
   const [followed, setFollowed] = createSignal(false)
@@ -282,6 +283,7 @@ export default function UserLayout(props: ParentProps) {
   const rssHref = () => {
     const qs = new URLSearchParams()
     qs.set('include_reblogs', hideReblogs() ? '0' : '1')
+    if (hideRepeatingImages()) qs.set('hide_repeating_images', '1')
     if (privateBlog() && v2session()) qs.set('v2_session', v2session()!)
     const q = qs.toString()
     return `/${slug()}/rss${q ? '?' + q : ''}`
@@ -507,7 +509,12 @@ export default function UserLayout(props: ParentProps) {
         </section>
       </Show>
       <AppErrorBoundary compact>
-        <FeedSettingsProvider hideReblogs={hideReblogs} setHideReblogs={setHideReblogs}>
+        <FeedSettingsProvider
+          hideReblogs={hideReblogs}
+          setHideReblogs={setHideReblogs}
+          hideRepeatingImages={hideRepeatingImages}
+          setHideRepeatingImages={setHideRepeatingImages}
+        >
           {props.children}
         </FeedSettingsProvider>
       </AppErrorBoundary>

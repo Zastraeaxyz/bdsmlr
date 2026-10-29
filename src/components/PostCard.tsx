@@ -19,13 +19,20 @@ import { formatRelativeDate } from "~/lib/date";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
 import { PostMediaList } from "~/components/PostMediaList";
+import {
+  filterRepeatingMediaItems,
+  stripRepeatingImagesFromHtml,
+} from "~/lib/repeatingImages";
 import { useAuth } from "~/lib/useAuth";
 import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
 import { postTypeName } from "~/lib/postTypes";
 import { surfaceForPath, trackEvent } from "~/lib/analytics";
 
+const NO_HIDDEN_IMAGES: ReadonlySet<string> = new Set();
+
 export interface PostCardProps {
   post: Post;
+  hiddenImageIdentities?: ReadonlySet<string>;
   onTagClick?: (tag: string) => void;
   onImageClick?: (url: string) => void;
   tagHref?: (tag: string) => string;
@@ -96,7 +103,14 @@ export function PostCard(props: PostCardProps) {
     trackEvent("outbound-bdsmlr", { surface: surface() });
   };
 
-  const mediaItems = () => getPostMediaItems(post);
+  const hiddenImageIdentities = () =>
+    props.hiddenImageIdentities ?? NO_HIDDEN_IMAGES;
+
+  const mediaItems = () =>
+    filterRepeatingMediaItems(
+      getPostMediaItems(post),
+      hiddenImageIdentities(),
+    );
 
   const contentHtml = () => {
     const c = post.content;
@@ -105,7 +119,10 @@ export function PostCard(props: PostCardProps) {
       post.type === PostType.Text
         ? processContentHtml(c.html, getPostMediaUrls(post))
         : c.html;
-    return sanitizeHtml(processed);
+    return stripRepeatingImagesFromHtml(
+      sanitizeHtml(processed),
+      hiddenImageIdentities(),
+    );
   };
 
   return (

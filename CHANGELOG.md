@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Hide repeating images**: Some blogs, such as Rectrix, show the same images in nearly every post because BDSMLR repeats media entries in its feed response. A new **Hide repeating images** option in the profile settings menu compares the three most recent image posts and hides the images they share, while keeping each post's unique images. RSS feeds match the setting with `?hide_repeating_images=1` when it is enabled.
 - **Profile favicons**: On a blog's pages, the browser tab now shows that blog's profile picture instead of the app icon, so profiles are easy to tell apart in open tabs.
 - **Collapsed multi-media posts**: Feed cards with more than two images or media now show the first two and a Show more button, with Show less to collapse them again. The highlighted post on a post detail page still shows all of its media immediately.
 - **Landing page AI spend tally**: The landing page now shows the total OpenCode spend for this repository, the number of sessions, and the share of sessions by model.
