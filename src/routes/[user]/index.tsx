@@ -42,6 +42,7 @@ import {
 } from "~/lib/searchHistory";
 import { freshPosts } from "~/lib/feedPagination";
 import { findRepeatingImageIdentities } from "~/lib/repeatingImages";
+import { pendingReblogsFor, prunePendingReblogs } from "~/lib/pendingReblogs";
 import { countBucket, trackEvent } from "~/lib/analytics";
 
 const PAGE_SIZE = 20;
@@ -319,6 +320,16 @@ export default function UserFeed() {
     } catch (err: unknown) {
       setError((err as Error)?.message || "Failed to load feed");
     } finally {
+      if (resolvedId && !activeQuery() && !hideReblogs()) {
+        prunePendingReblogs(posts());
+        const pending = pendingReblogsFor(resolvedId).filter(
+          (post) => !loadedIds.has(post.id),
+        );
+        if (pending.length > 0) {
+          for (const post of pending) loadedIds.add(post.id);
+          setPosts((prev) => [...pending, ...prev]);
+        }
+      }
       setLoading(false);
     }
   };

@@ -2,6 +2,7 @@ import { createSignal, type Accessor } from "solid-js";
 import {
   batchGetLikeStates,
   batchGetReblogStates,
+  getCurrentUser,
   likePost,
   requireUser,
   unlikePost,
@@ -9,6 +10,7 @@ import {
 } from "./api";
 import { currentActorBlogId } from "./activeBlog";
 import { submitReblog } from "./reblog";
+import { addPendingReblog } from "./pendingReblogs";
 
 export interface PostInteractionState {
   liked: boolean;
@@ -149,7 +151,7 @@ export async function reblog(
   const [, setState] = signalFor(post);
   const mode = opts.mode ?? "live";
 
-  await submitReblog(post.id, {
+  const newPostId = await submitReblog(post.id, {
     blogId: actorId,
     originPostId: post.originPostId,
     note: opts.comment,
@@ -164,6 +166,14 @@ export async function reblog(
       actorReblogCount: current.actorReblogCount + 1,
       reblogsCount: current.reblogsCount + 1,
     });
+    if (newPostId) {
+      const user = getCurrentUser();
+      const actorName =
+        user?.blogs?.find((blog) => blog.id === actorId)?.name ??
+        user?.blog_name ??
+        "";
+      addPendingReblog(actorId, actorName, newPostId, post);
+    }
   }
   return mode;
 }

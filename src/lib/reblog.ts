@@ -26,11 +26,40 @@ async function errorMessage(res: Response, fallback: string): Promise<string> {
   return data?.error || data?.message || fallback
 }
 
+async function latestPostIds(): Promise<number[] | null> {
+  const res = await fetch('/api/legacy/latest-posts', {
+    credentials: 'include',
+  }).catch(() => null)
+  if (!res?.ok) return null
+  const data = await res.json().catch(() => null)
+  return Array.isArray(data?.ids) ? (data.ids as number[]) : null
+}
+
+async function waitForReblogId(
+  before: Set<number>,
+): Promise<number | null | undefined> {
+  let sawResponse = false
+  for (const delay of [500, 1000, 2000]) {
+    await new Promise((resolve) => setTimeout(resolve, delay))
+    const ids = await latestPostIds()
+    if (!ids) continue
+    sawResponse = true
+    const fresh = ids.filter((id) => !before.has(id))
+    if (fresh.length > 0) return Math.max(...fresh)
+  }
+  return sawResponse ? null : undefined
+}
+
 export async function submitReblog(
   postId: number,
   opts: ReblogOptions,
-): Promise<void> {
+): Promise<number | undefined> {
   const originPostId = opts.originPostId ?? postId
+  const beforeIds =
+    opts.mode === 'live'
+      ? await latestPostIds()
+      : null
+  const before = new Set(beforeIds ?? [])
   const composer = await fetch(`/api/legacy/reblog/${postId}`, {
     method: 'POST',
     credentials: 'include',
@@ -99,4 +128,12 @@ export async function submitReblog(
   if (!res.ok) {
     throw new Error(await errorMessage(res, 'Could not reblog post'))
   }
+
+  if (opts.mode === 'queue' || beforeIds === null) return undefined
+  const newId = await waitForReblogId(before)
+  if (newId === undefined) return undefined
+  if (newId === null) {
+    throw new Error('BDSMLR did not create the reblog. Try again.')
+  }
+  return newId
 }

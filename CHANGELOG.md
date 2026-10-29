@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Reblogged posts appear on your profile right away**: The app now checks BDSMLR's latest posts after a reblog to confirm it was actually created, then shows the reblog at the top of your profile while BDSMLR's activity feed catches up. A reblog no longer marks itself as done if BDSMLR silently fails to create it.
 - **Photo posts upload and publish again**: Photo uploads and the photo post call were starting a separate composer and sending the wrong token. They now share the same composer token, so images upload and appear in the post.
 - **Draft actions show server errors clearly**: When BDSMLR returns a server error for a draft action, the page now says so instead of showing a generic failure.
 - **Profiles load again and errors stay contained**: Profile pages now load the blog description instead of crashing with a fullscreen "BlogDescription is not defined" error. If a page or the profile header fails unexpectedly, the app shows a friendly retry panel and keeps the rest of the profile available, and navigating elsewhere clears the error.
