@@ -285,6 +285,28 @@ button:disabled {
   font-size: 20px;
 }
 
+.outage-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 10px 24px;
+  background: rgba(210, 153, 34, 0.12);
+  border-bottom: 1px solid rgba(210, 153, 34, 0.5);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.outage-banner strong {
+  color: var(--warning);
+}
+
+.outage-banner a {
+  color: var(--warning);
+  font-weight: 600;
+}
+
 .nav-desktop {
   display: flex;
   align-items: center;

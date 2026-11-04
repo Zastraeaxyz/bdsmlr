@@ -5,6 +5,7 @@ import { useAuth } from "~/lib/useAuth";
 import { trackEvent } from "~/lib/analytics";
 import { DiscordIcon } from "~/components/Icons";
 import { AgeGate } from "~/components/AgeGate";
+import OutageBanner from "~/components/OutageBanner";
 
 const FEATURES = [
   {
@@ -100,6 +101,8 @@ export default function LandingPage() {
           </Show>
         </nav>
       </header>
+
+      <OutageBanner />
 
       <main class="landing-main">
         <section class="landing-hero">

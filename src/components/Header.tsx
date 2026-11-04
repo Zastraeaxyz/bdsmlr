@@ -7,6 +7,7 @@ import { unreadCount, refreshMessageUnread } from '../lib/messageUnread'
 import { activityUnreadCount, refreshActivityUnread } from '../lib/activityUnread'
 import { features } from '../lib/features'
 import { trackEvent } from '../lib/analytics'
+import OutageBanner from './OutageBanner'
 
 interface HeaderProps {
   info?: string
@@ -85,7 +86,8 @@ export default function Header(props: HeaderProps) {
   const closeDropdown = () => setShowDropdown(false)
 
   return (
-    <header style="view-transition-name: header">
+    <>
+      <header style="view-transition-name: header">
       <h1><A href="/home">BDSMLR</A></h1>
       {props.info && <span class="user-info">{props.info}</span>}
       {props.children}
@@ -295,6 +297,8 @@ export default function Header(props: HeaderProps) {
           </Show>
         </div>
       </Show>
-    </header>
+      </header>
+      <OutageBanner />
+    </>
   )
 }

@@ -34,6 +34,10 @@ export const changelog: ChangelogRelease[] = [
         kind: "Added",
         changes: [
           {
+            title: "Outage banner",
+            body: "When BDSMLR is down, the app can show a banner under the navigation bar explaining that feeds, posts, search, messages, and account actions will not work until BDSMLR is back. It is switched on with the `VITE_BDSMLR_OUTAGE_BANNER` environment variable.",
+          },
+          {
             title: "Changelog page",
             body: "`/changelog` now lists every change to the app, newest first. Open it from the avatar menu to catch up on what shipped.",
           },

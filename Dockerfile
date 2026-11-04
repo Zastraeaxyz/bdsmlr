@@ -1,5 +1,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
+ARG VITE_BDSMLR_OUTAGE_BANNER
+ENV VITE_BDSMLR_OUTAGE_BANNER=$VITE_BDSMLR_OUTAGE_BANNER
 RUN npm install -g pnpm@10
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile

@@ -17,4 +17,5 @@ export const features = {
     import.meta.env.VITE_FEATURE_LEGACY_ADVANCED_SETTINGS,
   ),
   forYou: enabled(import.meta.env.VITE_FEATURE_FOR_YOU),
+  bdsmlrOutageBanner: enabled(import.meta.env.VITE_BDSMLR_OUTAGE_BANNER),
 } as const;
