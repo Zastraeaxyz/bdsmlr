@@ -239,6 +239,10 @@ export const changelog: ChangelogRelease[] = [
         kind: "Changed",
         changes: [
           {
+            title: "Reblogs continue in the background",
+            body: "Pressing Reblog or Queue now closes the composer right away and shows a centered progress toast while BDSMLR finishes. You can keep browsing, and if the reblog fails the toast offers a Retry button. Closing or reloading the tab while a reblog is still running asks for confirmation first.",
+          },
+          {
             title: "Videos play when scrolled into view",
             body: "Videos in feeds and post pages now start playing when they scroll into view and pause when they leave, including GIFs that fall back to a video. Clips under 20 seconds loop without a play bar, while longer videos keep the full player controls. Pressing play or pause yourself leaves playback alone, and the full-screen viewer always shows controls.",
           },

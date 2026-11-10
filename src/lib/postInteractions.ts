@@ -9,7 +9,7 @@ import {
   type Post,
 } from "./api";
 import { currentActorBlogId } from "./activeBlog";
-import { submitReblog } from "./reblog";
+import { submitReblog, type ReblogPhase } from "./reblog";
 import { addPendingReblog } from "./pendingReblogs";
 
 export interface PostInteractionState {
@@ -143,7 +143,12 @@ export async function toggleLike(post: Post): Promise<void> {
 
 export async function reblog(
   post: Post,
-  opts: { mode?: "live" | "queue"; comment?: string; tags?: string[] } = {},
+  opts: {
+    mode?: "live" | "queue";
+    comment?: string;
+    tags?: string[];
+    onProgress?: (phase: ReblogPhase) => void;
+  } = {},
 ): Promise<"live" | "queue"> {
   requireUser();
   const actorId = currentActorBlogId();
@@ -157,6 +162,7 @@ export async function reblog(
     note: opts.comment,
     tags: opts.tags,
     mode,
+    onProgress: opts.onProgress,
   });
   if (mode === "live") {
     const current = signalFor(post)[0]();

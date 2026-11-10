@@ -6,6 +6,7 @@ import { AuthProvider } from "~/lib/useAuth";
 import { Analytics } from "~/components/Analytics";
 import { AppErrorBoundary } from "~/components/AppErrorBoundary";
 import { ScrollToTop } from "~/components/ScrollToTop";
+import { ReblogToasts } from "~/components/ReblogToasts";
 import "./index.css";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
             <AppErrorBoundary>
               <Suspense>{props.children}</Suspense>
               <ScrollToTop />
+              <ReblogToasts />
             </AppErrorBoundary>
           </MetaProvider>
         </AuthProvider>

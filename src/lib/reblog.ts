@@ -1,9 +1,12 @@
+export type ReblogPhase = 'preparing' | 'submitting' | 'confirming'
+
 export interface ReblogOptions {
   blogId: number
   originPostId?: number | null
   note?: string
   tags?: string[]
   mode?: 'live' | 'queue'
+  onProgress?: (phase: ReblogPhase) => void
 }
 
 function escapeHtml(value: string): string {
@@ -55,11 +58,13 @@ export async function submitReblog(
   opts: ReblogOptions,
 ): Promise<number | undefined> {
   const originPostId = opts.originPostId ?? postId
+  if (opts.mode === 'live') opts.onProgress?.('preparing')
   const beforeIds =
     opts.mode === 'live'
       ? await latestPostIds()
       : null
   const before = new Set(beforeIds ?? [])
+  opts.onProgress?.('submitting')
   const composer = await fetch(`/api/legacy/reblog/${postId}`, {
     method: 'POST',
     credentials: 'include',
@@ -130,6 +135,7 @@ export async function submitReblog(
   }
 
   if (opts.mode === 'queue' || beforeIds === null) return undefined
+  opts.onProgress?.('confirming')
   const newId = await waitForReblogId(before)
   if (newId === undefined) return undefined
   if (newId === null) {

@@ -1,6 +1,6 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 import type { Post } from "~/lib/api";
-import { reblog } from "~/lib/postInteractions";
+import { startReblogJob } from "~/lib/reblogJobs";
 import { postTypeName } from "~/lib/postTypes";
 import { surfaceForPath, trackEvent } from "~/lib/analytics";
 
@@ -11,9 +11,7 @@ export function ReblogComposer(props: {
 }) {
   const [note, setNote] = createSignal("");
   const [tags, setTags] = createSignal("");
-  const [busy, setBusy] = createSignal(false);
-  const [error, setError] = createSignal("");
-  const [status, setStatus] = createSignal("");
+  let submitted = false;
 
   const tagList = () =>
     [...new Set(
@@ -23,40 +21,36 @@ export function ReblogComposer(props: {
         .filter(Boolean),
     )];
 
-  const submit = async (mode: "live" | "queue", e?: Event) => {
+  const submit = (mode: "live" | "queue", e?: Event) => {
     e?.preventDefault();
-    if (busy()) return;
-    setBusy(true);
-    setError("");
-    setStatus("");
-    try {
-      await reblog(props.post, {
-        mode,
-        comment: note().trim() || undefined,
-        tags: tagList(),
-      });
-      setStatus(mode === "queue" ? "Queued." : "Reblogged.");
-      trackEvent("reblog", {
-        surface:
-          typeof window === "undefined"
-            ? "post"
-            : surfaceForPath(window.location.pathname),
-        postType: postTypeName(props.post.type),
-        mode,
-        hasNote: note().trim().length > 0,
-        tagCount: tagList().length,
-      });
-      props.onDone?.(mode);
-      props.onClose();
-    } catch (err: unknown) {
-      setError((err as Error)?.message || "Could not reblog post");
-    } finally {
-      setBusy(false);
-    }
+    if (submitted) return;
+    submitted = true;
+
+    const comment = note().trim() || undefined;
+    const tags = tagList();
+
+    startReblogJob({
+      post: props.post,
+      mode,
+      comment,
+      tags,
+    });
+    trackEvent("reblog", {
+      surface:
+        typeof window === "undefined"
+          ? "post"
+          : surfaceForPath(window.location.pathname),
+      postType: postTypeName(props.post.type),
+      mode,
+      hasNote: !!comment,
+      tagCount: tags.length,
+    });
+    props.onDone?.(mode);
+    props.onClose();
   };
 
   return (
-    <div class="tag-modal-backdrop" onClick={() => !busy() && props.onClose()}>
+    <div class="tag-modal-backdrop" onClick={props.onClose}>
       <form
         class="tag-modal reblog-modal"
         onClick={(e) => e.stopPropagation()}
@@ -67,7 +61,6 @@ export function ReblogComposer(props: {
           class="tag-modal-close"
           onClick={props.onClose}
           aria-label="Close reblog"
-          disabled={busy()}
         >
           ×
         </button>
@@ -79,7 +72,6 @@ export function ReblogComposer(props: {
             placeholder="Add a note…"
             value={note()}
             onInput={(e) => setNote(e.currentTarget.value)}
-            disabled={busy()}
           />
         </label>
         <label class="reblog-field">
@@ -89,35 +81,16 @@ export function ReblogComposer(props: {
             placeholder="tag one, tag two"
             value={tags()}
             onInput={(e) => setTags(e.currentTarget.value)}
-            disabled={busy()}
           />
         </label>
-        <Show when={error()}>
-          <p class="error">{error()}</p>
-        </Show>
-        <Show when={status()}>
-          <p class="reblog-status">{status()}</p>
-        </Show>
         <div class="reblog-actions">
-          <button
-            type="button"
-            class="btn-ghost"
-            onClick={props.onClose}
-            disabled={busy()}
-          >
+          <button type="button" class="btn-ghost" onClick={props.onClose}>
             Cancel
           </button>
-          <button
-            type="button"
-            class="btn-ghost"
-            onClick={() => submit("queue")}
-            disabled={busy()}
-          >
+          <button type="button" class="btn-ghost" onClick={() => submit("queue")}>
             Queue
           </button>
-          <button type="submit" disabled={busy()}>
-            {busy() ? "Reblogging…" : "Reblog"}
-          </button>
+          <button type="submit">Reblog</button>
         </div>
       </form>
     </div>
