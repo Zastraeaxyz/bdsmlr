@@ -239,6 +239,10 @@ export const changelog: ChangelogRelease[] = [
         kind: "Changed",
         changes: [
           {
+            title: "Videos play when scrolled into view",
+            body: "Videos in feeds and post pages now start playing when they scroll into view and pause when they leave, including GIFs that fall back to a video. Clips under 20 seconds loop without a play bar, while longer videos keep the full player controls. Pressing play or pause yourself leaves playback alone, and the full-screen viewer always shows controls.",
+          },
+          {
             title: "Mobile navigation and search",
             body: "On phones the top bar now shows only the brand and your avatar. Home, Post, Discord, and the other top-bar links moved into the avatar menu, and a signed-out visitor gets a compact \"Menu\" button in the same spot. The search bar now wraps to its own row with a full-width search field, so the sort, search, help, and view controls fit on narrow screens instead of overflowing. Post card headers also wrap instead of pushing the timestamp off screen.",
           },

@@ -36,7 +36,7 @@ export function LightBox(props: LightBoxProps) {
             ✕
           </button>
           <Show when={type() === 'image'} fallback={
-            <AutoLoopVideo src={props.url!} />
+            <AutoLoopVideo src={props.url!} forceControls />
           }>
             <img src={props.url!} alt="" />
           </Show>
