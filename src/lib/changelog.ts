@@ -34,6 +34,10 @@ export const changelog: ChangelogRelease[] = [
         kind: "Added",
         changes: [
           {
+            title: "About page FAQ",
+            body: "The `/about` page now has a FAQ section. Every question has its own link, so you can send someone straight to an answer, such as `/about#why-are-some-gifs-now-mp4s`.",
+          },
+          {
             title: "Outage banner",
             body: "When BDSMLR is down, the app can show a banner under the navigation bar explaining that feeds, posts, search, messages, and account actions will not work until BDSMLR is back. It is switched on with the `VITE_BDSMLR_OUTAGE_BANNER` environment variable.",
           },

@@ -3089,6 +3089,44 @@ button:disabled {
   line-height: 1.6;
 }
 
+.about-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.about-faq {
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.about-faq-question {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.about-faq-question a {
+  color: var(--text-heading);
+  text-decoration: none;
+}
+
+.about-faq-question a::before {
+  content: "#";
+  margin-right: 8px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.about-faq-question a:hover {
+  text-decoration: underline;
+}
+
+.about-faq:target .about-faq-question a {
+  color: var(--accent);
+}
+
 .login-about-link {
   color: var(--text-muted);
   font-size: 13px;

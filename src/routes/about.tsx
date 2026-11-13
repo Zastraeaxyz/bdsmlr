@@ -1,7 +1,47 @@
 import { Title } from "@solidjs/meta";
+import { For, onMount } from "solid-js";
 import Header from "~/components/Header";
 
+interface FaqEntry {
+  /** Stable anchor used for direct links to this question. */
+  id: string;
+  question: string;
+  answer: string[];
+}
+
+const faqs: FaqEntry[] = [
+  {
+    id: "why-are-some-gifs-now-mp4s",
+    question: "Why are some GIFs now MP4s?",
+    answer: [
+      "Those aren't GIFs anymore, those are MP4s. BDSMLR is serving MP4s for a lot of what previously was GIFs, and I have no idea why. BDSMLR's current site even handles this by making videos look like GIFs: it autoplays them and disables the video controls.",
+      "A lot of the GIF links are broken, so the app falls back to the MP4s that are more reliable. Another issue is that the mime type is sometimes set to null even though the URL ends in .gif. Some GIFs are also massive, which might be why they switched to video. We always try to show a GIF when one is available rather than an MP4.",
+    ],
+  },
+  {
+    id: "why-are-some-posts-empty",
+    question: "Why are some posts empty with no images and no text?",
+    answer: [
+      "That is also out of our control, and we cannot explain why it happens. Some posts just come back with no content at all.",
+      "You can click the BDSMLR logo on the post to open it on BDSMLR, and you will see it does not work there either.",
+    ],
+  },
+];
+
+function scrollToHash() {
+  const id = window.location.hash.slice(1);
+  if (!id) return;
+  const target = document.getElementById(id);
+  if (target) target.scrollIntoView();
+}
+
 export default function AboutPage() {
+  onMount(() => {
+    // The browser may miss the anchor when arriving from another route, so
+    // apply it once the FAQ entries have rendered.
+    scrollToHash();
+  });
+
   return (
     <div class="home-page about-page">
       <Title>About - bbdsmlr</Title>
@@ -104,6 +144,36 @@ export default function AboutPage() {
               though the app itself is fine. The server cannot fix BDSMLR's
               data. It just passes it along.
             </p>
+          </div>
+        </section>
+
+        <section class="about-section" id="faq">
+          <h3>Frequently asked questions</h3>
+          <div class="about-faq-list">
+            <For each={faqs}>
+              {(faq) => (
+                <article class="about-faq" id={faq.id}>
+                  <h4 class="about-faq-question">
+                    <a
+                      href={`#${faq.id}`}
+                      aria-label={`Link to "${faq.question}"`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        window.history.pushState(null, "", `#${faq.id}`);
+                        document.getElementById(faq.id)?.scrollIntoView();
+                      }}
+                    >
+                      {faq.question}
+                    </a>
+                  </h4>
+                  <div class="about-copy">
+                    <For each={faq.answer}>
+                      {(paragraph) => <p>{paragraph}</p>}
+                    </For>
+                  </div>
+                </article>
+              )}
+            </For>
           </div>
         </section>
       </main>
