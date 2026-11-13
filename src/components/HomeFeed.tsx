@@ -1,4 +1,4 @@
-import { createSignal, createEffect, For, Show, onCleanup, untrack } from "solid-js";
+import { createSignal, createEffect, For, Show, untrack } from "solid-js";
 import { useLocation, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import {
@@ -24,6 +24,7 @@ import SearchHelp from "~/components/SearchHelp";
 import { LightBox } from "~/components/LightBox";
 import SearchHistory from "~/components/SearchHistory";
 import ViewDropdown from "~/components/ViewDropdown";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { PostCard } from "~/components/PostCard";
 import { countBucket, trackEvent } from "~/lib/analytics";
 import {
@@ -74,7 +75,6 @@ export default function HomeFeed() {
   let searchPage = 1;
   let searchSession: string | null = null;
   let followedBlogIds: number[] = [];
-  let loadMoreRef: HTMLButtonElement | undefined;
 
   const requestSearch = (q: string, page: number, session: string | null) =>
     searchPostsByTag({
@@ -261,18 +261,6 @@ export default function HomeFeed() {
     }
   };
 
-  createEffect(() => {
-    if (authLoading() || !user()) return;
-    if (!loadMoreRef) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        loadMore();
-      }
-    });
-    observer.observe(loadMoreRef);
-    onCleanup(() => observer.disconnect());
-  });
-
   const runSearch = (q: string) => {
     setHistory(addSearchHistory(HISTORY_KEY, q));
     const current = (searchParams.tag_name as string) || "";
@@ -408,18 +396,14 @@ export default function HomeFeed() {
             </Show>
           </Show>
 
-          <button
-            ref={loadMoreRef}
-            onClick={() => {
+          <AutoLoadMore
+            onLoad={() => {
               trackEvent("load-more", { surface: "following" });
               void loadMore();
             }}
-            disabled={loadingMore()}
-            class="btn-ghost"
-            style="display:block;margin:24px auto"
-          >
-            {loadingMore() ? "Loading more" : "Load more"}
-          </button>
+            loading={loadingMore()}
+            ready={!loading()}
+          />
         </main>
         <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
       </div>

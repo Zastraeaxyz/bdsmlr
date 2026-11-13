@@ -1,4 +1,4 @@
-import { createSignal, createEffect, For, Show, onMount, onCleanup } from "solid-js";
+import { createSignal, createEffect, For, Show } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import {
@@ -13,6 +13,7 @@ import { upgradeToLightbox } from "~/lib/sanitize";
 import Header from "~/components/Header";
 import { LightBox } from "~/components/LightBox";
 import ViewDropdown from "~/components/ViewDropdown";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { PostCard } from "~/components/PostCard";
 import {
   loadFeedView,
@@ -35,7 +36,6 @@ export default function LikedPosts() {
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
   const [view, setView] = createSignal<FeedView>(loadFeedView());
   let nextPageToken: string | null = searchParams.page_token || null;
-  let loadMoreRef: HTMLButtonElement | undefined;
 
   const syncUrl = () => {
     setSearchParams(
@@ -112,17 +112,6 @@ export default function LikedPosts() {
     }
   };
 
-  onMount(() => {
-    if (!loadMoreRef) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        loadMore();
-      }
-    });
-    observer.observe(loadMoreRef);
-    onCleanup(() => observer.disconnect());
-  });
-
   return (
     <div class="home-page">
       <Title>Liked posts — bbdsmlr</Title>
@@ -177,15 +166,14 @@ export default function LikedPosts() {
           </Show>
         </Show>
 
-        <button
-          ref={loadMoreRef}
-          onClick={loadMore}
-          disabled={loadingMore()}
-          class="btn-ghost"
-          style="display:block;margin:24px auto"
-        >
-          {loadingMore() ? "Loading more" : "Load more"}
-        </button>
+        <AutoLoadMore
+          onLoad={() => {
+            trackEvent("load-more", { surface: "liked" });
+            void loadMore();
+          }}
+          loading={loadingMore()}
+          ready={!loading()}
+        />
       </main>
       <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
     </div>

@@ -29,6 +29,7 @@ import { LightBox } from "~/components/LightBox";
 import { useFeedSettings } from "~/lib/feedSettings";
 import SearchHistory from "~/components/SearchHistory";
 import ViewDropdown from "~/components/ViewDropdown";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { PostCard } from "~/components/PostCard";
 import {
   loadFeedView,
@@ -172,7 +173,6 @@ export default function UserFeed() {
   let searchPage = 1;
   let searchSession: string | null = null;
   let loadedIds = new Set<number>();
-  let loadMoreRef: HTMLButtonElement | undefined;
 
   const requestSearch = (
     name: string,
@@ -393,17 +393,6 @@ export default function UserFeed() {
       setLoadingMore(false);
     }
   };
-
-  onMount(() => {
-    if (!loadMoreRef) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        loadMore();
-      }
-    });
-    observer.observe(loadMoreRef);
-    onCleanup(() => observer.disconnect());
-  });
 
   const runSearch = (q: string) => {
     const name = slug();
@@ -695,15 +684,14 @@ export default function UserFeed() {
           </Show>
         </Show>
 
-        <button
-          ref={loadMoreRef}
-          onClick={loadMore}
-          disabled={loadingMore()}
-          class="btn-ghost"
-          style="display:block;margin:24px auto"
-        >
-          {loadingMore() ? "Loading more" : "Load more"}
-        </button>
+        <AutoLoadMore
+          onLoad={() => {
+            trackEvent("load-more", { surface: "profile" });
+            void loadMore();
+          }}
+          loading={loadingMore()}
+          ready={!loading()}
+        />
       </main>
       <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
     </>

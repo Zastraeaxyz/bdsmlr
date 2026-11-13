@@ -9,6 +9,7 @@ import {
 import { A, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
+import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { useAuth } from "~/lib/useAuth";
 import {
   archiveMessageThread,
@@ -78,6 +79,7 @@ export default function Messages() {
   const [creating, setCreating] = createSignal(false);
   const [suggestions, setSuggestions] = createSignal<Blog[]>([]);
   const [suppressSuggestions, setSuppressSuggestions] = createSignal(false);
+  const [canAutoLoadOlder, setCanAutoLoadOlder] = createSignal(false);
   let conversationRef: HTMLDivElement | undefined;
   let imageInputRef: HTMLInputElement | undefined;
 
@@ -85,6 +87,7 @@ export default function Messages() {
     requestAnimationFrame(() => {
       const el = conversationRef;
       if (el) el.scrollTop = el.scrollHeight;
+      setCanAutoLoadOlder(true);
     });
   };
 
@@ -137,6 +140,7 @@ export default function Messages() {
   const openThread = async (id: number) => {
     setSelectedId(id);
     setThread(null);
+    setCanAutoLoadOlder(false);
     setThreadLoading(true);
     setError("");
     setNotice("");
@@ -579,14 +583,17 @@ export default function Messages() {
                   </p>
                 </Show>
                 <Show when={thread()!.next_before}>
-                  <button
-                    type="button"
-                    class="btn-ghost messages-older"
-                    onClick={loadOlder}
-                    disabled={loadingOlder()}
-                  >
-                    {loadingOlder() ? "Loading…" : "Load older messages"}
-                  </button>
+                  <AutoLoadMore
+                    onLoad={() => void loadOlder()}
+                    loading={loadingOlder()}
+                    ready={canAutoLoadOlder()}
+                    loadingLabel="Loading…"
+                    label="Load older messages"
+                    class="messages-older"
+                    style="margin:0 auto 8px"
+                    root={() => conversationRef}
+                    rootMargin="200px 0px 0px 0px"
+                  />
                 </Show>
                 <For each={thread()!.messages ?? []}>
                   {(message) => (

@@ -34,6 +34,10 @@ export const changelog: ChangelogRelease[] = [
         kind: "Added",
         changes: [
           {
+            title: "Automatic infinite scroll",
+            body: "Feeds, search results, comments, related posts, activity, and message history now load the next page as you scroll. The load-more buttons remain as a fallback if automatic loading does not trigger.",
+          },
+          {
             title: "About page FAQ",
             body: "The `/about` page now has a FAQ section. Every question has its own link, so you can send someone straight to an answer, such as `/about#why-are-some-gifs-now-mp4s`.",
           },
