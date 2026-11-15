@@ -9,7 +9,7 @@ import {
 } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
 import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
-import { upgradeToLightbox } from "~/lib/sanitize";
+import { createMediaGallery } from "~/lib/mediaGallery";
 import Header from "~/components/Header";
 import { LightBox } from "~/components/LightBox";
 import ViewDropdown from "~/components/ViewDropdown";
@@ -31,7 +31,7 @@ export default function LikedPosts() {
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
   const [error, setError] = createSignal("");
-  const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
+  const gallery = createMediaGallery({ posts: () => posts() });
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
   const [view, setView] = createSignal<FeedView>(loadFeedView());
@@ -156,8 +156,8 @@ export default function LikedPosts() {
                 {(post) => (
                   <PostCard
                     post={post}
-                    onImageClick={(url) =>
-                      setLightboxUrl(upgradeToLightbox(url))
+                    onImageClick={(url, postId) =>
+                      gallery.open(url, postId)
                     }
                   />
                 )}
@@ -175,7 +175,7 @@ export default function LikedPosts() {
           ready={!loading()}
         />
       </main>
-      <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
+      <LightBox gallery={gallery} />
     </div>
   );
 }

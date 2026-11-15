@@ -34,7 +34,7 @@ export interface PostCardProps {
   post: Post;
   hiddenImageIdentities?: ReadonlySet<string>;
   onTagClick?: (tag: string) => void;
-  onImageClick?: (url: string) => void;
+  onImageClick?: (url: string, postId: number) => void;
   tagHref?: (tag: string) => string;
 }
 
@@ -155,7 +155,7 @@ export function PostCard(props: PostCardProps) {
           onClick={(e) => {
             const target = e.target as HTMLElement;
             if (target.tagName === "IMG" && target.getAttribute("src")) {
-              props.onImageClick?.(target.getAttribute("src")!);
+              props.onImageClick?.(target.getAttribute("src")!, post.id);
             }
           }}
         />
@@ -164,7 +164,7 @@ export function PostCard(props: PostCardProps) {
         <PostMediaList
           items={mediaItems()}
           class="feed-card-images"
-          onImageClick={props.onImageClick}
+          onImageClick={(url) => props.onImageClick?.(url, post.id)}
         />
       )}
       {post.tags && post.tags.length > 0 && (

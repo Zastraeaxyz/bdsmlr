@@ -5,7 +5,7 @@ import { useAuth } from "~/lib/useAuth";
 import { PostCard } from "~/components/PostCard";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
-import { upgradeToLightbox } from "~/lib/sanitize";
+import { createMediaGallery } from "~/lib/mediaGallery";
 import { tagSearchHref } from "~/lib/tagLinks";
 
 const PAGE_SIZE = 6;
@@ -17,7 +17,7 @@ export function RelatedPosts(props: { postId: number }) {
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [error, setError] = createSignal("");
-  const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
+  const gallery = createMediaGallery({ posts: () => posts() });
   let nextPageToken: string | null = null;
 
   const load = async () => {
@@ -95,8 +95,8 @@ export function RelatedPosts(props: { postId: number }) {
                 <PostCard
                   post={post}
                   onTagClick={openTag}
-                  onImageClick={(url) =>
-                    setLightboxUrl(upgradeToLightbox(url))
+                  onImageClick={(url, postId) =>
+                    gallery.open(url, postId)
                   }
                 />
               )}
@@ -112,7 +112,7 @@ export function RelatedPosts(props: { postId: number }) {
           label="Load more related posts"
         />
       </Show>
-      <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
+      <LightBox gallery={gallery} />
     </section>
   );
 }

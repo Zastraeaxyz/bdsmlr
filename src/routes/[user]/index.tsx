@@ -23,7 +23,7 @@ import {
 } from "~/lib/api";
 import { GearIcon, WarningIcon } from "~/components/Icons";
 import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
-import { upgradeToLightbox } from "~/lib/sanitize";
+import { createMediaGallery } from "~/lib/mediaGallery";
 import SearchHelp from "~/components/SearchHelp";
 import { LightBox } from "~/components/LightBox";
 import { useFeedSettings } from "~/lib/feedSettings";
@@ -70,7 +70,6 @@ export default function UserFeed() {
   const [activeQuery, setActiveQuery] = createSignal(
     (searchParams.tag_name as string) || "",
   );
-  const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
   const [showAllTags, setShowAllTags] = createSignal(false);
   const [sortField, setSortField] = createSignal(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
@@ -108,6 +107,11 @@ export default function UserFeed() {
       ? findRepeatingImageIdentities(posts())
       : EMPTY_IMAGE_IDENTITIES,
   );
+
+  const gallery = createMediaGallery({
+    posts: () => posts(),
+    hiddenImageIdentities: () => repeatingImageIdentities(),
+  });
 
   const activeTagName = () => {
     const match = activeQuery().trim().match(/^tag:(?:"([^"]+)"|(\S+))$/i);
@@ -674,8 +678,8 @@ export default function UserFeed() {
                     hiddenImageIdentities={repeatingImageIdentities()}
                     onTagClick={handleTagClick}
                     tagHref={tagHref}
-                    onImageClick={(url) =>
-                      setLightboxUrl(upgradeToLightbox(url))
+                    onImageClick={(url, postId) =>
+                      gallery.open(url, postId)
                     }
                   />
                 )}
@@ -693,7 +697,7 @@ export default function UserFeed() {
           ready={!loading()}
         />
       </main>
-      <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
+      <LightBox gallery={gallery} />
     </>
   );
 }

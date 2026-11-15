@@ -7,8 +7,8 @@ import {
   processContentHtml,
   getPostMediaUrls,
   getPostMediaItems,
-  upgradeToLightbox,
 } from "~/lib/sanitize";
+import { createMediaGallery } from "~/lib/mediaGallery";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
@@ -42,7 +42,12 @@ export default function PostDetail(props: {
   const [error, setError] = createSignal("");
   const [blogGone, setBlogGone] = createSignal(false);
   const [blogCheckDone, setBlogCheckDone] = createSignal(false);
-  const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
+  const gallery = createMediaGallery({
+    posts: () => {
+      const p = post();
+      return p ? [p] : [];
+    },
+  });
   let trackedPostId: number | null = null;
 
   createEffect(() => {
@@ -134,13 +139,13 @@ export default function PostDetail(props: {
         <PostDetailView
           post={post()!}
           blogGone={blogGone()}
-          onImageClick={(url) => setLightboxUrl(upgradeToLightbox(url))}
+          onImageClick={(url, postId) => gallery.open(url, postId)}
         />
         <Show when={post()!.id}>
           <RelatedPosts postId={post()!.id} />
         </Show>
       </Show>
-      <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
+      <LightBox gallery={gallery} />
     </>
   );
 }
@@ -148,7 +153,7 @@ export default function PostDetail(props: {
 function PostDetailView(props: {
   post: Post;
   blogGone?: boolean;
-  onImageClick?: (url: string) => void;
+  onImageClick?: (url: string, postId: number) => void;
 }) {
   const { user, activeBlogId } = useAuth();
   const navigate = useNavigate();
@@ -283,7 +288,10 @@ function PostDetailView(props: {
           onClick={(e) => {
             const target = e.target as HTMLElement;
             if (target.tagName === "IMG" && target.getAttribute("src")) {
-              props.onImageClick?.(target.getAttribute("src")!);
+              props.onImageClick?.(
+                target.getAttribute("src")!,
+                props.post.id,
+              );
             }
           }}
         />
@@ -294,7 +302,7 @@ function PostDetailView(props: {
           items={mediaItems()}
           class="post-detail-images"
           showAll
-          onImageClick={props.onImageClick}
+          onImageClick={(url) => props.onImageClick?.(url, props.post.id)}
         />
       )}
 

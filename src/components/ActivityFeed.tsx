@@ -13,7 +13,7 @@ import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { LightBox } from "~/components/LightBox";
 import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
-import { upgradeToLightbox } from "~/lib/sanitize";
+import { createMediaGallery } from "~/lib/mediaGallery";
 import { tagSearchHref } from "~/lib/tagLinks";
 import { markActivitySeen } from "~/lib/activityUnread";
 import { trackEvent } from "~/lib/analytics";
@@ -61,7 +61,6 @@ export function ActivityFeed(props: { blogName: string }) {
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [error, setError] = createSignal("");
-  const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
   let nextPageToken: string | null = null;
 
   const matches = (item: TimelineItem): boolean => {
@@ -80,6 +79,13 @@ export function ActivityFeed(props: { blogName: string }) {
   };
 
   const visible = () => items().filter(matches);
+
+  const gallery = createMediaGallery({
+    posts: () =>
+      visible()
+        .filter((item) => item.type === 1 && item.post)
+        .map((item) => item.post!),
+  });
 
   const toggleKind = (kind: ActivityKind) => {
     trackEvent("activity-filter", { filter: kind });
@@ -280,8 +286,8 @@ export function ActivityFeed(props: { blogName: string }) {
                   <PostCard
                     post={item.post!}
                     onTagClick={openTag}
-                    onImageClick={(url) =>
-                      setLightboxUrl(upgradeToLightbox(url))
+                    onImageClick={(url, postId) =>
+                      gallery.open(url, postId)
                     }
                   />
                 </Show>
@@ -293,7 +299,7 @@ export function ActivityFeed(props: { blogName: string }) {
       <Show when={nextPageToken}>
         <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
       </Show>
-      <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
+      <LightBox gallery={gallery} />
     </div>
   );
 }

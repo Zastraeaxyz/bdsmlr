@@ -34,6 +34,10 @@ export const changelog: ChangelogRelease[] = [
         kind: "Added",
         changes: [
           {
+            title: "Lightbox keyboard navigation",
+            body: "Click any image to open the lightbox, then use Left and Right to move through every image and video in that post, including media hidden behind Show more and inline images in text posts. Up and Down jump to the previous or next post in the feed. Escape still closes.",
+          },
+          {
             title: "Open source repository",
             body: "Better BDSMLR is open source again. The landing page, the About page, the footer, and the signed-out navigation now link to `github.com/Zastraeaxyz/bdsmlr`, where the full code is public and issues and pull requests are welcome.",
           },

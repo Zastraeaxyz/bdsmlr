@@ -11,7 +11,7 @@ import {
 import { PostCard } from "~/components/PostCard";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
-import { upgradeToLightbox } from "~/lib/sanitize";
+import { createMediaGallery } from "~/lib/mediaGallery";
 import { tagSearchHref } from "~/lib/tagLinks";
 import { countBucket, trackEvent } from "~/lib/analytics";
 
@@ -27,7 +27,7 @@ export function PostSearchResults(props: {
   const [loading, setLoading] = createSignal(false);
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [error, setError] = createSignal("");
-  const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
+  const gallery = createMediaGallery({ posts: () => posts() });
   let searchPage = 1;
   let searchSession: string | null = null;
   let hasMore = true;
@@ -142,8 +142,8 @@ export function PostSearchResults(props: {
                 <PostCard
                   post={post}
                   onTagClick={openTag}
-                  onImageClick={(url) =>
-                    setLightboxUrl(upgradeToLightbox(url))
+                  onImageClick={(url, postId) =>
+                    gallery.open(url, postId)
                   }
                 />
               )}
@@ -154,7 +154,7 @@ export function PostSearchResults(props: {
       <Show when={hasMore && posts().length > 0}>
         <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
       </Show>
-      <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
+      <LightBox gallery={gallery} />
     </div>
   );
 }

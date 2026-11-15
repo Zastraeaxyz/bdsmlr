@@ -9,7 +9,7 @@ import { fetchAllFollowerIds } from "~/lib/following";
 import { PostCard } from "~/components/PostCard";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
-import { upgradeToLightbox } from "~/lib/sanitize";
+import { createMediaGallery } from "~/lib/mediaGallery";
 import { tagSearchHref } from "~/lib/tagLinks";
 
 const PAGE_SIZE = 20;
@@ -20,7 +20,7 @@ export function FollowerFeed(props: { blogName: string }) {
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [error, setError] = createSignal("");
-  const [lightboxUrl, setLightboxUrl] = createSignal<string | null>(null);
+  const gallery = createMediaGallery({ posts: () => posts() });
   let followerIds: number[] = [];
   let nextPageToken: string | null = null;
 
@@ -95,8 +95,8 @@ export function FollowerFeed(props: { blogName: string }) {
                 <PostCard
                   post={post}
                   onTagClick={openTag}
-                  onImageClick={(url) =>
-                    setLightboxUrl(upgradeToLightbox(url))
+                  onImageClick={(url, postId) =>
+                    gallery.open(url, postId)
                   }
                 />
               )}
@@ -107,7 +107,7 @@ export function FollowerFeed(props: { blogName: string }) {
       <Show when={nextPageToken}>
         <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
       </Show>
-      <LightBox url={lightboxUrl()} onClose={() => setLightboxUrl(null)} />
+      <LightBox gallery={gallery} />
     </div>
   );
 }
