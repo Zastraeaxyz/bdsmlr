@@ -2,6 +2,8 @@
 
 A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, search posts, browse blogs, like, reblog, or comment on posts, discover new blogs and posts, and send messages.
 
+Better BDSMLR is an open source community project. The code is public at [github.com/Zastraeaxyz/bdsmlr](https://github.com/Zastraeaxyz/bdsmlr), where bug reports, feature ideas, and pull requests are welcome.
+
 ## Features
 
 - **Landing page** — The public home page at `/` explains the app, lists its features, and shows the social preview cards. Signed-in visitors see the following feed there and the URL updates to `/home`. Login is at `/login`, and the following feed is also at `/home`.
@@ -41,3 +43,26 @@ A browser client for [BDSMLR](https://bdsmlr.com/). Log in, follow your feed, se
 - **Blog social actions**: Follow and unfollow blogs, see followers and other blogs owned by the same user, block or unblock a blog, report a blog, and start a message from a profile.
 - **Post controls**: Edit and delete posts from the active blog, report posts, and use the reblog composer to add a note, add tags, or send the reblog to your queue.
 - **Multiple blogs**: Switch the active blog from the profile menu. Likes, reblogs, comments, follows, blocks, and reports use the active blog.
+
+## Project links
+
+- Repository: <https://github.com/Zastraeaxyz/bdsmlr>
+- Issues and feature requests: <https://github.com/Zastraeaxyz/bdsmlr/issues>
+- Discord: <https://discord.gg/w3BkPTwf2d>
+
+## Running locally
+
+Node 22 or newer and pnpm are required.
+
+```sh
+pnpm install
+pnpm dev
+```
+
+`pnpm dev` applies the SQLite migrations and then starts the Vite dev server on the port it prints. `pnpm test` runs the unit tests and `pnpm build` makes a production build.
+
+Optional settings: `DATABASE_PATH` moves the SQLite file, `RESOLVE_CACHE_TTL`, `BLOG_CACHE_TTL`, and `PAGE_TOKEN_TTL` tune the RSS and preview caches, and feature flags such as `VITE_FEATURE_LEGACY_ACCOUNT_SETTINGS` and `VITE_BDSMLR_OUTAGE_BANNER` are read at build time.
+
+## Contributing
+
+Open an issue before starting a large change so the approach can be agreed on first. This is a SolidJS app, so use `<For>` and `<Show>` instead of array maps and inline conditionals in JSX. Every user-facing change needs an entry in `src/lib/changelog.ts` under `Unreleased`, because that file powers the in-app changelog at `/changelog`. More detail lives in `AGENTS.md`.

@@ -1,7 +1,6 @@
 import { Show } from "solid-js";
 import { features } from "~/lib/features";
-
-const DISCORD_URL = "https://discord.gg/w3BkPTwf2d";
+import { DISCORD_URL } from "~/lib/links";
 
 export default function OutageBanner() {
   return (

@@ -67,7 +67,7 @@ function rootPreview(origin: string): SocialPreview {
   return {
     title: "Better BDSMLR",
     description:
-      "An intuitive, modern BDSMLR frontend built by a senior developer with an eye for design and detail. Follow your feed, search posts, and stay connected.",
+      "An intuitive, modern, open source front-end for BDSMLR. Follow your feed, search posts, and stay connected. Read the code and contribute on GitHub.",
     url: `${origin}/`,
     image: `${origin}/og-default.png`,
     type: "website",

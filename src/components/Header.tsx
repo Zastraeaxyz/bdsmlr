@@ -2,7 +2,8 @@ import { createEffect, createSignal, For, Show, onCleanup, onMount } from 'solid
 import { useNavigate, A } from '@solidjs/router'
 import { useAuth } from '../lib/useAuth'
 import { useBlogAvatar } from '../lib/blogAvatar'
-import { DiscordIcon } from './Icons'
+import { DiscordIcon, GitHubIcon } from './Icons'
+import { DISCORD_URL, REPO_URL } from '../lib/links'
 import { unreadCount, refreshMessageUnread } from '../lib/messageUnread'
 import { activityUnreadCount, refreshActivityUnread } from '../lib/activityUnread'
 import { features } from '../lib/features'
@@ -13,8 +14,6 @@ interface HeaderProps {
   info?: string
   children?: any
 }
-
-const DISCORD_URL = 'https://discord.gg/w3BkPTwf2d'
 
 export default function Header(props: HeaderProps) {
   const navigate = useNavigate()
@@ -98,6 +97,16 @@ export default function Header(props: HeaderProps) {
           <A href="/about" class="btn-ghost">About</A>
         </Show>
         <Show when={!user()}>
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-ghost"
+          >
+            GitHub
+          </a>
+        </Show>
+        <Show when={!user()}>
           <A href="/login" class="btn-ghost">Sign in</A>
         </Show>
         <a
@@ -139,6 +148,16 @@ export default function Header(props: HeaderProps) {
                 <A href="/login" class="user-dropdown-item" onClick={closeDropdown}>
                   Sign in
                 </A>
+                <a
+                  href={REPO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="user-dropdown-item user-dropdown-discord"
+                  onClick={closeDropdown}
+                >
+                  <GitHubIcon class="icon" />
+                  GitHub
+                </a>
                 <a
                   href={DISCORD_URL}
                   target="_blank"

@@ -2,7 +2,16 @@
   "name": "bbdmslr",
   "private": true,
   "version": "0.3.0",
+  "description": "An open source browser client for BDSMLR.",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zastraeaxyz/bdsmlr.git"
+  },
+  "homepage": "https://github.com/Zastraeaxyz/bdsmlr#readme",
+  "bugs": {
+    "url": "https://github.com/Zastraeaxyz/bdsmlr/issues"
+  },
   "scripts": {
     "predev": "pnpm db:migrate",
     "dev": "vite dev",

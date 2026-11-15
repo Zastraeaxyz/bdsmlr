@@ -3127,6 +3127,15 @@ button:disabled {
   color: var(--accent);
 }
 
+.about-copy a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.about-copy a:hover {
+  text-decoration: underline;
+}
+
 .login-about-link {
   color: var(--text-muted);
   font-size: 13px;
@@ -3135,6 +3144,34 @@ button:disabled {
 
 .login-about-link:hover {
   color: var(--text-heading);
+}
+
+/* ---- 404 ---- */
+
+.notfound-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 72px 24px;
+}
+
+.notfound-page h1 {
+  margin-bottom: 10px;
+  font-size: 28px;
+}
+
+.notfound-page p {
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.notfound-page a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.notfound-page a:hover {
+  text-decoration: underline;
 }
 
 /* ---- Changelog ---- */

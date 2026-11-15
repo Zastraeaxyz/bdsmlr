@@ -34,6 +34,10 @@ export const changelog: ChangelogRelease[] = [
         kind: "Added",
         changes: [
           {
+            title: "Open source repository",
+            body: "Better BDSMLR is open source again. The landing page, the About page, the footer, and the signed-out navigation now link to `github.com/Zastraeaxyz/bdsmlr`, where the full code is public and issues and pull requests are welcome.",
+          },
+          {
             title: "Automatic infinite scroll",
             body: "Feeds, search results, comments, related posts, activity, and message history now load the next page as you scroll. The load-more buttons remain as a fallback if automatic loading does not trigger.",
           },

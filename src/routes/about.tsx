@@ -1,6 +1,7 @@
 import { Title } from "@solidjs/meta";
 import { For, onMount } from "solid-js";
 import Header from "~/components/Header";
+import { REPO_URL } from "~/lib/links";
 
 interface FaqEntry {
   /** Stable anchor used for direct links to this question. */
@@ -50,9 +51,9 @@ export default function AboutPage() {
         <section class="about-hero">
           <h2>What our backend does</h2>
           <p class="about-lede">
-            Better BDSMLR is a separate front-end for BDSMLR. Your browser talks
-            to this app, and this app talks to BDSMLR for you. That round trip
-            is all the server really is.
+            Better BDSMLR is an unofficial, open source front-end for BDSMLR.
+            Your browser talks to this app, and this app talks to BDSMLR for
+            you. That round trip is all the server really is.
           </p>
           <div class="about-flow" aria-label="How the app connects to BDSMLR">
             <div class="about-flow-step">Your browser</div>
@@ -96,6 +97,28 @@ export default function AboutPage() {
               settings and session cookies. The server passes your login to
               BDSMLR to start a session, then lets it go. And if BDSMLR hides,
               blocks, or deletes something, this app cannot get around that.
+            </p>
+          </div>
+        </section>
+
+        <section class="about-section" id="open-source">
+          <h3>Open source</h3>
+          <div class="about-copy">
+            <p>
+              You do not have to take any of that on faith. The whole app, the
+              server included, is open source at{" "}
+              <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+                github.com/Zastraeaxyz/bdsmlr
+              </a>
+              . You can read exactly what runs on the server, check what it logs,
+              and run your own copy.
+            </p>
+            <p>
+              Bug reports and feature requests belong in the repository's issue
+              tracker, and pull requests are welcome. Problems with your account,
+              missing posts, or anything that also fails on bdsmlr.com needs to
+              go to BDSMLR instead, since this project cannot change what their
+              API returns.
             </p>
           </div>
         </section>

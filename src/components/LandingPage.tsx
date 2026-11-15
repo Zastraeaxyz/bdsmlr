@@ -3,9 +3,10 @@ import { A } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { useAuth } from "~/lib/useAuth";
 import { trackEvent } from "~/lib/analytics";
-import { DiscordIcon } from "~/components/Icons";
+import { DiscordIcon, GitHubIcon } from "~/components/Icons";
 import { AgeGate } from "~/components/AgeGate";
 import OutageBanner from "~/components/OutageBanner";
+import { DISCORD_URL, REPO_URL } from "~/lib/links";
 
 const FEATURES = [
   {
@@ -76,7 +77,16 @@ export default function LandingPage() {
         </A>
         <nav class="landing-nav-links">
           <a
-            href="https://discord.gg/w3BkPTwf2d"
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="landing-nav-link"
+            onClick={cta("github", "nav")}
+          >
+            GitHub
+          </a>
+          <a
+            href={DISCORD_URL}
             target="_blank"
             rel="noopener noreferrer"
             class="landing-nav-link"
@@ -115,13 +125,13 @@ export default function LandingPage() {
             </h1>
             <p class="landing-lede">
               A fast, clean browser client for your feed, search, likes,
-              reblogs, comments, and messages. It is a community project made
-              by people who use BDSMLR every day. Sign in with your BDSMLR
-              account and pick up where you left off.
+              reblogs, comments, and messages. It is an open source community
+              project made by people who use BDSMLR every day. Sign in with your
+              BDSMLR account and pick up where you left off.
             </p>
             <p class="landing-dig">
-              The goal is a focused, comfortable place to browse, and a project
-              the BDSMLR community can help shape.
+              The goal is a focused, comfortable place to browse, and the code
+              is now public on GitHub so the BDSMLR community can help build it.
             </p>
             <div class="landing-actions">
               <Show
@@ -140,7 +150,7 @@ export default function LandingPage() {
                 See features
               </A>
               <a
-                href="https://discord.gg/w3BkPTwf2d"
+                href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="landing-secondary landing-discord"
@@ -182,6 +192,38 @@ export default function LandingPage() {
                 </article>
               )}
             </For>
+          </div>
+        </section>
+
+        <section class="landing-section landing-open-source">
+          <div class="landing-section-head">
+            <span class="landing-kicker">Open source</span>
+            <h2>Built in the open</h2>
+            <p>
+              Every part of this app is public. Read how it handles your
+              session, run your own copy, or help fix the parts of BDSMLR that
+              break.
+            </p>
+          </div>
+          <div class="landing-contact-card">
+            <div>
+              <h2>Better BDSMLR on GitHub</h2>
+              <p>
+                Bugs, feature ideas, and pull requests all live in the
+                repository. The issue tracker is the fastest way to reach the
+                project, and the Discord community is a good place to ask too.
+              </p>
+            </div>
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="landing-cta landing-contact-link"
+              onClick={cta("github", "open-source")}
+            >
+              <GitHubIcon class="icon" />
+              View the repository
+            </a>
           </div>
         </section>
 
@@ -246,15 +288,16 @@ export default function LandingPage() {
               <span class="landing-kicker">For the BDSMLR team</span>
               <h2>Own BDSMLR?</h2>
               <p>
-                This is a community project, and it is meant to support the
-                site rather than compete with it. If you like what you see,
-                reach out on Discord. I would be glad to help the BDSMLR team in
-                a professional capacity, whether that means improving the
-                official site or finding another way to work together.
+                This is an open source community project, and it is meant to
+                support the site rather than compete with it. If you like what
+                you see, reach out on Discord. I would be glad to help the
+                BDSMLR team in a professional capacity, whether that means
+                improving the official site or finding another way to work
+                together.
               </p>
             </div>
             <a
-              href="https://discord.gg/w3BkPTwf2d"
+              href={DISCORD_URL}
               target="_blank"
               rel="noopener noreferrer"
               class="landing-cta landing-contact-link"
@@ -268,11 +311,19 @@ export default function LandingPage() {
       </main>
 
       <footer class="landing-footer">
-        <span>Better BDSMLR</span>
+        <span>Better BDSMLR, an open source community project</span>
         <nav>
           <A href="/about">About the backend</A>
           <a
-            href="https://discord.gg/w3BkPTwf2d"
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={cta("github", "footer")}
+          >
+            GitHub
+          </a>
+          <a
+            href={DISCORD_URL}
             target="_blank"
             rel="noopener noreferrer"
             onClick={cta("discord", "footer")}
