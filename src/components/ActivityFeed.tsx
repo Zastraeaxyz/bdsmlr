@@ -11,6 +11,7 @@ import {
 import { PostCard } from "~/components/PostCard";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { BlogAvatar } from "~/components/BlogAvatar";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { LightBox } from "~/components/LightBox";
 import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
 import { createMediaGallery } from "~/lib/mediaGallery";
@@ -219,7 +220,9 @@ export function ActivityFeed(props: { blogName: string }) {
         />
       </div>
 
-      {error() && <p class="error">{error()}</p>}
+      <Show when={error()}>
+        <FeedErrorNotice message={error()} blogName={props.blogName} />
+      </Show>
       {loading() && <p class="loading">Loading activity…</p>}
       <Show when={!loading()}>
         <Show

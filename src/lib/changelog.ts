@@ -348,6 +348,10 @@ export const changelog: ChangelogRelease[] = [
         kind: "Fixed",
         changes: [
           {
+            title: "Private blogs ask you to sign in",
+            body: "BDSMLR reports a private blog's activity as a missing route, so profiles used to show the raw \"Cannot find any route matching\" error. Profiles and the activity tab now explain that the blog is private and offer a Sign in button instead.",
+          },
+          {
             title: "Reblogged posts appear on your profile right away",
             body: "The app now checks BDSMLR's latest posts after a reblog to confirm it was actually created, then shows the reblog at the top of your profile while BDSMLR's activity feed catches up. A reblog no longer marks itself as done if BDSMLR silently fails to create it.",
           },

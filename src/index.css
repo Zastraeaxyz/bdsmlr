@@ -109,6 +109,60 @@ button:disabled {
   font-size: 14px;
 }
 
+.private-blog-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(210, 153, 34, 0.45);
+  border-radius: 8px;
+  background: rgba(210, 153, 34, 0.08);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.private-blog-notice .icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--warning);
+}
+
+.private-blog-notice-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+}
+
+.private-blog-notice-copy strong {
+  color: var(--warning);
+}
+
+.private-blog-notice-copy span {
+  color: var(--text-muted);
+}
+
+.private-blog-notice-login {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.private-blog-notice-login:hover {
+  background: var(--accent-hover);
+  color: #fff;
+}
+
 .error-boundary {
   max-width: 560px;
   margin: 48px auto;

@@ -22,6 +22,7 @@ import {
   type TopTag,
 } from "~/lib/api";
 import { GearIcon, WarningIcon } from "~/components/Icons";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
 import { createMediaGallery } from "~/lib/mediaGallery";
 import SearchHelp from "~/components/SearchHelp";
@@ -647,7 +648,9 @@ export default function UserFeed() {
           />
         </form>
 
-        {error() && <p class="error">{error()}</p>}
+        <Show when={error()}>
+          <FeedErrorNotice message={error()} blogName={slug()} />
+        </Show>
 
         {loading() && <p class="loading">Loading feed…</p>}
 
