@@ -32,6 +32,21 @@ export const ZASTRAEA_LINKS: RssLinks = {
   tag: (tag) => `${ZASTRAEA_ORIGIN}${tagSearchHref(tag)}`,
 }
 
+/**
+ * Script browsers run when they open a feed URL. Feed readers ignore it, so
+ * this is how the feed tells a browser apart from a reader. See
+ * `public/rss-viewer.js`.
+ */
+const RSS_VIEWER_PATH = '/rss-viewer.js'
+
+function viewerScriptUrl(feedUrl: string): string {
+  try {
+    return new URL(RSS_VIEWER_PATH, feedUrl).href
+  } catch {
+    return RSS_VIEWER_PATH
+  }
+}
+
 function getRssMedia(post: Post) {
   const seen = new Set<string>()
   return getPostMediaItems(post)
@@ -135,6 +150,8 @@ interface RssInput {
   feedUrl: string
   nextUrl?: string
   links?: RssLinks
+  /** Drop posts without an image and strip video attachments from the rest. */
+  imagesOnly?: boolean
 }
 
 export function generateRss({
@@ -143,7 +160,23 @@ export function generateRss({
   feedUrl,
   nextUrl,
   links = BDSMLR_LINKS,
+  imagesOnly = false,
 }: RssInput): string {
+  const feedElements: unknown[] = []
+  if (nextUrl) {
+    feedElements.push({ 'atom:link': { _attr: { href: nextUrl, rel: 'next' } } })
+  }
+  // The XHTML namespace is what makes browsers execute the script inside an
+  // XML document. Readers ignore the element.
+  feedElements.push({
+    script: {
+      _attr: {
+        xmlns: 'http://www.w3.org/1999/xhtml',
+        src: viewerScriptUrl(feedUrl),
+      },
+    },
+  })
+
   const feed = new RSS({
     title: blog.title || blog.name,
     description: blog.description || '',
@@ -153,13 +186,17 @@ export function generateRss({
     custom_namespaces: {
       media: 'http://search.yahoo.com/mrss/',
     },
-    custom_elements: nextUrl
-      ? [{ 'atom:link': { _attr: { href: nextUrl, rel: 'next' } } }]
-      : [],
+    custom_elements: feedElements,
   })
 
   for (const post of posts) {
-    const media = getRssMedia(post)
+    const allMedia = getRssMedia(post)
+    const media = imagesOnly
+      ? allMedia.filter((entry) => entry.type === 'image')
+      : allMedia
+
+    // Images only means image posts, so text-only and video-only posts go.
+    if (imagesOnly && media.length === 0) continue
 
     const itemOpts: RSS.ItemOptions = {
       title: postTitle(post),

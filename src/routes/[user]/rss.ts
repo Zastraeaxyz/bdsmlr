@@ -16,6 +16,7 @@ function cookieValue(cookieHeader: string | null, name: string): string | null {
 
 export async function GET(event: APIEvent) {
   const url = new URL(event.request.url)
+  const imagesOnly = url.searchParams.get('images_only') === '1'
   const v2session =
     url.searchParams.get('v2_session') ||
     cookieValue(event.request.headers.get('cookie'), 'v2_session') ||
@@ -32,8 +33,8 @@ export async function GET(event: APIEvent) {
     })
 
     // Preserve the caller's query params (v2_session, include_reblogs,
-    // hide_repeating_images, zastraea) so feed readers can follow the next link
-    // with the same context.
+    // hide_repeating_images, images_only, zastraea) so feed readers can follow
+    // the next link with the same context.
     const nextUrl = feed.hasNext ? new URL(url.href) : null
     if (nextUrl) nextUrl.searchParams.set('page', String(feed.page + 1))
 
@@ -42,6 +43,7 @@ export async function GET(event: APIEvent) {
       posts: feed.posts,
       feedUrl: url.href,
       nextUrl: nextUrl?.href,
+      imagesOnly,
       links:
         url.searchParams.get('zastraea') === 'true'
           ? ZASTRAEA_LINKS
@@ -49,7 +51,10 @@ export async function GET(event: APIEvent) {
     })
 
     return new Response(xml, {
-      headers: { 'Content-Type': 'application/rss+xml; charset=utf-8' },
+      // Browsers only parse (and run the viewer script in) XML documents.
+      // application/rss+xml is shown as plain text by Chrome, so use text/xml
+      // the same way imaglr and rss.style do. Feed readers accept it.
+      headers: { 'Content-Type': 'text/xml; charset=utf-8' },
     })
   } catch (e) {
     // Throw (rather than return) so the 404 Response isn't treated as an

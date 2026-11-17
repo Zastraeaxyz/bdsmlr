@@ -10,6 +10,56 @@ const taggedPost: Post = {
   tags: ['chastity', 'cage life'],
 }
 
+const textOnlyPost: Post = {
+  id: 900000001,
+  blogName: 'Thecagestore',
+  content: { text: 'Just a few words' },
+}
+
+const videoOnlyPost: Post = {
+  id: 900000002,
+  blogName: 'Thecagestore',
+  mediaRepresentation: {
+    kind: 3,
+    items: [
+      {
+        kind: 1,
+        original: {
+          mimeType: 'video/mp4',
+          url: 'https://ocdn012.bdsmlr.com/uploads/videos/2026/05/170839/bdsmlr-170839-clip.mp4?e=1',
+        },
+        alternates: [],
+      },
+    ],
+  },
+}
+
+const mixedPost: Post = {
+  id: 900000003,
+  blogName: 'Thecagestore',
+  mediaRepresentation: {
+    kind: 3,
+    items: [
+      {
+        kind: 1,
+        original: {
+          mimeType: 'image/jpeg',
+          url: 'https://ocdn012.bdsmlr.com/uploads/photos/2026/05/170839/bdsmlr-170839-still.jpg?e=1',
+        },
+        alternates: [],
+      },
+      {
+        kind: 1,
+        original: {
+          mimeType: 'video/mp4',
+          url: 'https://ocdn012.bdsmlr.com/uploads/videos/2026/05/170839/bdsmlr-170839-clip.mp4?e=1',
+        },
+        alternates: [],
+      },
+    ],
+  },
+}
+
 describe('generateRss', () => {
   it('uses an image fallback instead of a dead video alternate', () => {
     const xml = generateRss({
@@ -21,6 +71,50 @@ describe('generateRss', () => {
     expect(xml).toContain('bdsmlr-170839-3pjj815a2w.gif')
     expect(xml).toContain('type="image/gif"')
     expect(xml).not.toContain('bdsmlr-170839-3pjj815a2w.mp4')
+  })
+
+  it('adds the browser viewer script and the next link', () => {
+    const xml = generateRss({
+      blog,
+      posts: [taggedPost],
+      feedUrl: 'https://bbdsmlr.vercel.app/Thecagestore/rss?page=1',
+      nextUrl: 'https://bbdsmlr.vercel.app/Thecagestore/rss?page=2',
+    })
+
+    expect(xml).toContain(
+      '<script xmlns="http://www.w3.org/1999/xhtml" src="https://bbdsmlr.vercel.app/rss-viewer.js"/>',
+    )
+    expect(xml).toContain('href="https://bbdsmlr.vercel.app/Thecagestore/rss?page=2"')
+    expect(xml).toContain('rel="next"')
+  })
+
+  it('keeps only image posts when images only is on', () => {
+    const xml = generateRss({
+      blog,
+      posts: [taggedPost, videoOnlyPost, textOnlyPost],
+      feedUrl: 'https://bbdsmlr.vercel.app/Thecagestore/rss?images_only=1',
+      imagesOnly: true,
+    })
+
+    expect(xml).toContain(`https://bdsmlr.com/post/${taggedPost.id}`)
+    expect(xml).not.toContain(`https://bdsmlr.com/post/${videoOnlyPost.id}`)
+    expect(xml).not.toContain(`https://bdsmlr.com/post/${textOnlyPost.id}`)
+  })
+
+  it('strips video attachments from mixed posts when images only is on', () => {
+    const feedUrl = 'https://bbdsmlr.vercel.app/Thecagestore/rss?images_only=1'
+    const filtered = generateRss({
+      blog,
+      posts: [mixedPost],
+      feedUrl,
+      imagesOnly: true,
+    })
+    const unfiltered = generateRss({ blog, posts: [mixedPost], feedUrl })
+
+    expect(filtered).toContain('bdsmlr-170839-still.jpg')
+    expect(filtered).not.toContain('bdsmlr-170839-clip.mp4')
+    expect(filtered).toContain(`https://bdsmlr.com/post/${mixedPost.id}`)
+    expect(unfiltered).toContain('bdsmlr-170839-clip.mp4')
   })
 
   it('links to bdsmlr.com by default', () => {

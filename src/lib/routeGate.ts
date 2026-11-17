@@ -38,6 +38,7 @@ const ASSET_PATHS = new Set([
   "/icons.svg",
   "/og-default.png",
   "/robots.txt",
+  "/rss-viewer.js",
   "/site.webmanifest",
 ]);
 

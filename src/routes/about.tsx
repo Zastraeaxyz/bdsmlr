@@ -12,6 +12,15 @@ interface FaqEntry {
 
 const faqs: FaqEntry[] = [
   {
+    id: "rss-feeds",
+    question: "How do I configure an RSS feed?",
+    answer: [
+      "Every profile has a feed at /<blog>/rss on this site. Open that URL in a normal browser and you get a page where you can turn the feed options on and off and copy the finished URL. Feed readers still get plain XML.",
+      "The options are include reblogs, hide repeating images (which removes images shared by the three newest image posts, for blogs like Rectrix), images only (which drops text-only and video-only posts and leaves the images), and open links in bbdsmlr (which points post, tag, and blog links at this app instead of bdsmlr.com). They are also URL parameters you can set by hand: include_reblogs=1, hide_repeating_images=1, images_only=1, and zastraea=true.",
+      "Private blogs need your v2_session token in the feed URL so the reader can sign in. The feed page warns you when that token is present. Never share, post, or screenshot a URL that contains it: anyone who has it can use it to access your account.",
+    ],
+  },
+  {
     id: "why-are-some-gifs-now-mp4s",
     question: "Why are some GIFs now MP4s?",
     answer: [

@@ -31,6 +31,11 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "New",
+        title: "RSS feeds have a settings page",
+        body: "Opening a profile's RSS feed in a browser now shows a readable page instead of raw XML. Turn reblogs, repeating-image removal, images-only, and app links on or off, then copy the finished feed URL. Feed readers still get the usual XML. A private blog's feed URL includes your session token so readers can sign in, and the page warns you never to share that URL."
+      },
+      {
+        kind: "New",
         title: "RSS feeds can point at the zastraea mirror",
         body: "Add `?zastraea=true` to a profile's RSS feed URL and its blog, post, and tag links point at bdsmlr.zastraea.xyz instead of bdsmlr.com. Entry IDs stay the same, so your feed reader will not show old posts as new."
       },

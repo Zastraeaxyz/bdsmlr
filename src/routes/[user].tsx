@@ -416,7 +416,7 @@ export default function UserLayout(props: ParentProps) {
                   classList={{
                     'download-btn-active': location.pathname === `/${slug()}/rss`,
                   }}
-                  title="RSS feed"
+                  title="RSS feed options"
                 >
                   <RssIcon />
                 </a>
@@ -509,7 +509,7 @@ export default function UserLayout(props: ParentProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 class="download-btn"
-                title="RSS feed"
+                title="RSS feed options"
                 onClick={() => trackEvent('rss-open')}
               >
                 <RssIcon />
