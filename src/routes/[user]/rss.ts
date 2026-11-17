@@ -1,6 +1,6 @@
 import type { APIEvent } from '@solidjs/start/server'
 import { fetchBlogFeed, FetchError } from '~/lib/rssApi'
-import { generateRss } from '~/lib/rss'
+import { generateRss, ZASTRAEA_LINKS } from '~/lib/rss'
 
 function cookieValue(cookieHeader: string | null, name: string): string | null {
   if (!cookieHeader) return null
@@ -32,8 +32,8 @@ export async function GET(event: APIEvent) {
     })
 
     // Preserve the caller's query params (v2_session, include_reblogs,
-    // hide_repeating_images) so feed readers can follow the next link with the
-    // same context.
+    // hide_repeating_images, zastraea) so feed readers can follow the next link
+    // with the same context.
     const nextUrl = feed.hasNext ? new URL(url.href) : null
     if (nextUrl) nextUrl.searchParams.set('page', String(feed.page + 1))
 
@@ -42,6 +42,10 @@ export async function GET(event: APIEvent) {
       posts: feed.posts,
       feedUrl: url.href,
       nextUrl: nextUrl?.href,
+      links:
+        url.searchParams.get('zastraea') === 'true'
+          ? ZASTRAEA_LINKS
+          : undefined,
     })
 
     return new Response(xml, {

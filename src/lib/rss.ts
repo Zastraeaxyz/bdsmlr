@@ -1,6 +1,36 @@
 import RSS from 'rss'
 import type { Blog, Post } from './api'
 import { getPostMediaItems } from './sanitize'
+import { tagSearchHref } from './tagLinks'
+
+/** Builds the page links a feed points at. */
+export interface RssLinks {
+  /** The blog's page. */
+  blog(blogName: string): string
+  /** A single post's page. */
+  post(blogName: string, postId: string | number): string
+  /** A tag search. */
+  tag(tag: string): string
+}
+
+/** Links into bdsmlr.com, the default for every feed. */
+export const BDSMLR_LINKS: RssLinks = {
+  blog: (name) => `https://bdsmlr.com/blog/${name}`,
+  post: (_name, id) => `https://bdsmlr.com/post/${id}`,
+  tag: (tag) => `https://bdsmlr.com/tagged/${encodeURIComponent(tag)}`,
+}
+
+const ZASTRAEA_ORIGIN = 'https://bdsmlr.zastraea.xyz'
+
+/**
+ * Links into this app at bdsmlr.zastraea.xyz. The mirror serves the app's own
+ * routes, so posts live under `/<blog>/post/<id>` and tags under `/home`.
+ */
+export const ZASTRAEA_LINKS: RssLinks = {
+  blog: (name) => `${ZASTRAEA_ORIGIN}/${name}`,
+  post: (name, id) => `${ZASTRAEA_ORIGIN}/${name}/post/${id}`,
+  tag: (tag) => `${ZASTRAEA_ORIGIN}${tagSearchHref(tag)}`,
+}
 
 function getRssMedia(post: Post) {
   const seen = new Set<string>()
@@ -55,7 +85,7 @@ function getMimeType(url: string): string {
   }
 }
 
-function postDescription(post: Post): string {
+function postDescription(post: Post, links: RssLinks): string {
   const parts: string[] = []
 
   const html = post.content?.html
@@ -81,10 +111,7 @@ function postDescription(post: Post): string {
     parts.push(
       '<p>' +
         post.tags
-          .map(
-            (t) =>
-              `<a href="https://bdsmlr.com/tagged/${encodeURIComponent(t)}">#${t}</a>`,
-          )
+          .map((t) => `<a href="${links.tag(t)}">#${t}</a>`)
           .join(' ') +
         '</p>',
     )
@@ -107,14 +134,21 @@ interface RssInput {
   posts: Post[]
   feedUrl: string
   nextUrl?: string
+  links?: RssLinks
 }
 
-export function generateRss({ blog, posts, feedUrl, nextUrl }: RssInput): string {
+export function generateRss({
+  blog,
+  posts,
+  feedUrl,
+  nextUrl,
+  links = BDSMLR_LINKS,
+}: RssInput): string {
   const feed = new RSS({
     title: blog.title || blog.name,
     description: blog.description || '',
     feed_url: feedUrl,
-    site_url: `https://bdsmlr.com/blog/${blog.name}`,
+    site_url: links.blog(blog.name),
     generator: 'bbdmslr',
     custom_namespaces: {
       media: 'http://search.yahoo.com/mrss/',
@@ -129,8 +163,11 @@ export function generateRss({ blog, posts, feedUrl, nextUrl }: RssInput): string
 
     const itemOpts: RSS.ItemOptions = {
       title: postTitle(post),
-      description: postDescription(post),
-      url: `https://bdsmlr.com/post/${post.id}`,
+      description: postDescription(post, links),
+      url: links.post(post.blogName || blog.name, post.id),
+      // The GUID identifies an item across feed URLs, so keep it on bdsmlr.com
+      // even when links point at a mirror. Otherwise toggling the mirror flag
+      // would make readers show every post as new.
       guid: `https://bdsmlr.com/post/${post.id}`,
       date: post.createdAtUnix ? new Date(post.createdAtUnix * 1000) : new Date(),
       author: post.blogName,

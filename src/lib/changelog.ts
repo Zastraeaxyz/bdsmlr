@@ -30,6 +30,11 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-17",
     changes: [
       {
+        kind: "New",
+        title: "RSS feeds can point at the zastraea mirror",
+        body: "Add `?zastraea=true` to a profile's RSS feed URL and its blog, post, and tag links point at bdsmlr.zastraea.xyz instead of bdsmlr.com. Entry IDs stay the same, so your feed reader will not show old posts as new."
+      },
+      {
         kind: "Improved",
         title: "Changelog grouped by day",
         body: "This page now lists changes under the day they went live instead of version numbers. Every entry carries a New, Improved, Fixed, or Removed tag, so it reads as a simple history of the app."
