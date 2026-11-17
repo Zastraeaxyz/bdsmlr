@@ -1,5 +1,5 @@
 import { Title } from "@solidjs/meta";
-import { For, Show } from "solid-js";
+import { createSignal, For, onMount, Show } from "solid-js";
 import Header from "~/components/Header";
 import { changelog } from "~/lib/changelog";
 
@@ -57,8 +57,22 @@ function formatDate(value: string): string {
   return `${day} ${monthName} ${year}`;
 }
 
-function versionLabel(version: string): string {
-  return version === "Unreleased" ? "Unreleased" : `v${version}`;
+/** Day shown above a group, with Today and Yesterday for the recent ones. */
+function dayLabel(value: string, today: Date | null): string {
+  if (!today) return formatDate(value);
+  const [year, month, day] = value.split("-").map(Number);
+  const target = new Date(year, month - 1, day);
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const diff = Math.round(
+    (startOfToday.getTime() - target.getTime()) / 86_400_000,
+  );
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return formatDate(value);
 }
 
 function InlineText(props: { text: string }) {
@@ -81,6 +95,11 @@ function InlineText(props: { text: string }) {
 }
 
 export default function ChangelogPage() {
+  // Only known on the client, so the server-rendered heading is always a date
+  // and the relative label appears after hydration without a mismatch.
+  const [today, setToday] = createSignal<Date | null>(null);
+  onMount(() => setToday(new Date()));
+
   return (
     <div class="home-page changelog-page">
       <Title>Changelog - bbdsmlr</Title>
@@ -89,61 +108,57 @@ export default function ChangelogPage() {
         <section class="changelog-hero">
           <h2>What's new</h2>
           <p class="changelog-lede">
-            Every change you can see or use in Better BDSMLR, newest first.
-            Entries describe what the app does now rather than how it is built.
+            Everything that shipped, newest first, grouped by the day it went
+            live.
           </p>
         </section>
 
-        <div class="changelog-releases">
+        <div class="changelog-days">
           <For each={changelog}>
-            {(release, index) => (
+            {(day, index) => (
               <article
-                class="changelog-release"
-                classList={{ "changelog-release-latest": index() === 0 }}
+                class="changelog-day"
+                classList={{
+                  "changelog-day-latest": index() === 0,
+                  "changelog-day-earlier": !!day.note,
+                }}
               >
-                <div class="changelog-release-head">
-                  <h3 class="changelog-version">
-                    {versionLabel(release.version)}
+                <div class="changelog-day-head">
+                  <h3 class="changelog-day-date">
+                    <time dateTime={day.date}>
+                      {dayLabel(day.date, today())}
+                    </time>
                   </h3>
-                  <Show when={release.date}>
-                    {(date) => (
-                      <time class="changelog-date" dateTime={date()}>
-                        {formatDate(date())}
-                      </time>
-                    )}
-                  </Show>
+                  <span class="changelog-day-count">
+                    {day.changes.length}{" "}
+                    {day.changes.length === 1 ? "change" : "changes"}
+                  </span>
                 </div>
+                <Show when={day.note}>
+                  <p class="changelog-day-note">{day.note}</p>
+                </Show>
 
-                <Show
-                  when={release.sections.length > 0}
-                  fallback={
-                    <p class="changelog-empty">
-                      Nothing has shipped since the last release yet.
-                    </p>
-                  }
-                >
-                  <For each={release.sections}>
-                    {(section) => (
-                      <section class="changelog-section">
-                        <h4 class="changelog-section-title">{section.kind}</h4>
-                        <ul class="changelog-items">
-                          <For each={section.changes}>
-                            {(change) => (
-                              <li class="changelog-item">
-                                <span class="changelog-item-title">
-                                  <InlineText text={change.title} />
-                                </span>
-                                <span class="changelog-item-body">
-                                  <InlineText text={change.body} />
-                                </span>
-                              </li>
-                            )}
-                          </For>
-                        </ul>
-                      </section>
+                <ul class="changelog-items">
+                  <For each={day.changes}>
+                    {(change) => (
+                      <li class="changelog-item">
+                        <span class="changelog-item-head">
+                          <span
+                            class={`changelog-kind changelog-kind-${change.kind.toLowerCase()}`}
+                          >
+                            {change.kind}
+                          </span>
+                          <span class="changelog-item-title">
+                            <InlineText text={change.title} />
+                          </span>
+                        </span>
+                        <span class="changelog-item-body">
+                          <InlineText text={change.body} />
+                        </span>
+                      </li>
                     )}
                   </For>
-                </Show>
+                </ul>
               </article>
             )}
           </For>

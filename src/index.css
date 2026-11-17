@@ -3360,24 +3360,24 @@ button:disabled {
   line-height: 1.7;
 }
 
-.changelog-releases {
+.changelog-days {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.changelog-release {
+.changelog-day {
   padding: 18px 20px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
 }
 
-.changelog-release-latest {
+.changelog-day-latest {
   border-color: rgba(88, 166, 255, 0.45);
 }
 
-.changelog-release-head {
+.changelog-day-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -3386,33 +3386,27 @@ button:disabled {
   margin-bottom: 14px;
 }
 
-.changelog-version {
+.changelog-day-date {
   font-size: 18px;
   color: var(--text-heading);
 }
 
-.changelog-date {
+.changelog-day-count {
   color: var(--text-muted);
   font-size: 12px;
 }
 
-.changelog-section + .changelog-section {
-  margin-top: 18px;
-}
-
-.changelog-section-title {
-  margin-bottom: 8px;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.changelog-day-note {
+  margin: -6px 0 14px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .changelog-items {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -3422,6 +3416,40 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 3px;
+}
+
+.changelog-item-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.changelog-kind {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.changelog-kind-new {
+  color: #3fb950;
+}
+
+.changelog-kind-improved {
+  color: #58a6ff;
+}
+
+.changelog-kind-fixed {
+  color: #d29922;
+}
+
+.changelog-kind-removed {
+  color: #f85149;
 }
 
 .changelog-item-title {
@@ -3450,13 +3478,8 @@ button:disabled {
   font-weight: 600;
 }
 
-.changelog-empty {
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
 @media (max-width: 560px) {
-  .changelog-release {
+  .changelog-day {
     padding: 16px;
   }
 }
