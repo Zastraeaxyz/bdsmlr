@@ -1,12 +1,25 @@
 import { createSignal, createEffect, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { useAuth } from "~/lib/useAuth";
 import { trackEvent } from "~/lib/analytics";
+import { DiscordInvite } from "~/components/DiscordInvite";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading, login: authLogin } = useAuth();
+
+  /** Where to go after signing in, so gated deep links survive the detour. */
+  const nextPath = () => {
+    const value = searchParams.next;
+    const raw = Array.isArray(value) ? value[0] : value;
+    if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+    return raw;
+  };
+
+  const destination = (blogName?: string | null) =>
+    nextPath() ?? (blogName ? `/${blogName}` : "/home");
 
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
@@ -16,7 +29,7 @@ export default function Login() {
 
   createEffect(() => {
     if (user() && !authLoading()) {
-      navigate(`/${user()!.blog_name}`, { replace: true });
+      navigate(destination(user()!.blog_name), { replace: true });
     }
   });
 
@@ -27,7 +40,7 @@ export default function Login() {
     try {
       const u = await authLogin(email(), password());
       trackEvent("login", { result: "success" });
-      navigate(`/${u.blog_name}`, { replace: true });
+      navigate(destination(u.blog_name), { replace: true });
     } catch (err: unknown) {
       trackEvent("login", { result: "failure" });
       setError((err as Error)?.message || "Login failed");
@@ -115,6 +128,7 @@ export default function Login() {
             {submitting() ? "Signing in…" : "Sign in"}
           </button>
         </form>
+        <DiscordInvite location="login" />
         <a href="/about" class="login-about-link">
           About this app and its backend
         </a>

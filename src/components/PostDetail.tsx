@@ -1,5 +1,5 @@
 import { createSignal, createEffect, For, Show } from "solid-js";
-import { A, useNavigate } from "@solidjs/router";
+import { A, useLocation, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { getPostDetail, getBlog, deletePost, PostType, type Post } from "~/lib/api";
 import {
@@ -38,6 +38,7 @@ export default function PostDetail(props: {
   onAuthorKnown?: (blogName: string, blogId: number) => void;
 }) {
   const [post, setPost] = createSignal<Post | null>(null);
+  const { user } = useAuth();
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal("");
   const [blogGone, setBlogGone] = createSignal(false);
@@ -141,7 +142,7 @@ export default function PostDetail(props: {
           blogGone={blogGone()}
           onImageClick={(url, postId) => gallery.open(url, postId)}
         />
-        <Show when={post()!.id}>
+        <Show when={post()!.id && user()}>
           <RelatedPosts postId={post()!.id} />
         </Show>
       </Show>
@@ -156,6 +157,7 @@ function PostDetailView(props: {
   onImageClick?: (url: string, postId: number) => void;
 }) {
   const { user, activeBlogId } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const interaction = usePostInteraction(props.post);
   const [busy, setBusy] = createSignal(false);
@@ -365,7 +367,7 @@ function PostDetailView(props: {
             <ReblogIcon /> {interaction().reblogsCount}
           </button>
         </Show>
-        <Show when={props.post.id}>
+        <Show when={user() && props.post.id}>
           <button
             type="button"
             class="download-btn"
@@ -416,12 +418,20 @@ function PostDetailView(props: {
           onClose={() => setShowReblog(false)}
         />
       </Show>
-      <Show when={props.post.id}>
+      <Show when={props.post.id && user()}>
         <Comments
           postId={props.post.id}
           initialCount={props.post.commentsCount ?? 0}
           onCountChange={setCommentsCount}
         />
+      </Show>
+      <Show when={!user()}>
+        <p class="post-guest-note">
+          <A href={`/login?next=${encodeURIComponent(location.pathname)}`}>
+            Sign in
+          </A>{" "}
+          to like, reblog, or comment.
+        </p>
       </Show>
       <Show when={showEngagement()}>
         <EngagementModal

@@ -31,6 +31,7 @@ export const RESERVED_TOP_LEVEL = new Set([
   "assets",
   "blocked",
   "blog-search",
+  "changelog",
   "compose",
   "customize",
   "drafts",

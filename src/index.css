@@ -3215,6 +3215,101 @@ button:disabled {
   color: var(--text-heading);
 }
 
+/* ---- Discord invite nudge ---- */
+
+.discord-invite {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 380px;
+  margin: 16px auto 0;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.discord-invite .icon {
+  flex: none;
+  color: var(--accent);
+}
+
+.discord-invite a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.discord-invite a:hover {
+  color: var(--text-heading);
+}
+
+/* ---- Login gate ---- */
+
+.login-gate-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.login-gate-modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.login-gate-modal h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.login-gate-modal p {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.login-gate-cta {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+}
+
+.login-gate-modal .discord-invite {
+  margin-top: 18px;
+}
+
+.post-guest-note {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.post-guest-note a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.post-guest-note a:hover {
+  text-decoration: underline;
+}
+
 /* ---- 404 ---- */
 
 .notfound-page {

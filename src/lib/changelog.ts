@@ -255,6 +255,14 @@ export const changelog: ChangelogRelease[] = [
         kind: "Changed",
         changes: [
           {
+            title: "Sign in to use the app",
+            body: "Browsing now requires a BDSMLR account. Feeds, search, messages, and every other part of the app send you to the sign-in page and return you to where you were afterwards. Two things stay open without an account: a shared post link still shows the post itself, and a profile URL still shows the blog's avatar, title, description, and counts before the sign-in prompt appears.",
+          },
+          {
+            title: "Discord invite on the sign-in screen",
+            body: "The sign-in page and the sign-in prompt now link to the community Discord, which is where people ask for a BDSMLR invite. Joining is optional.",
+          },
+          {
             title: "Reblogs continue in the background",
             body: "Pressing Reblog or Queue now closes the composer right away and shows a centered progress toast while BDSMLR finishes. You can keep browsing, and if the reblog fails the toast offers a Retry button. Closing or reloading the tab while a reblog is still running asks for confirmation first.",
           },
