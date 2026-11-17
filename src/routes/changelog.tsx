@@ -1,7 +1,12 @@
 import { Title } from "@solidjs/meta";
 import { createSignal, For, onMount, Show } from "solid-js";
 import Header from "~/components/Header";
-import { changelog } from "~/lib/changelog";
+import { changelog, entryId } from "~/lib/changelog";
+import {
+  isChangelogEntryNew,
+  markChangelogSeen,
+  refreshChangelogSeen,
+} from "~/lib/changelogSeen";
 
 const MONTHS = [
   "January",
@@ -100,6 +105,22 @@ export default function ChangelogPage() {
   const [today, setToday] = createSignal<Date | null>(null);
   onMount(() => setToday(new Date()));
 
+  // Frozen for this visit, so the markers stay put while the counter clears.
+  const [newIds, setNewIds] = createSignal<ReadonlySet<string>>(new Set());
+
+  onMount(() => {
+    refreshChangelogSeen();
+    const fresh = new Set<string>();
+    for (const day of changelog) {
+      for (const change of day.changes) {
+        const id = entryId(day.date, change);
+        if (isChangelogEntryNew(id)) fresh.add(id);
+      }
+    }
+    setNewIds(fresh);
+    markChangelogSeen();
+  });
+
   return (
     <div class="home-page changelog-page">
       <Title>Changelog - bbdsmlr</Title>
@@ -111,6 +132,11 @@ export default function ChangelogPage() {
             Everything that shipped, newest first, grouped by the day it went
             live.
           </p>
+          <Show when={newIds().size > 0}>
+            <p class="changelog-new-summary">
+              {newIds().size} new since your last visit
+            </p>
+          </Show>
         </section>
 
         <div class="changelog-days">
@@ -140,23 +166,33 @@ export default function ChangelogPage() {
 
                 <ul class="changelog-items">
                   <For each={day.changes}>
-                    {(change) => (
-                      <li class="changelog-item">
-                        <span class="changelog-item-head">
-                          <span
-                            class={`changelog-kind changelog-kind-${change.kind.toLowerCase()}`}
-                          >
-                            {change.kind}
+                    {(change) => {
+                      const id = entryId(day.date, change);
+                      const isNew = () => newIds().has(id);
+                      return (
+                        <li
+                          class="changelog-item"
+                          classList={{ "changelog-item-new": isNew() }}
+                        >
+                          <span class="changelog-item-head">
+                            <Show when={isNew()}>
+                              <span class="changelog-new-pill">New</span>
+                            </Show>
+                            <span
+                              class={`changelog-kind changelog-kind-${change.kind.toLowerCase()}`}
+                            >
+                              {change.kind}
+                            </span>
+                            <span class="changelog-item-title">
+                              <InlineText text={change.title} />
+                            </span>
                           </span>
-                          <span class="changelog-item-title">
-                            <InlineText text={change.title} />
+                          <span class="changelog-item-body">
+                            <InlineText text={change.body} />
                           </span>
-                        </span>
-                        <span class="changelog-item-body">
-                          <InlineText text={change.body} />
-                        </span>
-                      </li>
-                    )}
+                        </li>
+                      );
+                    }}
                   </For>
                 </ul>
               </article>

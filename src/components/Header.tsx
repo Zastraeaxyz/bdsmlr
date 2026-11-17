@@ -6,6 +6,7 @@ import { DiscordIcon, GitHubIcon } from './Icons'
 import { DISCORD_URL, REPO_URL } from '../lib/links'
 import { unreadCount, refreshMessageUnread } from '../lib/messageUnread'
 import { activityUnreadCount, refreshActivityUnread } from '../lib/activityUnread'
+import { changelogUnseenCount, refreshChangelogSeen } from '../lib/changelogSeen'
 import { features } from '../lib/features'
 import { trackEvent } from '../lib/analytics'
 import OutageBanner from './OutageBanner'
@@ -22,6 +23,10 @@ export default function Header(props: HeaderProps) {
   const avatarUrl = useBlogAvatar(() => activeBlogId())
 
   let containerRef: HTMLDivElement | undefined
+
+  /** Unread changes since the last changelog visit, capped for the badge. */
+  const changelogBadge = () =>
+    changelogUnseenCount() > 99 ? '99+' : `${changelogUnseenCount()}`
 
   const handleSignOut = () => {
     setShowDropdown(false)
@@ -42,6 +47,7 @@ export default function Header(props: HeaderProps) {
 
   onMount(() => {
     if (typeof document === 'undefined') return
+    refreshChangelogSeen()
     document.addEventListener('click', handleClickOutside)
     document.addEventListener('keydown', handleKeydown)
   })
@@ -93,6 +99,17 @@ export default function Header(props: HeaderProps) {
       <nav class="nav-desktop">
         <A href="/home" class="btn-ghost">Home</A>
         <A href="/compose" class="btn-ghost">Post</A>
+        <A href="/changelog" class="btn-ghost changelog-nav-link">
+          <span>Changelog</span>
+          <Show when={changelogUnseenCount() > 0}>
+            <span
+              class="changelog-badge"
+              aria-label={`${changelogUnseenCount()} new changes`}
+            >
+              {changelogBadge()}
+            </span>
+          </Show>
+        </A>
         <Show when={!user()}>
           <A href="/about" class="btn-ghost">About</A>
         </Show>
@@ -142,8 +159,20 @@ export default function Header(props: HeaderProps) {
                 <A href="/about" class="user-dropdown-item" onClick={closeDropdown}>
                   About
                 </A>
-                <A href="/changelog" class="user-dropdown-item" onClick={closeDropdown}>
-                  Changelog
+                <A
+                  href="/changelog"
+                  class="user-dropdown-item user-dropdown-changelog"
+                  onClick={closeDropdown}
+                >
+                  <span>Changelog</span>
+                  <Show when={changelogUnseenCount() > 0}>
+                    <span
+                      class="changelog-badge"
+                      aria-label={`${changelogUnseenCount()} new changes`}
+                    >
+                      {changelogBadge()}
+                    </span>
+                  </Show>
                 </A>
                 <A href="/login" class="user-dropdown-item" onClick={closeDropdown}>
                   Sign in
@@ -260,8 +289,20 @@ export default function Header(props: HeaderProps) {
               <A href="/blocked" class="user-dropdown-item" onClick={closeDropdown}>
                 Blocked blogs
               </A>
-              <A href="/changelog" class="user-dropdown-item" onClick={closeDropdown}>
-                Changelog
+              <A
+                href="/changelog"
+                class="user-dropdown-item user-dropdown-changelog"
+                onClick={closeDropdown}
+              >
+                <span>Changelog</span>
+                <Show when={changelogUnseenCount() > 0}>
+                  <span
+                    class="changelog-badge"
+                    aria-label={`${changelogUnseenCount()} new changes`}
+                  >
+                    {changelogBadge()}
+                  </span>
+                </Show>
               </A>
               <A
                 href="/messages"

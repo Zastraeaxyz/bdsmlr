@@ -1,8 +1,14 @@
-export type ChangelogKind = "New" | "Improved" | "Fixed" | "Removed";
+export type ChangelogKind = "Added" | "Improved" | "Fixed" | "Removed";
 
 export interface ChangelogEntry {
   /** What kind of change this was, shown as a tag next to the title. */
   kind: ChangelogKind;
+  /**
+   * Stable identity, used to remember which entries a visitor has read. It
+   * defaults to a slug of the title, so most entries do not need one. Set it
+   * when a title changes but the entry should stay the same entry.
+   */
+  id?: string;
   /** Short headline for the change. */
   title: string;
   /** One or two sentences of detail, written for people using the app. */
@@ -30,19 +36,29 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-17",
     changes: [
       {
-        kind: "New",
+        kind: "Added",
+        title: "Changelog in the navigation",
+        body: "The changelog now has a link in the top navigation. When something ships after your last visit, the link shows how many changes are waiting for you. Entries you have not read yet are marked new on the changelog page, and the counter clears once you open it."
+      },
+      {
+        kind: "Improved",
+        title: "Change tags say Added instead of New",
+        body: "The tag for brand new features used to say New, which was easy to mix up with the new marker for changes you have not read yet. It now says Added, so the two always mean different things."
+      },
+      {
+        kind: "Added",
         title: "RSS feeds have a settings page",
         body: "Opening a profile's RSS feed in a browser now shows a readable page instead of raw XML. Turn reblogs, repeating-image removal, images-only, and app links on or off, then copy the finished feed URL. Feed readers still get the usual XML. A private blog's feed URL includes your session token so readers can sign in, and the page warns you never to share that URL."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "RSS feeds can point at the zastraea mirror",
         body: "Add `?zastraea=true` to a profile's RSS feed URL and its blog, post, and tag links point at bdsmlr.zastraea.xyz instead of bdsmlr.com. Entry IDs stay the same, so your feed reader will not show old posts as new."
       },
       {
         kind: "Improved",
         title: "Changelog grouped by day",
-        body: "This page now lists changes under the day they went live instead of version numbers. Every entry carries a New, Improved, Fixed, or Removed tag, so it reads as a simple history of the app."
+        body: "This page now lists changes under the day they went live instead of version numbers. Every entry carries an Added, Improved, Fixed, or Removed tag, so it reads as a simple history of the app."
       },
       {
         kind: "Improved",
@@ -70,12 +86,12 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-15",
     changes: [
       {
-        kind: "New",
+        kind: "Added",
         title: "Lightbox keyboard navigation",
         body: "Click any image to open the lightbox, then use Left and Right to move through every image and video in that post, including media hidden behind Show more and inline images in text posts. Up and Down jump to the previous or next post in the feed. Escape still closes."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Open source repository",
         body: "Better BDSMLR is open source again. The landing page, the About page, the footer, and the signed-out navigation now link to `github.com/Zastraeaxyz/bdsmlr`, where the full code is public and issues and pull requests are welcome."
       }
@@ -85,12 +101,12 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-13",
     changes: [
       {
-        kind: "New",
+        kind: "Added",
         title: "Automatic infinite scroll",
         body: "Feeds, search results, comments, related posts, activity, and message history now load the next page as you scroll. The load-more buttons remain as a fallback if automatic loading does not trigger."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "About page FAQ",
         body: "The `/about` page now has a FAQ section. Every question has its own link, so you can send someone straight to an answer, such as `/about#why-are-some-gifs-now-mp4s`."
       }
@@ -115,7 +131,7 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-04",
     changes: [
       {
-        kind: "New",
+        kind: "Added",
         title: "Outage banner",
         body: "When BDSMLR is down, the app can show a banner under the navigation bar explaining that feeds, posts, search, messages, and account actions will not work until BDSMLR is back. It is switched on with the `VITE_BDSMLR_OUTAGE_BANNER` environment variable."
       }
@@ -126,247 +142,247 @@ export const changelog: ChangelogDay[] = [
     note: "Everything that shipped before this page started tracking daily changes.",
     changes: [
       {
-        kind: "New",
+        kind: "Added",
         title: "Changelog page",
         body: "`/changelog` now lists every change to the app, newest first. Open it from the avatar menu to catch up on what shipped."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Queue page",
         body: "`/queue` now lists scheduled posts with their time and blog. You can publish a post now, edit it, remove it, or reschedule it. Queue settings control pause, posting hours, interval, random order, and timezone."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Draft editing",
         body: "Drafts now have an Edit action that opens the composer with the saved title, body, and tags, then saves back to BDSMLR."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Post editing",
         body: "Your own posts now show an Edit action that opens the composer with the existing title, body, tags, and link details."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Back-to-top button",
         body: "Feed pages now show a small floating button in the lower-left corner after you scroll down. Click it to return smoothly to the top of the feed."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Upload previews",
         body: "Image, video, and audio posts now have a drop zone in the composer. Choose a file or drag it in and you see a preview right away: a thumbnail for images (click to enlarge), a player for video and audio, the file name and size, and a button to remove it before publishing."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Hide repeating images",
         body: "Some blogs, such as Rectrix, show the same images in nearly every post because BDSMLR repeats media entries in its feed response. A new **Hide repeating images** option in the profile settings menu compares the three most recent image posts and hides the images they share, while keeping each post's unique images. RSS feeds match the setting with `?hide_repeating_images=1` when it is enabled."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Profile favicons",
         body: "On a blog's pages, the browser tab now shows that blog's profile picture instead of the app icon, so profiles are easy to tell apart in open tabs."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Collapsed multi-media posts",
         body: "Feed cards with more than two images or media now show the first two and a Show more button, with Show less to collapse them again. The highlighted post on a post detail page still shows all of its media immediately."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Landing page AI spend tally",
         body: "The landing page now shows the total OpenCode spend for this repository, the number of sessions, and the share of sessions by model."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Expandable blog descriptions",
         body: "Long profile descriptions are now truncated to a tweet-length preview. A Show more button reveals the full text, Show less collapses it again, line breaks are preserved, and links are clickable."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Landing page contact",
         body: "The landing page now invites the BDSMLR team to reach out on Discord if they want help improving the official site."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Auto-loading pagination",
         body: "Every list with a Load more button now fetches the next page automatically when the button scrolls into view. This covers search results, For You, activity, follower feeds, comments, likes and reblogs, related posts, and blog search."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Age confirmation on the landing page",
         body: "First-time visitors now see a full-page 18+ confirmation dialog. Confirming stores the answer in the browser, and the dialog only runs on the landing page."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Feature flags for legacy features",
         body: "Compose, drafts, account changes, blog customization, and legacy queue/asks/submissions/settings links are now disabled by default until their BDSMLR backend behavior is verified. Each one has a `VITE_FEATURE_*` flag that stays disabled until its backend behavior is verified."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Account, blog customization, and drafts",
         body: "The settings page can now change your email, password, and blog name. A new customization page edits blog title, description, theme, fonts, colors, avatar, header images, display options, and interests. A new drafts page lists saved drafts with Publish, Publish to queue, and Delete actions."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Activity badge",
         body: "The Activity item in the profile menu now shows a count when new activity appears on your active blog since you last opened its activity feed."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Archive, related tags, settings, and blocked blogs",
         body: "Profiles now have an Archive tab with month and post-type filters, plus a Related tags row based on tag affinity. The new `/settings` page shows account and blog shortcuts, and `/blocked` lists blocked blogs with an Unblock button."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Discord community",
         body: "The landing page and the profile menu now link to the official Discord invite, opening in a new tab."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Compose posts",
         body: "The new `/compose` page can publish text, quote, link, chat, image, video, and audio posts to the active blog. Text, image, and video posts also support queue and draft modes. Queue management, drafts, asks, and settings remain linked to BDSMLR for now."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Landing page",
         body: "The root URL now opens a public landing page with a feature overview, share-preview examples, and a login button. The following feed moved to `/home`, and login remains at `/login`."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Social previews",
         body: "Links to the site, profiles, and posts now include Open Graph and Twitter preview data for Discord and other social apps. The home page uses a branded preview image, profiles show the blog avatar and description, and posts show the first image from the post."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "About page",
         body: "A new `/about` page explains in plain language why the app needs a backend, what it does with your login and cookies, and what it does not store or control."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Approximate tag count warning",
         body: "When a profile tag search finishes and returns fewer posts than the tag's Top tags count, the page now explains that BDSMLR's tag counts are approximate and can be stale or broader than the blog search. Top tag counts also have a tooltip with the same clarification."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Messaging upgrades",
         body: "Messages can now include images, and the conversation header has Block/Unblock, Archive, and Clear actions. New messages show recipient suggestions as you type. Unread conversations add a count badge to the profile menu and the header."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "For You and recommendations",
         body: "The new `/for-you` feed shows recommended posts and a row of recommended blogs. It is available from the profile menu."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Related posts",
         body: "Post detail pages now include a \"More like this\" section with pagination."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Engagement lists",
         body: "Post pages show \"Liked by\" and \"Reblogged by\" buttons that open paginated lists of the blogs behind those counts."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Search and tag pages",
         body: "The new `/search` page can search posts or blogs. Tags on post detail pages now open dedicated tag pages with their own post feed."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Activity and follower feeds",
         body: "Profiles now have Activity and Followers' feed tabs. Activity can be filtered to Posts, Reblogs, Likes, or Comments, and `/activity` opens your own activity."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Blog social actions",
         body: "Profiles now have Follow and Following buttons, plus tabs for Followers and Other blogs owned by the same user. The blog action menu can start a message, block or unblock the blog, and report it. Follow counts and the following cache update immediately."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Post controls",
         body: "Post detail pages can report a post or delete one you own. Reblogs now open a composer where you can add a note and tags, or queue the reblog instead of publishing it immediately."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Active blog switching",
         body: "If your account owns more than one blog, the profile menu now lets you choose the active blog. Likes, reblogs, comments, follows, blocks, reports, liked posts, and the home feed all use that blog."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Messages",
         body: "A new `/messages` page brings your BDSMLR inbox into the app. Browse and search conversations, read threads, see which messages you sent, and send replies from the conversation view. The **New message** button starts a conversation with any blog by name. Signing in now also starts the BDSMLR web session that messaging needs, and the Messages link is in your profile menu."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Comments",
         body: "Every post now has a comments view: click the comment count on a feed card to open it in a dialog, or scroll to the comments section on the post detail page. Comments show the author, time, and body, can be paginated, and signed-in users can post a new comment without leaving the page."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Likes and reblogs",
         body: "Posts on every feed and on post detail pages now have working Like and Reblog buttons. Click the heart to like or unlike a post, and click the reblog icon to reblog it to your primary blog. Buttons highlight when you have already liked or reblogged a post, and the counts update without reloading the page."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Search queries and pages live in the URL",
         body: "Searching on the home feed or a profile puts the query in the address bar (`?tag_name=…`), and the page number plus the search's session token are added as you load more (`&page=3&session=…`). Bookmark or share a search to reopen it later: opening the URL jumps straight back to that page with a single request. Changing the query or sort starts over from the first page, and you can still step back and forward through your past searches with the browser buttons."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "RSS feeds advertise their next page",
         body: "Feed readers that support pagination can now fetch older posts by following the `<atom:link rel=\"next\">` link in each feed page. The link only appears when more posts exist, and it keeps any `v2_session` or `include_reblogs` options from the original feed URL."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Generic post links redirect to the author's page",
         body: "Opening a shared link to `/post/<id>` now jumps straight to the author's profile at `/blog/post/<id>` when the blog still exists, so you immediately see their profile header and Feed/Following tabs. The post card animates smoothly into place on the new page instead of reloading, and posts you've already opened load instantly. If the blog has been deleted, the post stays fully readable with the \"Blog gone\" notice rather than redirecting."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Grid view for post lists",
         body: "Every feed (home, profiles, liked posts) now has a view toggle on the far right of the search bar. Click it to switch between a list and a grid layout: the grid packs posts into responsive columns with images up top and text clamped short. Your choice is remembered across visits."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Deleted blogs on permalink pages",
         body: "When you open a post whose blog has been deleted, the page now shows a \"Blog gone\" notice and a chip next to the post type. The author's name and avatar are no longer clickable, but the post itself stays fully readable."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Infinite scroll on all feeds",
         body: "Feeds now automatically load the next page as you scroll toward the bottom. The **Load more** button still appears at the end as a fallback, so you can manually trigger another load if the auto-load fails or the API incorrectly reports there are no more posts."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Smarter API response caching",
         body: "Stable lookups like `resolve-identifier`, `get-blog`, `get-post-detail`, and `list-blog-top-tags` are now fetched as `GET` requests, so the browser caches them locally per its `Cache-Control` max-age (up to a day for identifier lookups, 30 minutes for blog metadata and top tags, 60 seconds for post details). Previously these were `POST` requests, which browsers never cache, forcing a slow round-trip to the backend on every navigation. `list-blog-activity` responses are explicitly `no-store` since they change constantly, and auth and signed-URL requests are never cached."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Following graph cached in localStorage",
         body: "When you log in, all blog IDs you follow are fetched (all pages) and cached locally. The home feed now uses this cache instead of re-fetching the graph, and the cache refreshes when you visit your own following page."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Permalink pages show the author's profile header",
         body: "The Permalink button now opens posts at `/blog/post/<id>` instead of `/post/<id>`. This new page renders the same post detail as before but also loads the author's profile header (avatar, title, description, and Feed/Following links) above it."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Hide reblogs toggle on profile",
         body: "A gear icon next to the search bar now opens a settings dropdown with a \"Hide reblogs\" checkbox. When checked, only original posts from the creator are shown; reblogged content is hidden."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Windows desktop app",
         body: "A single-executable Windows app is now available. Run `BetterBDSMLR.exe` and it lives in the system tray. Right-click the tray icon to open the app in your browser or quit. No extra installation required."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "HTTP request logging",
         body: "Server logs now show every incoming HTTP request (`--> GET /path`) and its response (`<-- GET /path 200 12ms`), making it easier to observe server activity and diagnose issues."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Search posts by tag now sends `post_types` and `variants`",
         body: "The tag search API request now includes the `post_types` array (defaulting to all post types) and a `variants` field, aligning with the API spec and improving result accuracy."
       },
@@ -646,37 +662,37 @@ export const changelog: ChangelogDay[] = [
     date: "2026-06-15",
     changes: [
       {
-        kind: "New",
+        kind: "Added",
         title: "SQLite database infrastructure",
         body: "Added a SQLite database layer with Drizzle ORM, laying the groundwork for persisting server-side state such as download jobs."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Header view transition",
         body: "The header now animates smoothly during page navigations using the View Transitions API."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "User dropdown in navbar",
         body: "The navbar now shows your avatar and username instead of a plain \"Sign out\" button. Clicking it opens a dropdown with a \"Following\" shortcut and a \"Sign out\" button. The dropdown closes on outside click or Escape."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Following page",
         body: "Visit `/:username/following` to see every blog a user follows, with each blog's avatar, title, description, creation date, and following count. The navbar has a `Following` shortcut for the current user."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Profile Following button",
         body: "Every user profile page now has a \"Following\" button next to the BDSMLR icon that links to the user's following list."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Following and Feed button bolding",
         body: "Active Feed/Following buttons are now bold on profile and following pages for clearer navigation state."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Shared layout for user routes",
         body: "User routes now share a persistent layout with a sticky blog-header, improving navigation consistency."
       },
@@ -701,47 +717,47 @@ export const changelog: ChangelogDay[] = [
         body: "The blog-follow-graph request now fetches all pages instead of stopping after the first page."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Show all tags",
         body: "A \"Show all (N)\" button appears after the top 5 tags on user profiles. Clicking it opens a modal with every remaining tag. The modal closes when you click outside, click the X, or click a tag (which also adds it to the current filter)."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Bulk downloads",
         body: "You can now download every post from a blog or all of your liked posts as a single ZIP archive. A progress panel in the header tracks each job and lets you download the ZIP once it is ready."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Resumable downloads",
         body: "Bulk downloads are persisted on the server using SQLite. If you navigate away or close the tab, the job continues in the background and you can resume it when you return."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Login disclaimer",
         body: "The login page now shows a legal disclaimer explaining that this is an alternative front-end to BDSMLR, that all content is user-provided and hosted by BDSMLR, and that you must be of legal age to view adult content. You must check an acknowledgement box before signing in, confirming that the developers own no displayed content and that you comply with BDSMLR's Terms of Service."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Profile search fix",
         body: "Searching on user profiles now uses the blog-specific search API again instead of the global tag search."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Sort readability",
         body: "Sort field and order values are now expressed as human-readable named constants (`SortField.Date`, `SortOrder.Descending`, etc.) throughout the codebase."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Sort label fix",
         body: "Sort dropdowns now correctly label `Date + Descending` as \"Newest\" and `Date + Ascending` as \"Oldest\", matching the actual API semantics."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Custom sort dropdown",
         body: "The sort selector is now a custom dropdown instead of a native browser `<select>`. It stays open when you click elsewhere on the page, and its selection persists when you submit a search or press Enter. Each page can configure which sort options are available."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Open on BDSMLR",
         body: "Every post card and profile page now has a button that opens the original post or blog on BDSMLR in a new tab."
       },
@@ -771,80 +787,119 @@ export const changelog: ChangelogDay[] = [
         body: "Clicking \"Download all\" now starts a discovery phase that finds all posts without downloading anything. Once discovery is complete, the download panel shows a confirmation prompt: \"You're about to download X images from Y posts.\" You must click \"Start download\" before any actual downloading begins. This makes large bulk downloads more predictable and easier to debug."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Login",
         body: "Log in with your email/username and password. Your session stays active across browser tabs."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Read-only",
         body: "Browse and view content. Posting/liking/following new posts/users unsupported."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Compliant",
         body: "Complies with bdsmlr's openapi spec and does not use `internal-write` endpoints."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Home feed",
         body: "See posts from the people you follow right on the home page."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "User profiles",
         body: "Visit any blog by name to see their posts, profile picture, description, and popular tags."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Search",
         body: "Find posts with powerful filters: by tag, blog name, post type, media type, or date. Includes search tips, and every tag is clickable to find more like it. Search from the beginning of the app's history."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Tag search",
         body: "Click any tag or search for one to discover all posts with that tag, with sorting options."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Post pages",
         body: "Click any post to see it in full detail with all media, tags, and engagement counts. Permalinks to share or revisit posts."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Liked posts",
         body: "Browse everything you've liked, with sorting options."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Download posts",
         body: "Each post has a download button that supports both single and multiple images, with the option to preserve order, as well as videos."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Full-screen media",
         body: "Tap any image or video to view it full-screen without losing quality."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Reblog tracking",
         body: "See who originally posted content and jump straight to the original post."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Fixed Media",
         body: "Using old source urls to allow images/gifs/videos to play like they once did."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Smooth media",
         body: "Images, GIFs, and videos display smoothly in your feed. Animated GIFs play automatically."
       },
       {
-        kind: "New",
+        kind: "Added",
         title: "Deleted posts",
         body: "Posts from deleted authors now show a \"DELETED\" flair so you know why they can't be opened, and their permalinks are hidden."
       }
     ]
   }
 ];
+
+/** Lowercase, punctuation-free form of a title, used to build an entry id. */
+export function slugifyTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[`*_~"'’,.:;!?()[\]]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** Stable identity for one entry, as used for the visitor's read state. */
+export function entryId(date: string, entry: ChangelogEntry): string {
+  return entry.id ?? `${date}:${slugifyTitle(entry.title)}`;
+}
+
+/** Every entry id currently in the changelog, newest first. */
+export function changelogIds(): string[] {
+  return changelog.flatMap((day) =>
+    day.changes.map((change) => entryId(day.date, change)),
+  );
+}
+
+/** FNV-1a over the entry ids, as a short base36 string. */
+function hashIds(ids: string[]): string {
+  let hash = 0x811c9dc5;
+  for (const char of ids.join("|")) {
+    hash ^= char.codePointAt(0) ?? 0;
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+/**
+ * Short identifier for the changelog as a whole. Stored next to a visitor's
+ * read state so that a changed changelog is easy to recognise.
+ */
+export function changelogFingerprint(): string {
+  return hashIds(changelogIds());
+}

@@ -2911,6 +2911,34 @@ button:disabled {
   gap: 12px;
 }
 
+.user-dropdown-changelog {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.changelog-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.changelog-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #0d1117;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .messages-panel-title {
   flex: 1;
   min-width: 0;
@@ -3360,6 +3388,13 @@ button:disabled {
   line-height: 1.7;
 }
 
+.changelog-new-summary {
+  margin-top: 10px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .changelog-days {
   display: flex;
   flex-direction: column;
@@ -3418,6 +3453,34 @@ button:disabled {
   gap: 3px;
 }
 
+.changelog-item-new {
+  position: relative;
+}
+
+.changelog-item-new::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.changelog-new-pill {
+  flex: none;
+  padding: 1px 7px;
+  border: 1px solid rgba(88, 166, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(88, 166, 255, 0.16);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .changelog-item-head {
   display: flex;
   align-items: center;
@@ -3436,7 +3499,7 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.changelog-kind-new {
+.changelog-kind-added {
   color: #3fb950;
 }
 

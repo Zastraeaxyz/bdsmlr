@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { changelog } from "./changelog";
+import { changelog, changelogIds, entryId, slugifyTitle } from "./changelog";
 
-const KINDS = new Set(["New", "Improved", "Fixed", "Removed"]);
+const KINDS = new Set(["Added", "Improved", "Fixed", "Removed"]);
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe("changelog", () => {
@@ -31,5 +31,34 @@ describe("changelog", () => {
         expect(change.body).not.toContain("\n");
       }
     }
+  });
+
+  it("gives every entry a stable, unique id", () => {
+    const ids = changelogIds();
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) {
+      expect(id).toMatch(/^\d{4}-\d{2}-\d{2}:.+$/);
+    }
+  });
+
+  it("builds ids from the title unless an entry pins one", () => {
+    expect(slugifyTitle("Changelog grouped by day")).toBe(
+      "changelog-grouped-by-day",
+    );
+    expect(
+      entryId("2026-11-17", {
+        kind: "Added",
+        title: "Changelog in the navigation",
+        body: "",
+      }),
+    ).toBe("2026-11-17:changelog-in-the-navigation");
+    expect(
+      entryId("2026-11-17", {
+        kind: "Added",
+        id: "pinned",
+        title: "Renamed later",
+        body: "",
+      }),
+    ).toBe("pinned");
   });
 });
