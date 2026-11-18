@@ -33,6 +33,16 @@ export interface ChangelogDay {
  */
 export const changelog: ChangelogDay[] = [
   {
+    date: "2026-11-18",
+    changes: [
+      {
+        kind: "Improved",
+        title: "Browse without an account again",
+        body: "Profiles, shared post links, comments, related posts, and blog search are readable without signing in again. Areas that genuinely need your account, such as your home feed, messages, and composing, still send you to the sign-in page."
+      }
+    ]
+  },
+  {
     date: "2026-11-17",
     changes: [
       {

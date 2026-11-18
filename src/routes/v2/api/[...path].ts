@@ -1,6 +1,4 @@
 import type { APIEvent } from "@solidjs/start/server";
-import { hasCookie } from "~/lib/cookies";
-import { isProxyAllowedForGuests } from "~/lib/routeGate";
 
 const CACHE_CONFIG: Record<string, string> = {
   // Auth endpoints — never cache
@@ -54,20 +52,6 @@ function getCacheControl(pathname: string): string {
 async function proxy(event: APIEvent) {
   const url = new URL(event.request.url);
   const target = `https://api-prod.bdsmlr.com${url.pathname}${url.search}`;
-
-  const authed = hasCookie(
-    event.request.headers.get("cookie"),
-    "v2_session",
-  );
-  if (!authed && !isProxyAllowedForGuests(url.pathname)) {
-    return new Response(JSON.stringify({ error: "login required" }), {
-      status: 401,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-      },
-    });
-  }
 
   let method = event.request.method;
   let body: string | undefined;

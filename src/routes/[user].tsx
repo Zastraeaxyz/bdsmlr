@@ -27,8 +27,6 @@ import { BlogDescription } from '~/components/BlogDescription'
 import { AppErrorBoundary } from '~/components/AppErrorBoundary'
 import { FeedSettingsProvider } from '~/lib/feedSettings'
 import { useAuth } from '~/lib/useAuth'
-import { serverRenderedAuthed } from '~/lib/initialAuth'
-import { LoginGateModal } from '~/components/LoginGateModal'
 import {
   addCachedFollowingId,
   removeCachedFollowingId,
@@ -52,21 +50,7 @@ export default function UserLayout(props: ParentProps) {
   const params = useParams()
   const slug = () => params.user
   const location = useLocation()
-  const { user, activeBlogId, loading: authLoading } = useAuth()
-
-  // The server told us whether the request carried a session; the client then
-  // refines that once the stored user is loaded. Until then, trust the server
-  // so signed-in visitors do not see the gate flash on first paint.
-  const initialAuthed = serverRenderedAuthed()
-  const signedIn = () => {
-    if (user()) return true
-    if (!authLoading()) return false
-    return initialAuthed
-  }
-  // Shared post links stay readable without an account, even when the author
-  // is known and the URL moved under the profile.
-  const isPostView = () =>
-    /^\/[^/]+\/post(\/|$)/.test(location.pathname)
+  const { user, activeBlogId } = useAuth()
 
   const [blog, setBlog] = createSignal<Blog | null>(null)
   const [loading, setLoading] = createSignal(true)
@@ -161,7 +145,7 @@ export default function UserLayout(props: ParentProps) {
         setReportReason('')
         setFollowed(false)
         setBlocked(false)
-        if (!signedIn() || !activeBlogId()) return
+        if (!activeBlogId()) return
         fetch(`/api/rss-session-info?user=${encodeURIComponent(name)}`, {
           credentials: 'include',
         })
@@ -434,66 +418,64 @@ export default function UserLayout(props: ParentProps) {
             <Show when={actionError()}>
               <p class="action-error blog-action-error">{actionError()}</p>
             </Show>
-            <Show when={signedIn()}>
-              <nav class="blog-nav-tabs">
-                <A
-                  href={`/${slug()}`}
-                  class="blog-nav-tab"
-                  classList={{ 'blog-nav-tab-active': feedActive() }}
-                  onClick={() => trackEvent('profile-tab', { tab: 'feed' })}
-                >
-                  Feed
-                </A>
-                <A
-                  href={`/${slug()}/following`}
-                  class="blog-nav-tab"
-                  classList={{ 'blog-nav-tab-active': followingActive() }}
-                  onClick={() => trackEvent('profile-tab', { tab: 'following' })}
-                >
-                  Following
-                </A>
-                <A
-                  href={`/${slug()}/followers`}
-                  class="blog-nav-tab"
-                  classList={{ 'blog-nav-tab-active': followersActive() }}
-                  onClick={() => trackEvent('profile-tab', { tab: 'followers' })}
-                >
-                  Followers
-                </A>
-                <A
-                  href={`/${slug()}/siblings`}
-                  class="blog-nav-tab"
-                  classList={{ 'blog-nav-tab-active': siblingsActive() }}
-                  onClick={() => trackEvent('profile-tab', { tab: 'siblings' })}
-                >
-                  Other blogs
-                </A>
-                <A
-                  href={`/${slug()}/activity`}
-                  class="blog-nav-tab"
-                  classList={{ 'blog-nav-tab-active': activityActive() }}
-                  onClick={() => trackEvent('profile-tab', { tab: 'activity' })}
-                >
-                  Activity
-                </A>
-                <A
-                  href={`/${slug()}/follower-feed`}
-                  class="blog-nav-tab"
-                  classList={{ 'blog-nav-tab-active': followerFeedActive() }}
-                  onClick={() => trackEvent('profile-tab', { tab: 'follower-feed' })}
-                >
-                  Followers' feed
-                </A>
-                <A
-                  href={`/${slug()}/archive`}
-                  class="blog-nav-tab"
-                  classList={{ 'blog-nav-tab-active': archiveActive() }}
-                  onClick={() => trackEvent('profile-tab', { tab: 'archive' })}
-                >
-                  Archive
-                </A>
-              </nav>
-            </Show>
+            <nav class="blog-nav-tabs">
+              <A
+                href={`/${slug()}`}
+                class="blog-nav-tab"
+                classList={{ 'blog-nav-tab-active': feedActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'feed' })}
+              >
+                Feed
+              </A>
+              <A
+                href={`/${slug()}/following`}
+                class="blog-nav-tab"
+                classList={{ 'blog-nav-tab-active': followingActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'following' })}
+              >
+                Following
+              </A>
+              <A
+                href={`/${slug()}/followers`}
+                class="blog-nav-tab"
+                classList={{ 'blog-nav-tab-active': followersActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'followers' })}
+              >
+                Followers
+              </A>
+              <A
+                href={`/${slug()}/siblings`}
+                class="blog-nav-tab"
+                classList={{ 'blog-nav-tab-active': siblingsActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'siblings' })}
+              >
+                Other blogs
+              </A>
+              <A
+                href={`/${slug()}/activity`}
+                class="blog-nav-tab"
+                classList={{ 'blog-nav-tab-active': activityActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'activity' })}
+              >
+                Activity
+              </A>
+              <A
+                href={`/${slug()}/follower-feed`}
+                class="blog-nav-tab"
+                classList={{ 'blog-nav-tab-active': followerFeedActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'follower-feed' })}
+              >
+                Followers' feed
+              </A>
+              <A
+                href={`/${slug()}/archive`}
+                class="blog-nav-tab"
+                classList={{ 'blog-nav-tab-active': archiveActive() }}
+                onClick={() => trackEvent('profile-tab', { tab: 'archive' })}
+              >
+                Archive
+              </A>
+            </nav>
           </section>
         )}
       </Show>
@@ -527,21 +509,15 @@ export default function UserLayout(props: ParentProps) {
         </section>
       </Show>
       <AppErrorBoundary compact>
-        <Show when={signedIn() || isPostView()}>
-          <FeedSettingsProvider
-            hideReblogs={hideReblogs}
-            setHideReblogs={setHideReblogs}
-            hideRepeatingImages={hideRepeatingImages}
-            setHideRepeatingImages={setHideRepeatingImages}
-          >
-            {props.children}
-          </FeedSettingsProvider>
-        </Show>
+        <FeedSettingsProvider
+          hideReblogs={hideReblogs}
+          setHideReblogs={setHideReblogs}
+          hideRepeatingImages={hideRepeatingImages}
+          setHideRepeatingImages={setHideRepeatingImages}
+        >
+          {props.children}
+        </FeedSettingsProvider>
       </AppErrorBoundary>
-
-      <Show when={!signedIn() && !isPostView()}>
-        <LoginGateModal next={`${location.pathname}${location.search}`} />
-      </Show>
 
       <Show when={showReport()}>
         <div
