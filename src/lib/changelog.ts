@@ -33,6 +33,16 @@ export interface ChangelogDay {
  */
 export const changelog: ChangelogDay[] = [
   {
+    date: "2026-11-19",
+    changes: [
+      {
+        kind: "Added",
+        title: "Invitations page",
+        body: "Send invitations, review pending and accepted invites, resend or cancel them, and see who accepted with links to their profiles. Invitations live on BDSMLR's separate account site, so you connect that session once from the new Invitations page."
+      }
+    ]
+  },
+  {
     date: "2026-11-18",
     changes: [
       {

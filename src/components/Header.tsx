@@ -314,6 +314,9 @@ export default function Header(props: HeaderProps) {
                   <span class="message-badge">{unreadCount()}</span>
                 </Show>
               </A>
+              <A href="/invitations" class="user-dropdown-item" onClick={closeDropdown}>
+                Invitations
+              </A>
               <a
                 href={DISCORD_URL}
                 target="_blank"

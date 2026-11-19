@@ -12,8 +12,13 @@ export function POST(event: APIEvent) {
     "bdsmlr7_session",
     "v2_session",
     "XSRF-TOKEN",
-    ...cookieNames(event.request.headers.get("cookie") ?? "").filter((name) =>
-      name.startsWith("remember_web_"),
+    "bbdsmlr_account_user",
+    "wordpress_test_cookie",
+    ...cookieNames(event.request.headers.get("cookie") ?? "").filter(
+      (name) =>
+        name.startsWith("remember_web_") ||
+        name.startsWith("wordpress_logged_in_") ||
+        name.startsWith("wordpress_sec_"),
     ),
   ]);
   const secure = new URL(event.request.url).protocol === "https:" ? "; Secure" : "";
