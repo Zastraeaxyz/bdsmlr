@@ -66,6 +66,20 @@ export class InvitationsError extends Error {
   }
 }
 
+/**
+ * Say what is wrong with a pasted account-site cookie, or "" when it can be
+ * sent. Only a `wordpress_logged_in_...=` line (or a Cookie header containing
+ * one) is accepted; a bare value cannot be identified as the right cookie.
+ */
+export function accountCookieProblem(input: string): string {
+  const text = input.trim().replace(/^cookie\s*:\s*/i, "");
+  if (!text) return "Paste the account-site session cookie first.";
+  if (!/wordpress_logged_in_[A-Za-z0-9]+\s*=/.test(text)) {
+    return "That is not the wordpress_logged_in_... cookie. Copy the whole line from account.bdsmlr.com, including wordpress_logged_in_…=, not just its value.";
+  }
+  return "";
+}
+
 async function invitationRequest<T>(
   path: string,
   init?: RequestInit,

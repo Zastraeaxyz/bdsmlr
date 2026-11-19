@@ -37,8 +37,8 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Fixed",
-        title: "Connecting the account site works with just the cookie value",
-        body: "You can paste either the whole wordpress_logged_in_... line or only its value, and you no longer have to fill in the account-site username first. The page also reports a clear error instead of a blank screen if the invitations server sends back something unexpected."
+        title: "Connecting the account site checks the pasted cookie",
+        body: "The connect form now stops with a clear message unless you paste the whole wordpress_logged_in_...=... cookie line, so a stray value or a different cookie no longer fails later with a confusing error. You still do not need to fill in the account-site username, and an unexpected server response now shows an error instead of a blank screen."
       },
       {
         kind: "Added",

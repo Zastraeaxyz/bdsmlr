@@ -58,14 +58,10 @@ afterEach(() => {
 });
 
 describe("parseAccountCookieInput", () => {
-  it("accepts the bare cookie value and fills in the account-site name", () => {
-    const pairs = parseAccountCookieInput(
-      "zastraeachastity%7C1795300049%7Ctoken%7Chmac",
-    );
-    expect(pairs).toContainEqual({
-      name: "wordpress_logged_in_9f99da61dffa6001609cc00c032a1dac",
-      value: "zastraeachastity%7C1795300049%7Ctoken%7Chmac",
-    });
+  it("rejects a bare cookie value so the name is always known", () => {
+    expect(
+      parseAccountCookieInput("zastraeachastity%7C1795300049%7Ctoken%7Chmac"),
+    ).toEqual([]);
   });
 
   it("accepts a full cookie header with the browser's cookie name", () => {
@@ -77,6 +73,17 @@ describe("parseAccountCookieInput", () => {
         name: "wordpress_logged_in_9f99da61dffa6001609cc00c032a1dac",
         value: "zastraeachastity%7C1795300049%7Ctoken%7Chmac",
       },
+    ]);
+  });
+
+  it("keeps a wordpress_logged_in pair from a mixed Cookie header", () => {
+    const pairs = parseAccountCookieInput(
+      "Cookie: wordpress_test_cookie=WP%20Cookie%20check; wordpress_sec_abc=secret; wordpress_logged_in_abc=value",
+    );
+    expect(pairs).toEqual([
+      { name: "wordpress_test_cookie", value: "WP%20Cookie%20check" },
+      { name: "wordpress_sec_abc", value: "secret" },
+      { name: "wordpress_logged_in_abc", value: "value" },
     ]);
   });
 });

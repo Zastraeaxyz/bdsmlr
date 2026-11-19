@@ -157,19 +157,12 @@ function candidateLoginCookieNames(): string[] {
   );
 }
 
-/** Accept either a whole Cookie header or just the cookie value. */
+/** Accept a Cookie header or a `wordpress_logged_in_...=` line, but not a bare value. */
 export function parseAccountCookieInput(input: string): CookiePair[] {
   let text = input.trim();
   if (!text) return [];
   text = text.replace(/^cookie\s*:\s*/i, "");
-  const pairs = parseCookiePairs(text).filter((pair) =>
-    isAccountCookieName(pair.name),
-  );
-  if (pairs.length > 0) return pairs;
-  if (/^[\w%+/=.-]+$/.test(text)) {
-    return candidateLoginCookieNames().map((name) => ({ name, value: text }));
-  }
-  return [];
+  return parseCookiePairs(text).filter((pair) => isAccountCookieName(pair.name));
 }
 
 export function setAccountSessionCookies(

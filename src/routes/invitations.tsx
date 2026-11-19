@@ -11,6 +11,7 @@ import Header from "~/components/Header";
 import { useAuth } from "~/lib/useAuth";
 import { trackEvent } from "~/lib/analytics";
 import {
+  accountCookieProblem,
   connectAccountSite,
   disconnectAccountSite,
   getAcceptedInvitations,
@@ -255,12 +256,17 @@ export default function InvitationsPage() {
     }
   };
 
+  const cookieProblem = createMemo(() =>
+    cookieInput().trim() ? accountCookieProblem(cookieInput()) : "",
+  );
+
   const submitConnect = async (e: Event) => {
     e.preventDefault();
     if (authBusy()) return;
     const cookie = cookieInput().trim();
-    if (!cookie) {
-      setError("Paste the account-site session cookie first.");
+    const problem = accountCookieProblem(cookie);
+    if (problem) {
+      setError(problem);
       return;
     }
     setAuthBusy(true);
@@ -560,10 +566,16 @@ export default function InvitationsPage() {
                       autocomplete="off"
                       spellcheck={false}
                       value={cookieInput()}
-                      onInput={(e) => setCookieInput(e.currentTarget.value)}
+                      onInput={(e) => {
+                        setCookieInput(e.currentTarget.value);
+                        setError("");
+                      }}
                       placeholder="wordpress_logged_in_...=..."
                     />
                   </label>
+                  <Show when={cookieProblem()}>
+                    <p class="invitations-warning">{cookieProblem()}</p>
+                  </Show>
                   <details class="invitations-help">
                     <summary>How to get the session cookie</summary>
                     <ol>
@@ -592,10 +604,15 @@ export default function InvitationsPage() {
                     </ol>
                     <p>
                       If you prefer, copy the whole Cookie request header from
-                      the Network tab. Paste it as one line.
+                      the Network tab. Paste it as one line. Include the
+                      <code> wordpress_logged_in_…=</code> name: the value on
+                      its own is not accepted.
                     </p>
                   </details>
-                  <button type="submit" disabled={authBusy()}>
+                  <button
+                    type="submit"
+                    disabled={authBusy() || cookieProblem() !== ""}
+                  >
                     {authBusy() ? "Connecting…" : "Connect account site"}
                   </button>
                 </form>

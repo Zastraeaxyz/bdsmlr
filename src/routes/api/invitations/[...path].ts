@@ -289,7 +289,7 @@ export async function POST(event: APIEvent): Promise<Response> {
         return json(
           {
             error:
-              "Paste the wordpress_logged_in_... cookie from account.bdsmlr.com.",
+              "Paste the whole wordpress_logged_in_...=... cookie line from account.bdsmlr.com, not just its value.",
             code: "invalid_cookie",
           },
           400,
