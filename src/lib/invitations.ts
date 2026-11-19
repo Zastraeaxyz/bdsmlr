@@ -79,12 +79,22 @@ async function invitationRequest<T>(
       ...init?.headers,
     },
   });
-  const data = await res.json().catch(() => null);
+  const contentType = res.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json")
+    ? await res.json().catch(() => null)
+    : null;
   if (!res.ok) {
     throw new InvitationsError(
       data?.error || `Invitations request failed with HTTP ${res.status}`,
       res.status,
       data?.code || "upstream_error",
+    );
+  }
+  if (data === null) {
+    throw new InvitationsError(
+      "The invitations server returned an unexpected response. Refresh and try again.",
+      res.status,
+      "invalid_response",
     );
   }
   return data as T;

@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   loadAccountInvitations,
+  parseAccountCookieInput,
+  resolveAccountUserLogin,
   runAccountInvitationAction,
   sendAccountInvitation,
 } from "./accountSite";
@@ -53,6 +55,82 @@ const notificationsHtml = `
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe("parseAccountCookieInput", () => {
+  it("accepts the bare cookie value and fills in the account-site name", () => {
+    const pairs = parseAccountCookieInput(
+      "zastraeachastity%7C1795300049%7Ctoken%7Chmac",
+    );
+    expect(pairs).toContainEqual({
+      name: "wordpress_logged_in_9f99da61dffa6001609cc00c032a1dac",
+      value: "zastraeachastity%7C1795300049%7Ctoken%7Chmac",
+    });
+  });
+
+  it("accepts a full cookie header with the browser's cookie name", () => {
+    const pairs = parseAccountCookieInput(
+      "wordpress_logged_in_9f99da61dffa6001609cc00c032a1dac=zastraeachastity%7C1795300049%7Ctoken%7Chmac",
+    );
+    expect(pairs).toEqual([
+      {
+        name: "wordpress_logged_in_9f99da61dffa6001609cc00c032a1dac",
+        value: "zastraeachastity%7C1795300049%7Ctoken%7Chmac",
+      },
+    ]);
+  });
+});
+
+describe("resolveAccountUserLogin", () => {
+  const cookie =
+    "wordpress_logged_in_9f99da61dffa6001609cc00c032a1dac=zastraeachastity%7C1795300049%7Ctoken%7Chmac";
+
+  const memberHtml = `
+<link rel="canonical" href="https://account.bdsmlr.com/members/zastraeachastity/">
+<div id="wp-admin-bar-my-account"><a href="https://account.bdsmlr.com/members/zastraeachastity/">Howdy</a></div>`;
+
+  it("reads the username from the cookie without a wp-admin round trip", async () => {
+    const requested: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = new URL(String(input));
+        requested.push(url.pathname);
+        if (url.pathname.startsWith("/members/zastraeachastity/")) {
+          return new Response(memberHtml, { status: 200 });
+        }
+        return new Response(null, {
+          status: 302,
+          headers: { location: "/wp-login.php?reauth=1" },
+        });
+      }),
+    );
+
+    await expect(resolveAccountUserLogin(cookie)).resolves.toBe(
+      "zastraeachastity",
+    );
+    expect(requested).not.toContain("/wp-admin/profile.php");
+  });
+
+  it("falls back to the cookie username when the supplied one is not a member", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = new URL(String(input));
+        if (url.pathname.startsWith("/members/zzzz/")) {
+          return new Response("not found", { status: 404 });
+        }
+        if (url.pathname.startsWith("/members/zastraeachastity/")) {
+          return new Response(memberHtml, { status: 200 });
+        }
+        return new Response("not found", { status: 404 });
+      }),
+    );
+
+    await expect(resolveAccountUserLogin(cookie, "zzzz")).resolves.toBe(
+      "zastraeachastity",
+    );
+  });
 });
 
 describe("loadAccountInvitations", () => {

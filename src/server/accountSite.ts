@@ -103,6 +103,27 @@ function cookieHeaderFromPairs(pairs: CookiePair[]): string {
   return pairs.map((pair) => `${pair.name}=${pair.value}`).join("; ");
 }
 
+/**
+ * The `wordpress_logged_in_*` value is `user_login|expiration|token|hmac`, so
+ * the account-site username travels with the cookie itself. Reading it avoids
+ * a wp-admin round trip, which needs the separate `wordpress_sec_*` cookie and
+ * otherwise redirects to the login page even when the session is valid.
+ */
+function usernameFromCookie(cookie: string): string {
+  const pair = parseCookiePairs(cookie).find((item) =>
+    item.name.startsWith("wordpress_logged_in_"),
+  );
+  if (!pair) return "";
+  let value = pair.value;
+  try {
+    value = decodeURIComponent(value);
+  } catch {
+    // Keep the raw value when it is not valid percent-encoding.
+  }
+  const username = value.split("|")[0]?.trim() ?? "";
+  return /^[\w.@+-]+$/.test(username) ? username : "";
+}
+
 /** Account-site cookies from an incoming app request, ready to forward. */
 export function accountCookieHeader(request: Request): string {
   const pairs = parseCookiePairs(request.headers.get("cookie") ?? "").filter(
@@ -390,8 +411,17 @@ export async function resolveAccountUserLogin(
   cookie: string,
   username?: string,
 ): Promise<string> {
-  const named = await resolveFromUsername(cookie, username ?? "");
-  if (named) return named;
+  const candidates = [
+    ...new Set(
+      [usernameFromCookie(cookie), username?.trim() ?? ""].filter(
+        (value) => value.length > 0,
+      ),
+    ),
+  ];
+  for (const candidate of candidates) {
+    const named = await resolveFromUsername(cookie, candidate);
+    if (named) return named;
+  }
 
   const profile = await fetchAccountPage("/wp-admin/profile.php", cookie);
   if (profile.status >= 300 && profile.status < 400) {

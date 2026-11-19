@@ -36,6 +36,11 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-19",
     changes: [
       {
+        kind: "Fixed",
+        title: "Connecting the account site works with just the cookie value",
+        body: "You can paste either the whole wordpress_logged_in_... line or only its value, and you no longer have to fill in the account-site username first. The page also reports a clear error instead of a blank screen if the invitations server sends back something unexpected."
+      },
+      {
         kind: "Added",
         title: "Invitations page",
         body: "Send invitations, review pending and accepted invites, resend or cancel them, and see who accepted with links to their profiles. Invitations live on BDSMLR's separate account site, so you connect that session once from the new Invitations page."

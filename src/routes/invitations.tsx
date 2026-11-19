@@ -169,9 +169,10 @@ export default function InvitationsPage() {
       setData(result);
       setPage(nextPage);
       setNotificationsPage(nextNotifications);
-      setSession(result.session);
+      const nextSession = result.session ?? { connected: true, userLogin };
+      setSession(nextSession);
       setSelected(new Set<string>());
-      if (result.session.userLogin) setUsernameInput(result.session.userLogin);
+      if (nextSession.userLogin) setUsernameInput(nextSession.userLogin);
     } catch (err) {
       if (!handleSessionError(err)) setError(messageOf(err));
     } finally {
