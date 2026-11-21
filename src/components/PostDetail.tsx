@@ -16,7 +16,7 @@ import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
 import { tagSearchHref } from "~/lib/tagLinks";
 import { PostMediaList } from "~/components/PostMediaList";
-import { RelatedPosts } from "~/components/RelatedPosts";
+import { PostMoreTabs } from "~/components/PostMoreTabs";
 import { EngagementModal } from "~/components/EngagementModal";
 import {
   HeartIcon,
@@ -142,7 +142,7 @@ export default function PostDetail(props: {
           onImageClick={(url, postId) => gallery.open(url, postId)}
         />
         <Show when={post()!.id}>
-          <RelatedPosts postId={post()!.id} />
+          <PostMoreTabs post={post()!} />
         </Show>
       </Show>
       <LightBox gallery={gallery} />

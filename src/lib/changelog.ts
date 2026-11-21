@@ -36,6 +36,16 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-21",
     changes: [
       {
+        kind: "Added",
+        title: "Resume a blog feed where you stopped",
+        body: "After loading more posts, the profile feed now remembers the last page you reached in the address bar. Reloading the page picks up at that page instead of sending you back to the top. A notice explains that you are viewing older posts and offers a button to return to the latest posts."
+      },
+      {
+        kind: "Added",
+        title: "More posts from the same blog on post pages",
+        body: "Post pages now have two tabs: More like this, which shows related posts from other blogs as before, and More from the blog, which shows older posts from that blog starting at the post you are reading."
+      },
+      {
         kind: "Improved",
         title: "Reblog progress sits at the top of the screen",
         body: "The reblog progress toast no longer covers the middle of the page, so you can keep reading while a reblog runs. A successful reblog now clears its toast right away instead of lingering for a few seconds, and only failures stay on screen with Retry and Dismiss."

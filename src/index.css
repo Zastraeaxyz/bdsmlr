@@ -3088,6 +3088,18 @@ button:disabled {
   background: rgba(88, 166, 255, 0.1);
 }
 
+.related-tabs {
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.related-tabs .search-tab {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .engagement-modal {
   max-width: 420px;
   padding-top: 36px;
@@ -3149,6 +3161,38 @@ button:disabled {
 
 .related-posts {
   margin-top: 24px;
+}
+
+.historic-feed-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(88, 166, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(88, 166, 255, 0.08);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.historic-feed-notice button {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.historic-feed-notice button:hover {
+  background: var(--accent-hover);
 }
 
 .activity-controls {
