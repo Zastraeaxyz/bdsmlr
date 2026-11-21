@@ -15,9 +15,9 @@ const PHASE_LABEL: Record<ReblogPhase, string> = {
 
 function toastTitle(job: ReblogJob): string {
   if (job.status === "running") return PHASE_LABEL[job.phase];
-  const queued = job.mode === "queue";
-  if (job.status === "done") return queued ? "Added to your queue" : "Reblogged";
-  return queued ? "Could not queue post" : "Could not reblog post";
+  return job.mode === "queue"
+    ? "Could not queue post"
+    : "Could not reblog post";
 }
 
 function preventLeave(event: BeforeUnloadEvent): void {
@@ -52,11 +52,6 @@ export function ReblogToasts() {
                 <Show when={job.status === "running"}>
                   <span class="reblog-toast-spinner" aria-hidden="true" />
                 </Show>
-                <Show when={job.status === "done"}>
-                  <span class="reblog-toast-check" aria-hidden="true">
-                    ✓
-                  </span>
-                </Show>
                 <Show when={job.status === "error"}>
                   <span class="reblog-toast-error-icon" aria-hidden="true">
                     !
@@ -74,17 +69,15 @@ export function ReblogToasts() {
                   </Show>
                 </div>
               </div>
-              <Show when={job.status !== "running"}>
+              <Show when={job.status === "error"}>
                 <div class="reblog-toast-actions">
-                  <Show when={job.status === "error"}>
-                    <button
-                      type="button"
-                      class="btn-ghost"
-                      onClick={() => retryReblogJob(job.id)}
-                    >
-                      Retry
-                    </button>
-                  </Show>
+                  <button
+                    type="button"
+                    class="btn-ghost"
+                    onClick={() => retryReblogJob(job.id)}
+                  >
+                    Retry
+                  </button>
                   <button
                     type="button"
                     class="btn-ghost"

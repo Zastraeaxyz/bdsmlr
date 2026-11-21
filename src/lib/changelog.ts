@@ -33,6 +33,16 @@ export interface ChangelogDay {
  */
 export const changelog: ChangelogDay[] = [
   {
+    date: "2026-11-21",
+    changes: [
+      {
+        kind: "Improved",
+        title: "Reblog progress sits at the top of the screen",
+        body: "The reblog progress toast no longer covers the middle of the page, so you can keep reading while a reblog runs. A successful reblog now clears its toast right away instead of lingering for a few seconds, and only failures stay on screen with Retry and Dismiss."
+      }
+    ]
+  },
+  {
     date: "2026-11-19",
     changes: [
       {

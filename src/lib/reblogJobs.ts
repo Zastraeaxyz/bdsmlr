@@ -4,7 +4,7 @@ import { reblog } from "./postInteractions";
 import type { ReblogPhase } from "./reblog";
 
 export type ReblogMode = "live" | "queue";
-export type ReblogJobStatus = "running" | "error" | "done";
+export type ReblogJobStatus = "running" | "error";
 
 export interface ReblogJob {
   id: number;
@@ -25,10 +25,7 @@ export interface ReblogJobInput {
   tags?: string[];
 }
 
-const DONE_DISMISS_MS = 4000;
-
 const [jobs, setJobs] = createSignal<ReblogJob[]>([]);
-const dismissTimers = new Map<number, ReturnType<typeof setTimeout>>();
 let nextId = 1;
 
 /** Reactive list of reblog jobs, newest first. */
@@ -40,19 +37,14 @@ function updateJob(id: number, patch: Partial<ReblogJob>): void {
   );
 }
 
-function clearDismissTimer(id: number): void {
-  const timer = dismissTimers.get(id);
-  if (timer) {
-    clearTimeout(timer);
-    dismissTimers.delete(id);
-  }
+function removeJob(id: number): void {
+  setJobs((prev) => prev.filter((job) => job.id !== id));
 }
 
 async function runJob(id: number): Promise<void> {
   const job = jobs().find((item) => item.id === id);
   if (!job) return;
 
-  clearDismissTimer(id);
   updateJob(id, { status: "running", phase: "preparing", error: "" });
 
   try {
@@ -62,9 +54,9 @@ async function runJob(id: number): Promise<void> {
       tags: job.tags,
       onProgress: (phase) => updateJob(id, { phase }),
     });
-    updateJob(id, { status: "done" });
-    const timer = setTimeout(() => dismissReblogJob(id), DONE_DISMISS_MS);
-    dismissTimers.set(id, timer);
+    // A finished reblog needs no toast: the profile already shows the new post
+    // (or the pending card), so clear the job instead of leaving it on screen.
+    removeJob(id);
   } catch (err: unknown) {
     updateJob(id, {
       status: "error",
@@ -114,6 +106,5 @@ export function retryReblogJob(id: number): void {
 export function dismissReblogJob(id: number): void {
   const job = jobs().find((item) => item.id === id);
   if (!job || job.status === "running") return;
-  clearDismissTimer(id);
-  setJobs((prev) => prev.filter((item) => item.id !== id));
+  removeJob(id);
 }
