@@ -3179,20 +3179,17 @@ button:disabled {
   line-height: 1.5;
 }
 
-.historic-feed-notice button {
+.historic-feed-link {
   flex-shrink: 0;
-  padding: 6px 14px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--accent);
-  color: #fff;
+  color: var(--accent);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
+  text-decoration: none;
 }
 
-.historic-feed-notice button:hover {
-  background: var(--accent-hover);
+.historic-feed-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
 }
 
 .activity-controls {

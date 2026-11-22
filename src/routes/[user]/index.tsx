@@ -8,7 +8,7 @@ import {
   onMount,
   untrack,
 } from "solid-js";
-import { useParams, useSearchParams } from "@solidjs/router";
+import { useParams, useSearchParams, useLocation } from "@solidjs/router";
 import {
   resolveIdentifier,
   getPostDetail,
@@ -60,6 +60,7 @@ export default function UserFeed() {
   const params = useParams();
   const slug = () => params.user;
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
   const [posts, setPosts] = createSignal<Post[]>([]);
   const [topTags, setTopTags] = createSignal<TopTag[]>([]);
@@ -515,6 +516,23 @@ export default function UserFeed() {
     setSearchParams({ post: undefined }, { replace: true });
   };
 
+  const latestHref = () => {
+    const name = slug();
+    if (!name) return "#";
+    const params = new URLSearchParams(location.search);
+    params.delete("post");
+    const rest = params.toString();
+    return rest ? `/${name}?${rest}` : `/${name}`;
+  };
+
+  const latestAnchorClick = (e: MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      return;
+    }
+    e.preventDefault();
+    showLatest();
+  };
+
   const tagQuery = (tag: string) =>
     (query() ? query() + " " : "") +
     `tag:${tag.includes(" ") ? `"${tag}"` : tag}`;
@@ -752,14 +770,15 @@ export default function UserFeed() {
                 </span>
               }
             >
-              <span>
-                You are viewing older posts. Newer posts are hidden until you
-                return to the latest feed.
-              </span>
+              <span>We saved where you last left off</span>
             </Show>
-            <button type="button" onClick={showLatest}>
-              View latest posts
-            </button>
+            <a
+              class="historic-feed-link"
+              href={latestHref()}
+              onClick={latestAnchorClick}
+            >
+              See their latest posts
+            </a>
           </div>
         </Show>
 

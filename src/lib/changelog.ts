@@ -36,9 +36,14 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-21",
     changes: [
       {
+        kind: "Improved",
+        title: "A quieter notice when a profile feed resumes",
+        body: "The notice you see when a profile feed picks up where you left off now just says we saved your place, with a \"See their latest posts\" link back to the newest posts instead of a button."
+      },
+      {
         kind: "Added",
         title: "Resume a blog feed where you stopped",
-        body: "After loading more posts, the profile feed now remembers the last page you reached in the address bar. Reloading the page picks up at that page instead of sending you back to the top. A notice explains that you are viewing older posts and offers a button to return to the latest posts."
+        body: "After loading more posts, the profile feed now remembers the last page you reached in the address bar. Reloading the page picks up at that page instead of sending you back to the top. A notice explains that you are viewing older posts and offers a link to return to the latest posts."
       },
       {
         kind: "Added",
