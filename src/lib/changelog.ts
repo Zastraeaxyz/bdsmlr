@@ -41,16 +41,6 @@ export const changelog: ChangelogDay[] = [
         body: "Clicking a tag on a post page now searches the tag on the blog that posted it, so a #cuckold tag on an AmateurCuckolding2 post opens that blog's posts with the tag instead of the site-wide home search. The same goes for tags in the post page's More from the blog tab. Tags on posts from deleted blogs still use the site-wide search."
       },
       {
-        kind: "Improved",
-        title: "A quieter notice when a profile feed resumes",
-        body: "The notice you see when a profile feed picks up where you left off now just says we saved your place, with a \"See their latest posts\" link back to the newest posts instead of a button."
-      },
-      {
-        kind: "Added",
-        title: "Resume a blog feed where you stopped",
-        body: "After loading more posts, the profile feed now remembers the last page you reached in the address bar. Reloading the page picks up at that page instead of sending you back to the top. A notice explains that you are viewing older posts and offers a link to return to the latest posts."
-      },
-      {
         kind: "Added",
         title: "More posts from the same blog on post pages",
         body: "Post pages now have two tabs: More like this, which shows related posts from other blogs as before, and More from the blog, which shows older posts from that blog starting at the post you are reading."

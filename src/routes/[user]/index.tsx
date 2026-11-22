@@ -8,10 +8,9 @@ import {
   onMount,
   untrack,
 } from "solid-js";
-import { useParams, useSearchParams, useLocation } from "@solidjs/router";
+import { useParams, useSearchParams } from "@solidjs/router";
 import {
   resolveIdentifier,
-  getPostDetail,
   listBlogActivity,
   listBlogTopTags,
   searchPostsByTag,
@@ -43,7 +42,6 @@ import {
   addSearchHistory,
   removeSearchHistory,
 } from "~/lib/searchHistory";
-import { blogPostsBefore } from "~/lib/activityCursor";
 import { freshPosts } from "~/lib/feedPagination";
 import { findRepeatingImageIdentities } from "~/lib/repeatingImages";
 import { pendingReblogsFor, prunePendingReblogs } from "~/lib/pendingReblogs";
@@ -60,7 +58,6 @@ export default function UserFeed() {
   const params = useParams();
   const slug = () => params.user;
   const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
 
   const [posts, setPosts] = createSignal<Post[]>([]);
   const [topTags, setTopTags] = createSignal<TopTag[]>([]);
@@ -68,7 +65,6 @@ export default function UserFeed() {
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
   const [error, setError] = createSignal("");
-  const [anchored, setAnchored] = createSignal(false);
   const [query, setQuery] = createSignal(
     (searchParams.tag_name as string) || "",
   );
@@ -145,9 +141,7 @@ export default function UserFeed() {
 
   const emptyMessage = () => {
     if (!activeQuery()) {
-      return anchored()
-        ? "No older posts from this point."
-        : "No posts in feed.";
+      return "No posts in feed.";
     }
     const tag = activeTagName();
     const count = activeTagCount();
@@ -186,7 +180,6 @@ export default function UserFeed() {
   let searchPage = 1;
   let searchSession: string | null = null;
   let loadedIds = new Set<number>();
-  let lastRawPostId: number | null = null;
   let lastFeedKey: string | undefined;
 
   const requestSearch = (
@@ -248,7 +241,6 @@ export default function UserFeed() {
         incoming = incoming.filter((p) => p.variant !== PostVariant.Reblog);
       }
       setPosts((prev) => [...prev, ...incoming]);
-      lastRawPostId = fresh[fresh.length - 1]?.id ?? null;
       nextPageToken = data.page?.nextPageToken ?? null;
       // The server keeps echoing a token after the last page, so also stop when
       // a page returns fewer posts than requested.
@@ -266,28 +258,8 @@ export default function UserFeed() {
 
   const currentUrlSession = () => (searchParams.session as string) || null;
 
-  const currentUrlPost = () => (searchParams.post as string) || "";
-
-  const feedKeyFor = (name: string | undefined, q: string, post: string) =>
-    `${name ?? ""}|${q}|${post}`;
-
-  const setPostParam = (postId: number) => {
-    // Record the key before changing the URL so the route effect does not
-    // reset the feed we just appended to.
-    lastFeedKey = feedKeyFor(
-      slug(),
-      (searchParams.tag_name as string) || "",
-      String(postId),
-    );
-    setSearchParams(
-      {
-        post: String(postId),
-        page: undefined,
-        session: undefined,
-      },
-      { replace: true },
-    );
-  };
+  const feedKeyFor = (name: string | undefined, q: string) =>
+    `${name ?? ""}|${q}`;
 
   const fetchFeed = async (targetPage = 1) => {
     const name = slug();
@@ -305,8 +277,6 @@ export default function UserFeed() {
     searchPage = 1;
     searchSession = null;
     loadedIds = new Set();
-    lastRawPostId = null;
-    setAnchored(false);
     try {
       const resolved = await resolveIdentifier(name);
       if (!resolved.blogId) {
@@ -354,39 +324,7 @@ export default function UserFeed() {
         )
           setSearchParams({ session: searchSession }, { replace: true });
       } else {
-        const anchorParam = currentUrlPost();
-        let anchorToken: string | undefined;
-        if (anchorParam) {
-          const anchorId = Number(anchorParam);
-          if (
-            Number.isInteger(anchorId) &&
-            anchorId > 0 &&
-            sortField() === SortField.Date &&
-            sortOrder() === SortOrder.Descending
-          ) {
-            try {
-              const anchorData = await getPostDetail(anchorId);
-              const anchorPost = anchorData.post;
-              if (
-                anchorPost?.createdAtUnix &&
-                Number(anchorPost.blogId) === Number(resolved.blogId)
-              ) {
-                anchorToken = blogPostsBefore(
-                  Number(anchorPost.createdAtUnix),
-                  Number(anchorPost.id),
-                );
-                setAnchored(true);
-              }
-            } catch {
-              // Invalid or deleted anchors fall back to the latest feed.
-            }
-          }
-          if (!anchorToken) {
-            lastFeedKey = feedKeyFor(name, "", "");
-            setSearchParams({ post: undefined }, { replace: true });
-          }
-        }
-        await loadPage(name, anchorToken);
+        await loadPage(name);
       }
 
       const tagsRes = await listBlogTopTags(name);
@@ -411,8 +349,7 @@ export default function UserFeed() {
   createEffect(() => {
     const name = slug();
     const q = (searchParams.tag_name as string) || "";
-    const post = (searchParams.post as string) || "";
-    const key = feedKeyFor(name, q, post);
+    const key = feedKeyFor(name, q);
     if (key === lastFeedKey) return;
     lastFeedKey = key;
     setQuery(q);
@@ -460,9 +397,7 @@ export default function UserFeed() {
       if (!nextPageToken) return;
       const token = nextPageToken;
       nextPageToken = null;
-      const anchorId = lastRawPostId;
-      const added = await loadPage(name, token);
-      if (added > 0 && anchorId != null) setPostParam(anchorId);
+      await loadPage(name, token);
     } catch (err: unknown) {
       setError((err as Error)?.message || "Failed to load more");
     } finally {
@@ -476,10 +411,6 @@ export default function UserFeed() {
     setHistory(addSearchHistory(historyKey(), q));
     const current = (searchParams.tag_name as string) || "";
     if (q === current) {
-      if (searchParams.post) {
-        setSearchParams({ post: undefined }, { replace: true });
-        return;
-      }
       fetchFeed(1);
       return;
     }
@@ -487,7 +418,6 @@ export default function UserFeed() {
       tag_name: q || undefined,
       page: undefined,
       session: undefined,
-      post: undefined,
     });
   };
 
@@ -507,30 +437,6 @@ export default function UserFeed() {
     if (!name) return;
     trackEvent("search", { surface: "profile", mode: "clear" });
     runSearch("");
-  };
-
-  const showLatest = () => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    setSearchParams({ post: undefined }, { replace: true });
-  };
-
-  const latestHref = () => {
-    const name = slug();
-    if (!name) return "#";
-    const params = new URLSearchParams(location.search);
-    params.delete("post");
-    const rest = params.toString();
-    return rest ? `/${name}?${rest}` : `/${name}`;
-  };
-
-  const latestAnchorClick = (e: MouseEvent) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
-      return;
-    }
-    e.preventDefault();
-    showLatest();
   };
 
   const tagQuery = (tag: string) =>
@@ -660,17 +566,6 @@ export default function UserFeed() {
               searchSession = null;
               setPosts([]);
               setHasMore(true);
-              if (searchParams.post) {
-                setSearchParams(
-                  {
-                    post: undefined,
-                    page: undefined,
-                    session: undefined,
-                  },
-                  { replace: true },
-                );
-                return;
-              }
               if (activeQuery()) {
                 setSearchParams({ page: undefined, session: undefined });
                 fetchFeed(1);
@@ -758,29 +653,6 @@ export default function UserFeed() {
             }}
           />
         </form>
-
-        <Show when={anchored() || (currentUrlPost() && !loading())}>
-          <div class="historic-feed-notice">
-            <Show
-              when={anchored()}
-              fallback={
-                <span>
-                  Your place in this feed is saved. Reloading will resume from
-                  this post.
-                </span>
-              }
-            >
-              <span>We saved where you last left off</span>
-            </Show>
-            <a
-              class="historic-feed-link"
-              href={latestHref()}
-              onClick={latestAnchorClick}
-            >
-              See their latest posts
-            </a>
-          </div>
-        </Show>
 
         <Show when={error()}>
           <FeedErrorNotice message={error()} blogName={slug()} />
