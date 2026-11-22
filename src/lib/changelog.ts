@@ -37,6 +37,31 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Improved",
+        title: "A cleaner interface for small screens",
+        body: "Buttons, cards, dialogs, menus, and forms now look and behave the same across the app. Post pages, feeds, messages, the composer, and account screens were rebuilt for phones, with larger tap targets, clearer spacing, and dialogs that slide up from the bottom.",
+      },
+      {
+        kind: "Improved",
+        title: "Messages in the main navigation",
+        body: "Messages now has a home in the top navigation on desktop and the bottom bar on phones, with its unread count. Activity moved into the menu, and the Discord invite is back in the header on both.",
+      },
+      {
+        kind: "Improved",
+        title: "Feed settings open with a tap",
+        body: "The gear in a profile feed opens right away on a normal tap, and the panel stays open while you turn reblogs or repeating images on or off.",
+      },
+      {
+        kind: "Improved",
+        title: "Bigger media viewer",
+        body: "Full-screen images now use all the space between the close and gallery buttons, so they stay as large as possible without being cut off.",
+      },
+      {
+        kind: "Fixed",
+        title: "Reblog credit is easier to read",
+        body: "The \"reblogged from\" line is larger and has room to breathe before the post.",
+      },
+      {
+        kind: "Improved",
         title: "Deleted posts now say they were deleted",
         body: "Opening a deleted post used to show BDSMLR's one-word status, \"gone\". The page now explains that the post was deleted and can no longer be shown, and gives you a way back into the feed.",
       },
@@ -60,36 +85,6 @@ export const changelog: ChangelogDay[] = [
   {
     date: "2026-11-21",
     changes: [
-      {
-        kind: "Improved",
-        title: "Feed settings open with a tap",
-        body: "The gear in a profile feed now opens a small settings panel on a normal tap, and the checkboxes stay open while you turn reblogs or repeating images on and off. No more long press."
-      },
-      {
-        kind: "Improved",
-        title: "Messages in the main navigation",
-        body: "Messages now sits in the top navigation on desktop and replaces Activity in the bottom bar on phones, with its unread badge. Activity is still available from the menu. The Discord link is back in the top header on both."
-      },
-      {
-        kind: "Improved",
-        title: "Bigger media viewer",
-        body: "The full-screen image viewer now fits each image to the screen without clipping it, using all the space around the close button and gallery controls."
-      },
-      {
-        kind: "Fixed",
-        title: "Reblog credit is easier to read",
-        body: "The \"reblogged from\" line on posts is larger and has breathing room below it before the post content."
-      },
-      {
-        kind: "Improved",
-        title: "A phone-first navigation bar",
-        body: "On phones, Home, Search, New post, Activity and your profile now live in a bar at the bottom of the screen, with unread badges for messages and activity. The full menu opens from the left, and every control is sized for touch."
-      },
-      {
-        kind: "Improved",
-        title: "A cleaner interface built on shadcn",
-        body: "Buttons, cards, dialogs, menus and forms across the app now share one consistent design. Post pages, feeds, messages, composer and account screens were rebuilt for small screens, with larger images, clearer spacing and dialogs that open as bottom sheets on phones."
-      },
       {
         kind: "Improved",
         title: "Tags on a post search that blog",
