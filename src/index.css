@@ -110,7 +110,8 @@ button:disabled {
 }
 
 .private-blog-notice,
-.rate-limit-notice {
+.rate-limit-notice,
+.post-deleted-notice {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -131,7 +132,8 @@ button:disabled {
 }
 
 .private-blog-notice .icon,
-.rate-limit-notice .icon {
+.rate-limit-notice .icon,
+.post-deleted-notice .icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
@@ -139,7 +141,8 @@ button:disabled {
 }
 
 .private-blog-notice-copy,
-.rate-limit-notice-copy {
+.rate-limit-notice-copy,
+.post-deleted-notice-copy {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -148,12 +151,14 @@ button:disabled {
 }
 
 .private-blog-notice-copy strong,
-.rate-limit-notice-copy strong {
+.rate-limit-notice-copy strong,
+.post-deleted-notice-copy strong {
   color: var(--warning);
 }
 
 .private-blog-notice-copy span,
-.rate-limit-notice-copy span {
+.rate-limit-notice-copy span,
+.post-deleted-notice-copy span {
   color: var(--text-muted);
 }
 
@@ -210,6 +215,23 @@ button:disabled {
 .private-blog-notice-login:hover {
   background: var(--accent-hover);
   color: #fff;
+}
+
+.post-deleted-notice-back {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.post-deleted-notice-back:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
+  color: var(--text);
 }
 
 .error-boundary {

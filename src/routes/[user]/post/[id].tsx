@@ -6,7 +6,12 @@ export default function UserPostPage() {
 
   return (
     <main>
-      <PostDetail postId={Number(params.id)} checkBlogGone />
+      <PostDetail
+        postId={Number(params.id)}
+        checkBlogGone
+        backHref={`/${params.user}`}
+        backLabel={`Back to @${params.user}`}
+      />
     </main>
   );
 }

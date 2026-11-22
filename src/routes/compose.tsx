@@ -28,6 +28,7 @@ import {
   type LegacyPostType,
 } from "~/lib/legacy";
 import type { LegacyEditablePost } from "~/lib/legacyDrafts";
+import { isDeletedPostError } from "~/lib/requestError";
 
 const TYPES: { id: LegacyPostType; label: string }[] = [
   { id: "text", label: "Text" },
@@ -170,9 +171,11 @@ export default function ComposePage() {
     } catch (err: unknown) {
       const message = (err as Error)?.message || "Could not load the editor";
       setError(
-        scope === "post" && /404|not found|cannot find any route/i.test(message)
-          ? "BDSMLR's API does not have this post yet. Wait a moment and try again."
-          : message,
+        scope === "post" && isDeletedPostError(err)
+          ? "This post was deleted, so it can no longer be edited."
+          : scope === "post" && /404|not found|cannot find any route/i.test(message)
+            ? "BDSMLR's API does not have this post yet. Wait a moment and try again."
+            : message,
       );
     } finally {
       setEditLoading(false);

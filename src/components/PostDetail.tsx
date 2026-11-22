@@ -25,6 +25,7 @@ import {
   ReblogIcon,
   BdsmlrIcon,
   ChartNoAxesColumnIcon,
+  WarningIcon,
 } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
 import { getCachedPost, setCachedPost } from "~/lib/postCache";
@@ -32,15 +33,19 @@ import { useAuth } from "~/lib/useAuth";
 import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
 import { postTypeName } from "~/lib/postTypes";
 import { trackEvent } from "~/lib/analytics";
+import { isDeletedPostError } from "~/lib/requestError";
 
 export default function PostDetail(props: {
   postId: number;
   checkBlogGone?: boolean;
   onAuthorKnown?: (blogName: string, blogId: number) => void;
+  backHref?: string;
+  backLabel?: string;
 }) {
   const [post, setPost] = createSignal<Post | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal("");
+  const [deleted, setDeleted] = createSignal(false);
   const [blogGone, setBlogGone] = createSignal(false);
   const [blogCheckDone, setBlogCheckDone] = createSignal(false);
   const gallery = createMediaGallery({
@@ -72,6 +77,7 @@ export default function PostDetail(props: {
     }
     setLoading(true);
     setError("");
+    setDeleted(false);
     setBlogGone(false);
     setBlogCheckDone(false);
 
@@ -107,7 +113,12 @@ export default function PostDetail(props: {
         }
       })
       .catch((err: unknown) => {
-        setError((err as Error)?.message || "Failed to load post");
+        if (isDeletedPostError(err)) {
+          setDeleted(true);
+          setPost(null);
+        } else {
+          setError((err as Error)?.message || "Failed to load post");
+        }
         setBlogCheckDone(true);
       })
       .finally(() => setLoading(false));
@@ -131,6 +142,21 @@ export default function PostDetail(props: {
       </Title>
       {error() && <FeedErrorNotice message={error()} />}
       {loading() && <p class="loading">Loading post…</p>}
+      <Show when={deleted()}>
+        <div class="post-deleted-notice" role="status">
+          <WarningIcon />
+          <div class="post-deleted-notice-copy">
+            <strong>This post was deleted.</strong>
+            <span>
+              The author deleted it, or BDSMLR removed it, so there is nothing
+              left to show.
+            </span>
+          </div>
+          <A href={props.backHref ?? "/home"} class="post-deleted-notice-back">
+            {props.backLabel ?? "Back to home"}
+          </A>
+        </div>
+      </Show>
       <Show when={blogGone()}>
         <p class="post-detail-gone">
           Blog gone — this blog was deleted, but the post remains accessible.

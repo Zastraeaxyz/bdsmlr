@@ -12,6 +12,7 @@ export type RequestErrorKind =
   | "rate_limited"
   | "auth"
   | "private"
+  | "deleted_post"
   | "not_found"
   | "server"
   | "network"
@@ -59,6 +60,14 @@ const PRIVATE: Omit<RequestErrorInfo, "status"> = {
   title: "This blog is not available",
   message:
     "BDSMLR says this blog is private or no longer exists, so it cannot be shown here. If this is your blog, sign in and try again.",
+  retryable: false,
+};
+
+const DELETED_POST: Omit<RequestErrorInfo, "status"> = {
+  kind: "deleted_post",
+  title: "This post was deleted",
+  message:
+    "The author deleted it, or BDSMLR removed it, so there is nothing left to show.",
   retryable: false,
 };
 
@@ -111,6 +120,8 @@ export function describeRequestError(
     info = { ...NETWORK };
   } else if (isPrivateBlogError(rawMessage)) {
     info = { ...PRIVATE };
+  } else if (isDeletedPostError(error)) {
+    info = { ...DELETED_POST };
   } else if (status === 401) {
     info = { ...AUTH };
   } else if (status !== undefined && status >= 500) {
@@ -132,6 +143,16 @@ export function describeRequestError(
   if (status !== undefined) info.status = status;
   if (options.title) info.title = options.title;
   return info;
+}
+
+/**
+ * BDSMLR answers `get-post-detail` for a removed post with HTTP 410 and the
+ * body `{"error":"gone"}`. That single word is the whole message the proxy
+ * hands to the client, so match both the status and the wording.
+ */
+export function isDeletedPostError(error: unknown): boolean {
+  if (statusOf(error) === 410) return true;
+  return /^gone$/i.test(messageOf(error).trim());
 }
 
 /**

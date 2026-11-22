@@ -36,6 +36,11 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-22",
     changes: [
       {
+        kind: "Improved",
+        title: "Deleted posts now say they were deleted",
+        body: "Opening a deleted post used to show BDSMLR's one-word status, \"gone\". The page now explains that the post was deleted and can no longer be shown, and gives you a way back into the feed.",
+      },
+      {
         kind: "Fixed",
         title: "Rate limits now say so instead of looking like a broken blog",
         body: "When BDSMLR starts refusing requests, the app used to show a bare \"Too Many Requests\" or a generic failure, which made it look like this site, or the blog you were reading, was broken. Failed sections now explain that BDSMLR is limiting requests, that nothing is wrong with the blog, and that waiting a minute or two fixes it. A banner at the top of the page counts down while the limit is active.",
