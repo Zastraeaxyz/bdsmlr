@@ -171,7 +171,7 @@ export function BlogHistoricPosts(props: {
   };
 
   const openTag = (tag: string) => {
-    navigate(tagSearchHref(tag));
+    navigate(tagSearchHref(tag, props.blogName));
   };
 
   return (

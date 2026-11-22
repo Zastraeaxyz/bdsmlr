@@ -37,6 +37,11 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Improved",
+        title: "Tags on a post search that blog",
+        body: "Clicking a tag on a post page now searches the tag on the blog that posted it, so a #cuckold tag on an AmateurCuckolding2 post opens that blog's posts with the tag instead of the site-wide home search. The same goes for tags in the post page's More from the blog tab. Tags on posts from deleted blogs still use the site-wide search."
+      },
+      {
+        kind: "Improved",
         title: "A quieter notice when a profile feed resumes",
         body: "The notice you see when a profile feed picks up where you left off now just says we saved your place, with a \"See their latest posts\" link back to the newest posts instead of a button."
       },

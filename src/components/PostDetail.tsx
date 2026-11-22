@@ -310,7 +310,14 @@ function PostDetailView(props: {
         <div class="post-detail-tags">
           <For each={props.post.tags}>
             {(t) => (
-              <A href={tagSearchHref(t)} class="tag" onClick={handleTagClick}>
+              <A
+                href={tagSearchHref(
+                  t,
+                  props.blogGone ? undefined : props.post.blogName,
+                )}
+                class="tag"
+                onClick={handleTagClick}
+              >
                 #{t}
               </A>
             )}
