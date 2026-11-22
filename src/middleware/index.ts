@@ -6,6 +6,12 @@ import { hasCookie } from "~/lib/cookies";
 export default createMiddleware({
   onRequest: async (event) => {
     const method = event.request.method;
+    const isPreview =
+      process.env.PREVIEW === "1" ||
+      process.env.RAILWAY_ENVIRONMENT === "preview";
+    if (isPreview) {
+      event.response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    }
     if (method !== "GET" && method !== "HEAD") return;
 
     const userAgent = event.request.headers.get("user-agent") ?? "";

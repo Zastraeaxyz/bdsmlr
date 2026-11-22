@@ -1,9 +1,11 @@
 import { createSignal, Show } from "solid-js";
+import { cx } from "@/lib/cva";
 import { AutoLoopVideo } from "~/components/AutoLoopVideo";
 import type { PostMediaItem } from "~/lib/sanitize";
 
 export function PostMedia(props: {
   item: PostMediaItem;
+  class?: string;
   onImageClick?: (url: string) => void;
 }) {
   const [index, setIndex] = createSignal(0);
@@ -18,14 +20,30 @@ export function PostMedia(props: {
   return (
     <Show
       when={current().type === "image"}
-      fallback={<AutoLoopVideo src={current().url} onError={next} />}
+      fallback={
+        <div class="w-full bg-muted [&_video]:h-auto [&_video]:max-h-[75dvh] [&_video]:w-full">
+          <AutoLoopVideo src={current().url} onError={next} />
+        </div>
+      }
     >
-      <img
-        src={current().url}
-        alt=""
-        onError={next}
+      <button
+        type="button"
+        class="group relative block w-full cursor-zoom-in overflow-hidden bg-muted"
         onClick={() => props.onImageClick?.(current().url)}
-      />
+        aria-label="Open image"
+      >
+        <img
+          src={current().url}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          class={cx(
+            "w-full transition-transform duration-200 group-hover:scale-[1.01]",
+            props.class ?? "h-auto max-h-[75dvh] object-contain",
+          )}
+          onError={next}
+        />
+      </button>
     </Show>
   );
 }

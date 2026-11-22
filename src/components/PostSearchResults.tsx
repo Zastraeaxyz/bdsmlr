@@ -9,7 +9,9 @@ import {
   SortOrder,
   type Post,
 } from "~/lib/api";
-import { PostCard } from "~/components/PostCard";
+import { PostFeed } from "~/components/PostFeed";
+import { FeedSkeleton, EmptyState } from "~/components/FeedStates";
+import { Alert, AlertDescription } from "./ui/alert";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
 import { createMediaGallery } from "~/lib/mediaGallery";
@@ -130,26 +132,22 @@ export function PostSearchResults(props: {
 
   return (
     <div>
-      {error() && <FeedErrorNotice message={error()} />}
-      {loading() && <p class="loading">Searching…</p>}
+<Show when={error()}>
+        <FeedErrorNotice message={error()} />
+      </Show>
+      <Show when={loading()}>
+        <FeedSkeleton />
+      </Show>
       <Show when={!loading()}>
         <Show
           when={posts().length > 0}
-          fallback={<p class="empty">No posts found.</p>}
+          fallback={<EmptyState title="No posts found">Try a different query.</EmptyState>}
         >
-          <div class="feed">
-            <For each={posts()}>
-              {(post) => (
-                <PostCard
-                  post={post}
-                  onTagClick={openTag}
-                  onImageClick={(url, postId) =>
-                    gallery.open(url, postId)
-                  }
-                />
-              )}
-            </For>
-          </div>
+          <PostFeed
+            posts={posts()}
+            onTagClick={openTag}
+            onImageClick={(url, postId) => gallery.open(url, postId)}
+          />
         </Show>
       </Show>
       <Show when={hasMore && posts().length > 0}>

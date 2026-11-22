@@ -1,6 +1,7 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A } from "@solidjs/router";
+import { MessageCircle, Send } from "lucide-solid";
 import {
   commentPost,
   listPostComments,
@@ -11,6 +12,9 @@ import { BlogAvatar } from "~/components/BlogAvatar";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { formatRelativeDate } from "~/lib/date";
 import { surfaceForPath, textLengthBucket, trackEvent } from "~/lib/analytics";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 
 const PAGE_SIZE = 20;
 
@@ -109,8 +113,8 @@ export function Comments(props: CommentsProps) {
     }
   };
 
-  const submit = async (e: Event) => {
-    e.preventDefault();
+  const submit = async (event: Event) => {
+    event.preventDefault();
     const text = draft().trim();
     const currentUser = user();
     const blog = activeBlog();
@@ -148,60 +152,95 @@ export function Comments(props: CommentsProps) {
   };
 
   return (
-    <section class="comments">
-      <h3 class="comments-title">Comments ({count()})</h3>
+    <section class="flex flex-col gap-4">
+      <h3 class="flex items-center gap-2 text-sm font-semibold">
+        <MessageCircle class="size-4" />
+        Comments ({count()})
+      </h3>
 
       <Show
         when={user() && activeBlog()}
-        fallback={<p class="comments-signin">Sign in to comment.</p>}
+        fallback={
+          <p class="text-sm text-muted-foreground">Sign in to comment.</p>
+        }
       >
-        <form class="comment-form" onSubmit={submit}>
+        <form class="flex flex-col gap-2" onSubmit={submit}>
           <textarea
+            class="min-h-20 w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
             placeholder="Write a comment…"
             value={draft()}
-            onInput={(e) => setDraft(e.currentTarget.value)}
+            onInput={(event) => setDraft(event.currentTarget.value)}
             rows={3}
           />
-          <button
+          <Button
             type="submit"
+            size="sm"
+            class="self-end"
             disabled={!draft().trim() || submitting()}
           >
+            <Send class="size-4" />
             {submitting() ? "Posting…" : "Comment"}
-          </button>
+          </Button>
         </form>
       </Show>
 
-      {error() && <FeedErrorNotice message={error()} />}
-      {loading() && <p class="loading">Loading comments…</p>}
+
+      <Show when={error()}>
+        <FeedErrorNotice message={error()} />
+      </Show>
+
+      <Show when={loading()}>
+        <div class="flex flex-col gap-3">
+          <For each={[0, 1, 2]}>
+            {() => (
+              <div class="flex gap-3">
+                <Skeleton class="size-7 rounded-full" />
+                <div class="flex-1 space-y-2">
+                  <Skeleton class="h-3 w-32" />
+                  <Skeleton class="h-3 w-full" />
+                </div>
+              </div>
+            )}
+          </For>
+        </div>
+      </Show>
+
 
       <Show when={!loading()}>
         <Show
           when={comments().length > 0}
-          fallback={<p class="comments-empty">No comments yet.</p>}
+          fallback={
+            <p class="py-4 text-center text-sm text-muted-foreground">
+              No comments yet.
+            </p>
+          }
         >
-          <div class="comment-list">
+          <div class="flex flex-col divide-y divide-border">
             <For each={comments()}>
               {(comment) => (
-                <div class="comment">
+                <div class="flex gap-3 py-3">
                   <BlogAvatar
                     blogId={comment.blogId}
                     blogName={comment.blogName}
-                    size={24}
+                    size={28}
                   />
-                  <div class="comment-main">
-                    <div class="comment-head">
-                      <A href={`/${comment.blogName}`} class="comment-blog">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <A
+                        href={`/${comment.blogName}`}
+                        class="text-sm font-medium hover:underline"
+                      >
                         {comment.blogName}
                       </A>
                       <Show when={comment.createdAtUnix}>
-                        <span class="comment-time">
+                        <span class="text-xs text-muted-foreground">
                           {formatRelativeDate(comment.createdAtUnix!)}
                         </span>
                       </Show>
                     </div>
-                    <div class="comment-body">
+                    <p class="mt-1 whitespace-pre-line break-words text-sm">
                       {commentBodyText(comment.body)}
-                    </div>
+                    </p>
                   </div>
                 </div>
               )}
@@ -211,7 +250,6 @@ export function Comments(props: CommentsProps) {
             <AutoLoadMore
               onLoad={loadMore}
               loading={loadingMore()}
-              class="comments-more"
               label="Load more comments"
               loadingLabel="Loading more…"
             />

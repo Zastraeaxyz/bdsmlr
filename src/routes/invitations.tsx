@@ -7,7 +7,41 @@ import {
 } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import Header from "~/components/Header";
+import { Page, PageHeader } from "~/components/Page";
+import { EmptyState } from "~/components/FeedStates";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPortal,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import { Badge } from "~/components/ui/badge";
+import { Button, buttonVariants } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import {
+  Checkbox,
+  CheckboxControl,
+  CheckboxLabel,
+} from "~/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldLabel,
+  TextFieldTextArea,
+} from "~/components/ui/text-field";
+import { cx } from "~/lib/cva";
 import { useAuth } from "~/lib/useAuth";
 import { trackEvent } from "~/lib/analytics";
 import {
@@ -49,11 +83,21 @@ function statusLabel(invitation: Invitation): string {
   return "Pending";
 }
 
-function statusClass(invitation: Invitation): string {
-  if (invitation.accepted) return "accepted";
-  if (!invitation.sent) return "unsent";
-  return "pending";
+function statusVariant(invitation: Invitation) {
+  if (invitation.accepted) return "secondary" as const;
+  if (!invitation.sent) return "outline" as const;
+  return "default" as const;
 }
+
+type ConfirmRequest = {
+  text: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  run: () => void;
+};
+
+const inlineLinkClass =
+  "font-medium text-primary underline underline-offset-4 hover:no-underline";
 
 export default function InvitationsPage() {
   const navigate = useNavigate();
@@ -80,6 +124,14 @@ export default function InvitationsPage() {
   const [selected, setSelected] = createSignal<Set<string>>(new Set());
   const [page, setPage] = createSignal(1);
   const [notificationsPage, setNotificationsPage] = createSignal(1);
+  const [confirmOpen, setConfirmOpen] = createSignal(false);
+  const [confirmRequest, setConfirmRequest] =
+    createSignal<ConfirmRequest | null>(null);
+
+  const askConfirm = (request: ConfirmRequest) => {
+    setConfirmRequest(request);
+    setConfirmOpen(true);
+  };
 
   const usernameCandidate = () => {
     const current = user();
@@ -288,14 +340,7 @@ export default function InvitationsPage() {
     }
   };
 
-  const handleDisconnect = async () => {
-    if (
-      !window.confirm(
-        "Disconnect the account site? You will need to connect it again to use invitations.",
-      )
-    ) {
-      return;
-    }
+  const doDisconnect = async () => {
     setError("");
     setNotice("");
     await disconnectAccountSite().catch(() => undefined);
@@ -309,6 +354,15 @@ export default function InvitationsPage() {
     setMode("session");
     setNotice("Account site disconnected.");
     trackEvent("invitation-connect", { mode: "disconnect" });
+  };
+
+  const handleDisconnect = () => {
+    askConfirm({
+      text: "Disconnect the account site? You will need to connect it again to use invitations.",
+      confirmLabel: "Disconnect",
+      destructive: true,
+      run: () => void doDisconnect(),
+    });
   };
 
   const submitInvite = async (e: Event) => {
@@ -344,14 +398,12 @@ export default function InvitationsPage() {
     }
   };
 
-  const runAction = async (
+  const performAction = async (
     action: "resend" | "cancel",
     ids: string[],
-    confirmText?: string,
     successText?: string,
   ) => {
     if (busy() || sending() || ids.length === 0) return;
-    if (confirmText && !window.confirm(confirmText)) return;
     const busyKey = `${action}:${ids.join(",")}`;
     setBusy(busyKey);
     setError("");
@@ -379,6 +431,27 @@ export default function InvitationsPage() {
     } finally {
       setBusy("");
     }
+  };
+
+  const runAction = async (
+    action: "resend" | "cancel",
+    ids: string[],
+    confirmText?: string,
+    successText?: string,
+    confirmLabel?: string,
+  ) => {
+    if (busy() || sending() || ids.length === 0) return;
+    if (confirmText) {
+      askConfirm({
+        text: confirmText,
+        confirmLabel:
+          confirmLabel ?? (action === "resend" ? "Resend" : "Continue"),
+        destructive: action === "cancel",
+        run: () => void performAction(action, ids, successText),
+      });
+      return;
+    }
+    await performAction(action, ids, successText);
   };
 
   const bulkResend = () => {
@@ -432,23 +505,32 @@ export default function InvitationsPage() {
 
   return (
     <Show when={!authLoading() && user()} fallback={null}>
-      <Title>Invitations - bbdsmlr</Title>
-      <div class="home-page invitations-page">
-        <Header info="Invitations" />
-        <main class="invitations-main">
-          <Show when={checking()}>
-            <p class="loading">Checking the account site…</p>
-          </Show>
+      <Page info="Invitations">
+        <Title>Invitations - bbdsmlr</Title>
+        <PageHeader
+          title="Invitations"
+          description="Send and manage invitations on account.bdsmlr.com."
+        />
 
-          <Show when={!checking() && !session()?.connected}>
-            <section class="invitations-connect">
-              <h2>Invitations need the account site</h2>
-              <p class="invitations-connect-copy">
+        <Show when={checking()}>
+          <p class="text-sm text-muted-foreground">
+            Checking the account site…
+          </p>
+        </Show>
+
+        <Show when={!checking() && !session()?.connected}>
+          <Card class="gap-4">
+            <CardHeader>
+              <CardTitle>Invitations need the account site</CardTitle>
+            </CardHeader>
+            <CardContent class="flex flex-col gap-4">
+              <p class="text-sm leading-relaxed text-muted-foreground">
                 Invitations live on{" "}
                 <a
                   href="https://account.bdsmlr.com/"
                   target="_blank"
                   rel="noopener noreferrer"
+                  class={inlineLinkClass}
                 >
                   account.bdsmlr.com
                 </a>
@@ -457,190 +539,236 @@ export default function InvitationsPage() {
                 login with Cloudflare Turnstile. The account-site password is
                 only used for the sign-in attempt and is never stored.
               </p>
+
               <Show when={session()?.expired}>
-                <p class="invitations-warning">
-                  Your account-site session expired. Connect it again to keep
-                  managing invitations.
-                </p>
+                <Alert variant="warning">
+                  <AlertDescription>
+                    Your account-site session expired. Connect it again to keep
+                    managing invitations.
+                  </AlertDescription>
+                </Alert>
               </Show>
               <Show when={session()?.loginBlocked}>
-                <p class="invitations-warning">
-                  The account site currently asks for a browser check. If the
-                  sign-in form does not work, connect an existing session
-                  instead.
-                </p>
+                <Alert variant="warning">
+                  <AlertDescription>
+                    The account site currently asks for a browser check. If the
+                    sign-in form does not work, connect an existing session
+                    instead.
+                  </AlertDescription>
+                </Alert>
               </Show>
               <Show when={error()}>
-                <p class="error">{error()}</p>
+                <Alert variant="destructive">
+                  <AlertDescription>{error()}</AlertDescription>
+                </Alert>
               </Show>
               <Show when={notice()}>
-                <p class="action-notice">{notice()}</p>
+                <Alert>
+                  <AlertDescription>{notice()}</AlertDescription>
+                </Alert>
               </Show>
 
-              <div class="invitations-tabs" role="tablist">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={mode() === "login"}
-                  class={mode() === "login" ? "invitations-tab active" : "invitations-tab"}
-                  onClick={() => {
-                    setMode("login");
-                    setError("");
-                    setNotice("");
-                  }}
-                >
-                  Sign in
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={mode() === "session"}
-                  class={mode() === "session" ? "invitations-tab active" : "invitations-tab"}
-                  onClick={() => {
-                    setMode("session");
-                    setError("");
-                    setNotice("");
-                  }}
-                >
-                  Use an existing session
-                </button>
-              </div>
+              <Tabs
+                value={mode()}
+                onChange={(next) => {
+                  if (next !== "login" && next !== "session") return;
+                  setMode(next);
+                  setError("");
+                  setNotice("");
+                }}
+              >
+                <TabsList class="h-11 md:h-9 w-full">
+                  <TabsTrigger
+                    value="login"
+                    class="h-10 rounded-md data-[selected]:bg-background data-[selected]:text-foreground data-[selected]:shadow-sm"
+                    onClick={() => {
+                      setError("");
+                      setNotice("");
+                    }}
+                  >
+                    Sign in
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="session"
+                    class="h-10 rounded-md data-[selected]:bg-background data-[selected]:text-foreground data-[selected]:shadow-sm"
+                    onClick={() => {
+                      setError("");
+                      setNotice("");
+                    }}
+                  >
+                    Use an existing session
+                  </TabsTrigger>
+                </TabsList>
 
-              <Show when={mode() === "login"}>
-                <form class="invitations-connect-form" onSubmit={submitLogin}>
-                  <label class="compose-field">
-                    BDSMLR email or username
-                    <input
-                      type="text"
-                      autocomplete="username"
-                      value={email()}
-                      onInput={(e) => setEmail(e.currentTarget.value)}
-                      required
-                    />
-                  </label>
-                  <label class="compose-field">
-                    BDSMLR password
-                    <input
-                      type="password"
-                      autocomplete="current-password"
-                      value={password()}
-                      onInput={(e) => setPassword(e.currentTarget.value)}
-                      required
-                    />
-                  </label>
-                  <button type="submit" disabled={authBusy()}>
-                    {authBusy() ? "Signing in…" : "Sign in to the account site"}
-                  </button>
-                </form>
-              </Show>
-
-              <Show when={mode() === "session"}>
-                <form class="invitations-connect-form" onSubmit={submitConnect}>
-                  <p class="invitations-connect-copy">
-                    Sign in at{" "}
-                    <a
-                      href="https://account.bdsmlr.com/wp-login.php"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                <TabsContent value="login">
+                  <form class="flex flex-col gap-3" onSubmit={submitLogin}>
+                    <TextField value={email()} onChange={setEmail}>
+                      <TextFieldLabel>BDSMLR email or username</TextFieldLabel>
+                      <TextFieldInput
+                        type="text"
+                        autocomplete="username"
+                        class="h-11 md:h-9"
+                        required
+                      />
+                    </TextField>
+                    <TextField value={password()} onChange={setPassword}>
+                      <TextFieldLabel>BDSMLR password</TextFieldLabel>
+                      <TextFieldInput
+                        type="password"
+                        autocomplete="current-password"
+                        class="h-11 md:h-9"
+                        required
+                      />
+                    </TextField>
+                    <Button
+                      type="submit"
+                      class="h-11 md:h-9 w-full"
+                      disabled={authBusy()}
                     >
-                      account.bdsmlr.com
-                    </a>
-                    , then paste the account-site session cookie here. It is
-                    stored only in an HTTP-only cookie on this device and can
-                    be disconnected at any time.
-                  </p>
-                  <label class="compose-field">
-                    Account-site username
-                    <input
-                      type="text"
-                      autocomplete="off"
+                      {authBusy()
+                        ? "Signing in…"
+                        : "Sign in to the account site"}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="session">
+                  <form class="flex flex-col gap-3" onSubmit={submitConnect}>
+                    <p class="text-sm leading-relaxed text-muted-foreground">
+                      Sign in at{" "}
+                      <a
+                        href="https://account.bdsmlr.com/wp-login.php"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class={inlineLinkClass}
+                      >
+                        account.bdsmlr.com
+                      </a>
+                      , then paste the account-site session cookie here. It is
+                      stored only in an HTTP-only cookie on this device and can
+                      be disconnected at any time.
+                    </p>
+                    <TextField
                       value={usernameInput()}
-                      onInput={(e) => setUsernameInput(e.currentTarget.value)}
-                      placeholder="Your account-site username"
-                    />
-                  </label>
-                  <label class="compose-field">
-                    Session cookie
-                    <textarea
-                      rows={4}
-                      autocomplete="off"
-                      spellcheck={false}
+                      onChange={setUsernameInput}
+                    >
+                      <TextFieldLabel>Account-site username</TextFieldLabel>
+                      <TextFieldInput
+                        type="text"
+                        autocomplete="off"
+                        class="h-11 md:h-9"
+                        placeholder="Your account-site username"
+                      />
+                    </TextField>
+                    <TextField
                       value={cookieInput()}
-                      onInput={(e) => {
-                        setCookieInput(e.currentTarget.value);
+                      onChange={(next) => {
+                        setCookieInput(next);
                         setError("");
                       }}
-                      placeholder="wordpress_logged_in_...=..."
-                    />
-                  </label>
-                  <Show when={cookieProblem()}>
-                    <p class="invitations-warning">{cookieProblem()}</p>
-                  </Show>
-                  <details class="invitations-help">
-                    <summary>How to get the session cookie</summary>
-                    <ol>
-                      <li>
-                        Open{" "}
-                        <a
-                          href="https://account.bdsmlr.com/wp-login.php"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          account.bdsmlr.com
-                        </a>{" "}
-                        and sign in.
-                      </li>
-                      <li>Open your browser developer tools with F12.</li>
-                      <li>
-                        Go to Application or Storage, then Cookies, then
-                        https://account.bdsmlr.com.
-                      </li>
-                      <li>
-                        Copy the whole cookie line named
-                        <code> wordpress_logged_in_…</code>, starting with
-                        <code> wordpress_logged_in_…=</code>.
-                      </li>
-                      <li>Paste it above and connect.</li>
-                    </ol>
-                    <p>
-                      If you prefer, copy the whole Cookie request header from
-                      the Network tab. Paste it as one line. Include the
-                      <code> wordpress_logged_in_…=</code> name: the value on
-                      its own is not accepted.
-                    </p>
-                  </details>
-                  <button
-                    type="submit"
-                    disabled={authBusy() || cookieProblem() !== ""}
-                  >
-                    {authBusy() ? "Connecting…" : "Connect account site"}
-                  </button>
-                </form>
-              </Show>
-            </section>
+                    >
+                      <TextFieldLabel>Session cookie</TextFieldLabel>
+                      <TextFieldTextArea
+                        rows={4}
+                        autocomplete="off"
+                        spellcheck={false}
+                        class="font-mono"
+                        placeholder="wordpress_logged_in_...=..."
+                      />
+                    </TextField>
+                    <Show when={cookieProblem()}>
+                      <Alert variant="warning">
+                        <AlertDescription>{cookieProblem()}</AlertDescription>
+                      </Alert>
+                    </Show>
+                    <details class="rounded-lg border border-border px-3 py-2 text-sm">
+                      <summary class="cursor-pointer py-2 font-medium">
+                        How to get the session cookie
+                      </summary>
+                      <ol class="mt-1 flex list-decimal flex-col gap-1 pl-5 text-muted-foreground">
+                        <li>
+                          Open{" "}
+                          <a
+                            href="https://account.bdsmlr.com/wp-login.php"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class={inlineLinkClass}
+                          >
+                            account.bdsmlr.com
+                          </a>{" "}
+                          and sign in.
+                        </li>
+                        <li>Open your browser developer tools with F12.</li>
+                        <li>
+                          Go to Application or Storage, then Cookies, then
+                          https://account.bdsmlr.com.
+                        </li>
+                        <li>
+                          Copy the whole cookie line named
+                          <code class="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+                            {" "}
+                            wordpress_logged_in_…
+                          </code>
+                          , starting with
+                          <code class="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+                            {" "}
+                            wordpress_logged_in_…=
+                          </code>
+                          .
+                        </li>
+                        <li>Paste it above and connect.</li>
+                      </ol>
+                      <p class="mt-2 text-muted-foreground">
+                        If you prefer, copy the whole Cookie request header from
+                        the Network tab. Paste it as one line. Include the
+                        <code class="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+                          {" "}
+                          wordpress_logged_in_…=
+                        </code>
+                        name: the value on its own is not accepted.
+                      </p>
+                    </details>
+                    <Button
+                      type="submit"
+                      class="h-11 md:h-9 w-full"
+                      disabled={authBusy() || cookieProblem() !== ""}
+                    >
+                      {authBusy() ? "Connecting…" : "Connect account site"}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </Show>
+
+        <Show when={!checking() && session()?.connected}>
+          <Show when={error()}>
+            <Alert variant="destructive" class="mb-3">
+              <AlertDescription>{error()}</AlertDescription>
+            </Alert>
+          </Show>
+          <Show when={notice()}>
+            <Alert class="mb-3">
+              <AlertDescription>{notice()}</AlertDescription>
+            </Alert>
           </Show>
 
-          <Show when={!checking() && session()?.connected}>
-            <Show when={error()}>
-              <p class="error invitations-error">{error()}</p>
-            </Show>
-            <Show when={notice()}>
-              <p class="action-notice invitations-notice">{notice()}</p>
-            </Show>
-
-            <section class="invitations-summary">
-              <div>
-                <p class="invitations-summary-title">
+          <Card class="mb-3 gap-0 py-4">
+            <CardContent class="flex flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
                   Connected as {session()?.userLogin}
                 </p>
-                <p class="invitations-summary-meta">
+                <p class="text-sm text-muted-foreground">
                   Invitations are managed on account.bdsmlr.com.
                 </p>
               </div>
-              <div class="invitations-summary-actions">
-                <button
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <Button
                   type="button"
-                  class="btn-ghost"
+                  variant="outline"
+                  class="h-11 md:h-9"
                   disabled={loading()}
                   onClick={() => {
                     setError("");
@@ -649,157 +777,176 @@ export default function InvitationsPage() {
                   }}
                 >
                   {loading() ? "Refreshing…" : "Refresh"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  class="btn-ghost danger-text"
+                  variant="ghost"
+                  class="h-11 md:h-9 text-destructive hover:text-destructive"
                   onClick={() => void handleDisconnect()}
                 >
                   Disconnect
-                </button>
+                </Button>
               </div>
-            </section>
+            </CardContent>
+          </Card>
 
-            <Show
-              when={data()}
-              fallback={
-                <p class={loading() ? "loading" : "empty"}>
-                  {loading()
-                    ? "Loading invitations…"
-                    : "Invitations could not be loaded."}
-                </p>
-              }
-            >
-            <section class="compose-card invitations-send">
-              <h2>Send an invite</h2>
-              <p class="invitations-send-note">
-                The invitee gets an email from BDSMLR with a link to join the
-                account site.
+          <Show
+            when={data()}
+            fallback={
+              <p class="text-sm text-muted-foreground">
+                {loading()
+                  ? "Loading invitations…"
+                  : "Invitations could not be loaded."}
               </p>
-              <Show
-                when={data()?.allowed}
-                fallback={
-                  <p class="invitations-warning">
-                    {data()?.blockedMessage ||
-                      "You are not allowed to send invitations from this account."}
-                  </p>
-                }
-              >
-                <form class="invitations-send-form" onSubmit={submitInvite}>
-                  <label class="compose-field">
-                    Email
-                    <input
-                      type="email"
-                      autocomplete="off"
-                      placeholder="friend@example.com"
-                      value={inviteEmail()}
-                      onInput={(e) => setInviteEmail(e.currentTarget.value)}
-                      required
-                    />
-                  </label>
-                  <label class="compose-field">
-                    Message (optional)
-                    <textarea
-                      rows={3}
-                      placeholder="Add a personal note to the invitation"
+            }
+          >
+            <Card class="mb-3 gap-4">
+              <CardHeader>
+                <CardTitle>Send an invite</CardTitle>
+              </CardHeader>
+              <CardContent class="flex flex-col gap-3">
+                <p class="text-sm text-muted-foreground">
+                  The invitee gets an email from BDSMLR with a link to join the
+                  account site.
+                </p>
+                <Show
+                  when={data()?.allowed}
+                  fallback={
+                    <Alert variant="warning">
+                      <AlertDescription>
+                        {data()?.blockedMessage ||
+                          "You are not allowed to send invitations from this account."}
+                      </AlertDescription>
+                    </Alert>
+                  }
+                >
+                  <form class="flex flex-col gap-3" onSubmit={submitInvite}>
+                    <TextField value={inviteEmail()} onChange={setInviteEmail}>
+                      <TextFieldLabel>Email</TextFieldLabel>
+                      <TextFieldInput
+                        type="email"
+                        autocomplete="off"
+                        class="h-11 md:h-9"
+                        placeholder="friend@example.com"
+                        required
+                      />
+                    </TextField>
+                    <TextField
                       value={inviteMessage()}
-                      onInput={(e) => setInviteMessage(e.currentTarget.value)}
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    disabled={
-                      sending() || busy() !== "" || !inviteEmail().trim()
-                    }
-                  >
-                    {sending() ? "Sending…" : "Send invite"}
-                  </button>
-                </form>
-              </Show>
-            </section>
+                      onChange={setInviteMessage}
+                    >
+                      <TextFieldLabel>Message (optional)</TextFieldLabel>
+                      <TextFieldTextArea
+                        rows={3}
+                        placeholder="Add a personal note to the invitation"
+                      />
+                    </TextField>
+                    <Button
+                      type="submit"
+                      class="h-11 md:h-9 w-full sm:w-auto sm:self-start"
+                      disabled={
+                        sending() || busy() !== "" || !inviteEmail().trim()
+                      }
+                    >
+                      {sending() ? "Sending…" : "Send invite"}
+                    </Button>
+                  </form>
+                </Show>
+              </CardContent>
+            </Card>
 
-            <section class="invitations-section">
-              <div class="invitations-section-header">
-                <h2>Invitations</h2>
-                <span class="invitations-section-count">
+            <Card class="mb-3 gap-0 py-0">
+              <CardHeader class="gap-1 px-4 py-4">
+                <CardTitle>Invitations</CardTitle>
+                <p class="text-xs text-muted-foreground">
                   {pendingInvitations().length} pending,{" "}
                   {acceptedInvitations().length} accepted on this page
-                </span>
-              </div>
+                </p>
+              </CardHeader>
 
               <Show when={selected().size > 0}>
-                <div class="invitations-bulk">
-                  <span>{selected().size} selected</span>
-                  <button
-                    type="button"
-                    class="btn-ghost"
-                    disabled={busy() !== "" || sending()}
-                    onClick={bulkResend}
-                  >
-                    Resend selected
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-ghost danger-text"
-                    disabled={busy() !== "" || sending()}
-                    onClick={bulkCancel}
-                  >
-                    Cancel selected
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-ghost"
-                    disabled={busy() !== "" || sending()}
-                    onClick={clearSelection}
-                  >
-                    Clear
-                  </button>
+                <div class="flex flex-wrap items-center gap-2 border-t border-border bg-muted/50 px-3 py-2">
+                  <span class="text-sm font-medium">{selected().size} selected</span>
+                  <div class="flex flex-wrap items-center gap-2 sm:ml-auto">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-11 md:h-9"
+                      disabled={busy() !== "" || sending()}
+                      onClick={bulkResend}
+                    >
+                      Resend selected
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-11 md:h-9 text-destructive hover:text-destructive"
+                      disabled={busy() !== "" || sending()}
+                      onClick={bulkCancel}
+                    >
+                      Cancel selected
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-11 md:h-9"
+                      disabled={busy() !== "" || sending()}
+                      onClick={clearSelection}
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </div>
               </Show>
 
               <Show
                 when={invitations().length > 0}
-                fallback={<p class="empty">No invitations yet.</p>}
+                fallback={<EmptyState>No invitations yet.</EmptyState>}
               >
-                <label class="invitations-select-all">
-                  <input
-                    type="checkbox"
+                <div class="border-t border-border px-3 py-2">
+                  <Checkbox
+                    class="flex min-h-11 items-center gap-3"
                     checked={allSelected()}
                     onChange={toggleSelectAll}
-                  />
-                  Select all on this page
-                </label>
-                <div class="invitations-list">
+                  >
+                    <CheckboxControl class="size-5" />
+                    <CheckboxLabel class="text-sm font-normal">
+                      Select all on this page
+                    </CheckboxLabel>
+                  </Checkbox>
+                </div>
+                <CardContent class="divide-y divide-border border-t border-border px-0 py-0">
                   <For each={invitations()}>
                     {(invitation) => (
-                      <article class="invitation-card">
-                        <label class="invitation-select">
-                          <input
-                            type="checkbox"
-                            checked={selected().has(invitation.id)}
-                            onChange={() => toggleSelect(invitation.id)}
-                          />
-                          <span class="visually-hidden">
+                      <article class="flex gap-2 px-3 py-3">
+                        <Checkbox
+                          class="flex min-h-11 shrink-0 items-start pt-0.5"
+                          checked={selected().has(invitation.id)}
+                          onChange={() => toggleSelect(invitation.id)}
+                        >
+                          <CheckboxControl class="size-5" />
+                          <CheckboxLabel class="sr-only">
                             Select the invitation for {invitation.email}
-                          </span>
-                        </label>
-                        <div class="invitation-body">
-                          <div class="invitation-top">
-                            <span class="invitation-email">
+                          </CheckboxLabel>
+                        </Checkbox>
+                        <div class="flex min-w-0 flex-1 flex-col gap-1">
+                          <div class="flex flex-wrap items-start justify-between gap-2">
+                            <span class="min-w-0 break-all text-sm font-medium">
                               {invitation.email}
                             </span>
-                            <span
-                              class={`invitation-status ${statusClass(invitation)}`}
-                            >
+                            <Badge variant={statusVariant(invitation)}>
                               {statusLabel(invitation)}
-                            </span>
+                            </Badge>
                           </div>
                           <Show when={invitation.message}>
-                            <p class="invitation-message">
+                            <p class="text-sm text-muted-foreground">
                               {invitation.message}
                             </p>
                           </Show>
-                          <p class="invitation-meta">
+                          <p class="text-xs text-muted-foreground">
                             <Show
                               when={invitation.dateModified}
                               fallback="No date recorded"
@@ -809,11 +956,13 @@ export default function InvitationsPage() {
                               </span>
                             </Show>
                           </p>
-                          <div class="invitation-actions">
+                          <div class="mt-1 flex flex-wrap gap-2">
                             <Show when={!invitation.accepted}>
-                              <button
+                              <Button
                                 type="button"
-                                class="btn-ghost"
+                                variant="outline"
+                                size="sm"
+                                class="h-11 md:h-9"
                                 disabled={busy() !== "" || sending()}
                                 onClick={() =>
                                   void runAction("resend", [invitation.id])
@@ -822,11 +971,13 @@ export default function InvitationsPage() {
                                 {busy() === `resend:${invitation.id}`
                                   ? "Resending…"
                                   : "Resend"}
-                              </button>
+                              </Button>
                             </Show>
-                            <button
+                            <Button
                               type="button"
-                              class="btn-ghost danger-text"
+                              variant="ghost"
+                              size="sm"
+                              class="h-11 md:h-9 text-destructive hover:text-destructive"
                               disabled={busy() !== "" || sending()}
                               onClick={() =>
                                 void runAction(
@@ -838,6 +989,7 @@ export default function InvitationsPage() {
                                   invitation.accepted
                                     ? "Invitation record deleted."
                                     : undefined,
+                                  invitation.accepted ? "Delete" : "Cancel",
                                 )
                               }
                             >
@@ -848,26 +1000,32 @@ export default function InvitationsPage() {
                                 : invitation.accepted
                                   ? "Delete"
                                   : "Cancel"}
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       </article>
                     )}
                   </For>
-                </div>
-                <div class="invitations-pagination">
-                  <button
+                </CardContent>
+                <div class="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-3">
+                  <Button
                     type="button"
-                    class="btn-ghost"
+                    variant="outline"
+                    size="sm"
+                    class="h-11 md:h-9"
                     disabled={loading() || page() <= 1}
                     onClick={() => void loadInvitations(page() - 1, notificationsPage())}
                   >
                     Previous page
-                  </button>
-                  <span>Page {page()}</span>
-                  <button
+                  </Button>
+                  <span class="text-sm text-muted-foreground">
+                    Page {page()}
+                  </span>
+                  <Button
                     type="button"
-                    class="btn-ghost"
+                    variant="outline"
+                    size="sm"
+                    class="h-11 md:h-9"
                     disabled={loading() || !data()?.nextPage}
                     onClick={() => {
                       const next = data()?.nextPage;
@@ -875,47 +1033,54 @@ export default function InvitationsPage() {
                     }}
                   >
                     Next page
-                  </button>
+                  </Button>
                 </div>
               </Show>
-            </section>
+            </Card>
 
-            <section class="invitations-section">
-              <div class="invitations-section-header">
-                <h2>Accepted invitations</h2>
-                <span class="invitations-section-count">
+            <Card class="gap-0 py-0">
+              <CardHeader class="gap-1 px-4 py-4">
+                <CardTitle>Accepted invitations</CardTitle>
+                <p class="text-xs text-muted-foreground">
                   {notifications().length} on this page
-                </span>
-              </div>
-              <Show when={data()?.notificationsError}>
-                <p class="error invitations-error">
-                  {data()?.notificationsError}
                 </p>
+              </CardHeader>
+              <Show when={data()?.notificationsError}>
+                <div class="px-4 pb-3">
+                  <Alert variant="destructive">
+                    <AlertDescription>
+                      {data()?.notificationsError}
+                    </AlertDescription>
+                  </Alert>
+                </div>
               </Show>
               <Show
                 when={notifications().length > 0}
                 fallback={
-                  <p class="empty">
+                  <EmptyState>
                     No accepted invitations yet. When someone joins, they show
                     up here with a link to their profile.
-                  </p>
+                  </EmptyState>
                 }
               >
-                <div class="accepted-invites">
+                <CardContent class="divide-y divide-border border-t border-border px-0 py-0">
                   <For each={notifications()}>
                     {(item: AcceptedInvitation) => (
-                      <article class="accepted-invite">
-                        <div class="accepted-invite-avatar" aria-hidden="true">
+                      <article class="flex flex-wrap items-center gap-3 px-4 py-3">
+                        <div
+                          class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium"
+                          aria-hidden="true"
+                        >
                           {item.displayName[0]?.toUpperCase() ?? "?"}
                         </div>
-                        <div class="accepted-invite-body">
+                        <div class="min-w-0 flex-1">
                           <A
                             href={`/${encodeURIComponent(item.userLogin)}`}
-                            class="accepted-invite-name"
+                            class="text-sm font-medium text-primary underline-offset-4 hover:underline"
                           >
                             {item.displayName}
                           </A>
-                          <p class="accepted-invite-meta">
+                          <p class="text-xs text-muted-foreground">
                             Accepted an invitation
                             <Show when={item.timeSince}>
                               <span title={item.dateTitle}>
@@ -927,7 +1092,11 @@ export default function InvitationsPage() {
                         </div>
                         <a
                           href={item.accountProfileUrl}
-                          class="btn-ghost"
+                          class={buttonVariants({
+                            variant: "outline",
+                            size: "sm",
+                            class: "h-11 md:h-9",
+                          })}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -936,22 +1105,28 @@ export default function InvitationsPage() {
                       </article>
                     )}
                   </For>
-                </div>
-                <div class="invitations-pagination">
-                  <button
+                </CardContent>
+                <div class="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-3">
+                  <Button
                     type="button"
-                    class="btn-ghost"
+                    variant="outline"
+                    size="sm"
+                    class="h-11 md:h-9"
                     disabled={loadingNotifications() || notificationsPage() <= 1}
                     onClick={() =>
                       void loadNotifications(notificationsPage() - 1)
                     }
                   >
                     Previous page
-                  </button>
-                  <span>Page {notificationsPage()}</span>
-                  <button
+                  </Button>
+                  <span class="text-sm text-muted-foreground">
+                    Page {notificationsPage()}
+                  </span>
+                  <Button
                     type="button"
-                    class="btn-ghost"
+                    variant="outline"
+                    size="sm"
+                    class="h-11 md:h-9"
                     disabled={
                       loadingNotifications() || !data()?.notificationsNextPage
                     }
@@ -961,14 +1136,41 @@ export default function InvitationsPage() {
                     }}
                   >
                     Next page
-                  </button>
+                  </Button>
                 </div>
               </Show>
-            </section>
-            </Show>
+            </Card>
           </Show>
-        </main>
-      </div>
+        </Show>
+
+        <AlertDialog
+          open={confirmOpen()}
+          onOpenChange={(open) => setConfirmOpen(open)}
+        >
+          <AlertDialogPortal>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm action</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {confirmRequest()?.text}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Go back</AlertDialogCancel>
+                <AlertDialogAction
+                  class={cx(
+                    confirmRequest()?.destructive &&
+                      "bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive/60",
+                  )}
+                  onClick={() => confirmRequest()?.run()}
+                >
+                  {confirmRequest()?.confirmLabel ?? "Confirm"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogPortal>
+        </AlertDialog>
+      </Page>
     </Show>
   );
 }

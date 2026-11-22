@@ -2,7 +2,11 @@ import { createEffect, createSignal, For, Show } from "solid-js";
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import Header from "~/components/Header";
+import { Page, PageHeader } from "~/components/Page";
+import { EmptyState } from "~/components/FeedStates";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
 import { useAuth } from "~/lib/useAuth";
 import {
   getBlocked,
@@ -81,40 +85,56 @@ export default function BlockedPage() {
   };
 
   return (
-    <div class="home-page">
+    <Page info="Blocked blogs">
       <Title>Blocked blogs - bbdsmlr</Title>
-      <Header info="Blocked blogs" />
-      <main>
-        <h2 class="social-list-title">Blocked blogs</h2>
-        {error() && <FeedErrorNotice message={error()} />}
-        {loading() && <p class="loading">Loading blocked blogs…</p>}
-        <Show when={!loading()}>
-          <Show
-            when={blogs().length > 0}
-            fallback={<p class="empty">No blocked blogs.</p>}
-          >
-            <div class="following-list">
+
+      <PageHeader
+        title="Blocked blogs"
+        description="Blogs you have blocked on BDSMLR. Unblocking makes their posts visible again."
+      />
+
+      <Show when={error()}>
+        <FeedErrorNotice message={error()} />
+      </Show>
+
+      <Show when={loading()}>
+        <p class="text-sm text-muted-foreground">Loading blocked blogs…</p>
+      </Show>
+
+      <Show when={!loading()}>
+        <Show
+          when={blogs().length > 0}
+          fallback={<EmptyState>No blocked blogs.</EmptyState>}
+        >
+          <Card class="gap-0 py-0">
+            <CardContent class="divide-y divide-border px-0 py-0">
+
               <For each={blogs()}>
                 {(blog) => (
-                  <div class="blocked-item">
-                    <A href={`/${blog.name}`} class="following-item-name">
+                  <div class="flex items-center justify-between gap-3 px-3 py-1.5">
+                    <A
+                      href={`/${blog.name}`}
+                      class="flex min-h-11 min-w-0 flex-1 items-center truncate rounded-md px-1 text-sm font-medium outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    >
                       {blog.name}
                     </A>
-                    <button
+                    <Button
                       type="button"
-                      class="btn-ghost"
+                      variant="ghost"
+                      size="sm"
+                      class="h-11 md:h-9 px-3"
                       onClick={() => unblock(blog.id)}
                       disabled={busyId() !== null}
                     >
                       {busyId() === blog.id ? "Unblocking…" : "Unblock"}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </For>
-            </div>
-          </Show>
+            </CardContent>
+          </Card>
         </Show>
-      </main>
-    </div>
+      </Show>
+    </Page>
   );
 }

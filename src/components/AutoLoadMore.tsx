@@ -1,4 +1,6 @@
 import { createEffect, onCleanup, onMount } from "solid-js";
+import { Loader2 } from "lucide-solid";
+import { Button } from "./ui/button";
 
 interface AutoLoadMoreProps {
   onLoad: () => void;
@@ -116,18 +118,26 @@ export function AutoLoadMore(props: AutoLoadMoreProps) {
   onCleanup(() => observer?.disconnect());
 
   return (
-    <button
-      ref={button}
-      type="button"
-      class={props.class ? `btn-ghost ${props.class}` : "btn-ghost"}
-      style={props.style ?? "display:block;margin:24px auto"}
-      onClick={handleClick}
-      disabled={props.loading}
-      aria-busy={props.loading}
-    >
-      {props.loading
-        ? (props.loadingLabel ?? "Loading more")
-        : (props.label ?? "Load more")}
-    </button>
+    <div class={props.class ?? "flex justify-center py-6"}>
+      <Button
+        ref={button}
+        type="button"
+        variant="ghost"
+        size="sm"
+        style={props.style}
+        onClick={handleClick}
+        disabled={props.loading}
+        aria-busy={props.loading}
+      >
+        {props.loading ? (
+          <>
+            <Loader2 class="size-4 animate-spin" />
+            {props.loadingLabel ?? "Loading more"}
+          </>
+        ) : (
+          (props.label ?? "Load more")
+        )}
+      </Button>
+    </div>
   );
 }

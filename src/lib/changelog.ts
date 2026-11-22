@@ -62,6 +62,16 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Improved",
+        title: "A phone-first navigation bar",
+        body: "On phones, Home, Search, New post, Activity and your profile now live in a bar at the bottom of the screen, with unread badges for messages and activity. The full menu opens from the left, and every control is sized for touch."
+      },
+      {
+        kind: "Improved",
+        title: "A cleaner interface built on shadcn",
+        body: "Buttons, cards, dialogs, menus and forms across the app now share one consistent design. Post pages, feeds, messages, composer and account screens were rebuilt for small screens, with larger images, clearer spacing and dialogs that open as bottom sheets on phones."
+      },
+      {
+        kind: "Improved",
         title: "Tags on a post search that blog",
         body: "Clicking a tag on a post page now searches the tag on the blog that posted it, so a #cuckold tag on an AmateurCuckolding2 post opens that blog's posts with the tag instead of the site-wide home search. The same goes for tags in the post page's More from the blog tab. Tags on posts from deleted blogs still use the site-wide search."
       },

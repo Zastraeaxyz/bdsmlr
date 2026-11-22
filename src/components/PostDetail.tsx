@@ -2,7 +2,23 @@ import { createSignal, createEffect, For, Show } from "solid-js";
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import { getPostDetail, getBlog, deletePost, PostType, type Post } from "~/lib/api";
+import {
+  AlertTriangle,
+  BarChart3,
+  ExternalLink,
+  Heart,
+  MessageCircle,
+  Pencil,
+  Repeat2,
+  Trash2,
+} from "lucide-solid";
+import {
+  getPostDetail,
+  getBlog,
+  deletePost,
+  PostType,
+  type Post,
+} from "~/lib/api";
 import {
   sanitizeHtml,
   processContentHtml,
@@ -12,6 +28,7 @@ import {
 import { createMediaGallery } from "~/lib/mediaGallery";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
+import { BdsmlrIcon } from "~/components/Icons";
 import { LightBox } from "~/components/LightBox";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
@@ -19,14 +36,6 @@ import { tagSearchHref } from "~/lib/tagLinks";
 import { PostMediaList } from "~/components/PostMediaList";
 import { PostMoreTabs } from "~/components/PostMoreTabs";
 import { EngagementModal } from "~/components/EngagementModal";
-import {
-  HeartIcon,
-  ChatIcon,
-  ReblogIcon,
-  BdsmlrIcon,
-  ChartNoAxesColumnIcon,
-  WarningIcon,
-} from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
 import { getCachedPost, setCachedPost } from "~/lib/postCache";
 import { useAuth } from "~/lib/useAuth";
@@ -34,6 +43,11 @@ import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
 import { postTypeName } from "~/lib/postTypes";
 import { trackEvent } from "~/lib/analytics";
 import { isDeletedPostError } from "~/lib/requestError";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { Skeleton } from "./ui/skeleton";
 
 export default function PostDetail(props: {
   postId: number;
@@ -140,38 +154,70 @@ export default function PostDetail(props: {
           ? `${post()!.blogName}'s Post — bbdsmlr`
           : "Post — bbdsmlr"}
       </Title>
-      {error() && <FeedErrorNotice message={error()} />}
-      {loading() && <p class="loading">Loading post…</p>}
-      <Show when={deleted()}>
-        <div class="post-deleted-notice" role="status">
-          <WarningIcon />
-          <div class="post-deleted-notice-copy">
-            <strong>This post was deleted.</strong>
-            <span>
-              The author deleted it, or BDSMLR removed it, so there is nothing
-              left to show.
-            </span>
+
+      <div class="mx-auto w-full max-w-2xl flex-1 px-0 py-0 sm:px-4 sm:py-4">
+        <Show when={error()}>
+          <div class="p-4">
+            <FeedErrorNotice message={error()} />
           </div>
-          <A href={props.backHref ?? "/home"} class="post-deleted-notice-back">
-            {props.backLabel ?? "Back to home"}
-          </A>
-        </div>
-      </Show>
-      <Show when={blogGone()}>
-        <p class="post-detail-gone">
-          Blog gone — this blog was deleted, but the post remains accessible.
-        </p>
-      </Show>
-      <Show when={!loading() && post()}>
-        <PostDetailView
-          post={post()!}
-          blogGone={blogGone()}
-          onImageClick={(url, postId) => gallery.open(url, postId)}
-        />
-        <Show when={post()!.id}>
-          <PostMoreTabs post={post()!} />
         </Show>
-      </Show>
+
+        <Show when={deleted()}>
+          <div class="px-3 pt-3 sm:px-0">
+            <Alert variant="warning" role="status">
+              <AlertTriangle class="size-4" />
+              <AlertTitle>This post was deleted.</AlertTitle>
+              <AlertDescription class="flex flex-col items-start gap-3">
+                <span>
+                  The author deleted it, or BDSMLR removed it, so there is
+                  nothing left to show.
+                </span>
+                <Button as={A} href={props.backHref ?? "/home"} size="sm">
+                  {props.backLabel ?? "Back to home"}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </Show>
+
+        <Show when={loading() && !post()}>
+          <div class="p-3">
+            <Card class="gap-3 bg-card p-4">
+              <div class="flex items-center gap-2">
+                <Skeleton class="size-9 rounded-full" />
+                <Skeleton class="h-4 w-40" />
+              </div>
+              <Skeleton class="h-5 w-3/4" />
+              <Skeleton class="h-4 w-full" />
+              <Skeleton class="aspect-[4/3] w-full rounded-lg" />
+            </Card>
+          </div>
+        </Show>
+
+        <Show when={blogGone()}>
+          <div class="px-3 pt-3 sm:px-0">
+            <Alert variant="warning">
+              <AlertTitle>Blog gone</AlertTitle>
+              <AlertDescription>
+                This blog was deleted, but the post remains accessible.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </Show>
+
+        <Show when={post()}>
+          <PostDetailView
+            post={post()!}
+            blogGone={blogGone()}
+            onImageClick={(url, postId) => gallery.open(url, postId)}
+          />
+          <Show when={post()!.id}>
+            <div class="px-3 sm:px-0">
+              <PostMoreTabs post={post()!} />
+            </div>
+          </Show>
+        </Show>
+      </div>
       <LightBox gallery={gallery} />
     </>
   );
@@ -187,7 +233,6 @@ function PostDetailView(props: {
   const interaction = usePostInteraction(props.post);
   const [busy, setBusy] = createSignal(false);
   const [actionError, setActionError] = createSignal("");
-  const [notice, setNotice] = createSignal("");
   const [showReblog, setShowReblog] = createSignal(false);
   const [showEngagement, setShowEngagement] = createSignal(false);
   const [commentsCount, setCommentsCount] = createSignal(
@@ -195,15 +240,13 @@ function PostDetailView(props: {
   );
 
   const ownsPost = () =>
-    !!activeBlogId() &&
-    Number(props.post.blogId) === Number(activeBlogId());
+    !!activeBlogId() && Number(props.post.blogId) === Number(activeBlogId());
 
   const handleDelete = async () => {
     const actor = activeBlogId();
     if (!actor || !ownsPost()) return;
     if (!window.confirm(`Delete post ${props.post.id}?`)) return;
     setActionError("");
-    setNotice("");
     try {
       const res = await deletePost(actor, props.post.id);
       if (res.ok === false || res.error) {
@@ -227,8 +270,6 @@ function PostDetailView(props: {
       setBusy(false);
     }
   };
-
-  const postTypeLabel = (type?: number) => postTypeName(type);
 
   const mediaItems = () => getPostMediaItems(props.post);
 
@@ -256,205 +297,252 @@ function PostDetailView(props: {
     setShowEngagement(true);
   };
 
-  const handleTagClick = () => {
-    trackEvent("tag-click", { surface: "post" });
-  };
-
-  const handleOutbound = () => {
-    trackEvent("outbound-bdsmlr", { surface: "post" });
-  };
-
   return (
-    <article class="post-detail" style="view-transition-name: post-detail">
-      <div class="post-detail-header">
-        <BlogAvatar
-          blogId={props.post.blogId}
-          blogName={props.post.blogName}
-          size={32}
-          linkable={!props.blogGone}
-        />
-        <Show
-          when={!props.blogGone}
-          fallback={
-            <span class="post-detail-blog post-detail-blog-gone">
-              {props.post.blogName}
-            </span>
-          }
-        >
-          <A href={`/${props.post.blogName}`} class="post-detail-blog">
-            {props.post.blogName}
-          </A>
-        </Show>
-        <span class="feed-card-type">{postTypeLabel(props.post.type)}</span>
-        <Show when={props.blogGone}>
-          <span class="feed-card-type blog-gone-chip">Blog gone</span>
-        </Show>
-        <Show when={!props.post.id}>
-          <span class="feed-card-type">DELETED</span>
-        </Show>
-        {props.post.createdAtUnix && (
-          <span class="post-detail-time">
-            {formatRelativeDate(props.post.createdAtUnix)}
-          </span>
-        )}
-      </div>
-
-      <ReblogAttribution
-        originBlogName={props.post.originBlogName}
-        originPostId={props.post.originPostId}
-        variant={props.post.variant}
-      />
-
-      {props.post.title && (
-        <h2 class="post-detail-title">{props.post.title}</h2>
-      )}
-      {contentHtml() && (
-        <div
-          class="post-detail-body"
-          innerHTML={contentHtml()!}
-          onClick={(e) => {
-            const target = e.target as HTMLElement;
-            if (target.tagName === "IMG" && target.getAttribute("src")) {
-              props.onImageClick?.(
-                target.getAttribute("src")!,
-                props.post.id,
-              );
-            }
-          }}
-        />
-      )}
-
-      {props.post.type !== PostType.Text && mediaItems().length > 0 && (
-        <PostMediaList
-          items={mediaItems()}
-          class="post-detail-images"
-          showAll
-          onImageClick={(url) => props.onImageClick?.(url, props.post.id)}
-        />
-      )}
-
-      {props.post.tags && props.post.tags.length > 0 && (
-        <div class="post-detail-tags">
-          <For each={props.post.tags}>
-            {(t) => (
-              <A
-                href={tagSearchHref(
-                  t,
-                  props.blogGone ? undefined : props.post.blogName,
-                )}
-                class="tag"
-                onClick={handleTagClick}
+    <article
+      class="w-full"
+      style="view-transition-name: post-detail"
+    >
+      <Card class="gap-0 overflow-hidden rounded-none border-x-0 bg-card py-0 shadow-none sm:rounded-xl sm:border-x">
+        <div class="flex items-center gap-2 px-3 py-3">
+          <BlogAvatar
+            blogId={props.post.blogId}
+            blogName={props.post.blogName}
+            size={36}
+            linkable={!props.blogGone}
+          />
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <Show
+                when={!props.blogGone}
+                fallback={
+                  <span class="truncate text-sm font-semibold">
+                    {props.post.blogName}
+                  </span>
+                }
               >
-                #{t}
-              </A>
-            )}
-          </For>
+                <A
+                  href={`/${props.post.blogName}`}
+                  class="truncate text-sm font-semibold hover:underline"
+                >
+                  {props.post.blogName}
+                </A>
+              </Show>
+              <Badge variant="secondary" class="text-[10px]">
+                {postTypeName(props.post.type)}
+              </Badge>
+              <Show when={props.blogGone}>
+                <Badge variant="outline" class="text-[10px]">
+                  Blog gone
+                </Badge>
+              </Show>
+              <Show when={!props.post.id}>
+                <Badge variant="destructive" class="text-[10px]">
+                  DELETED
+                </Badge>
+              </Show>
+            </div>
+            <Show when={props.post.createdAtUnix}>
+              <p class="text-xs text-muted-foreground">
+                {formatRelativeDate(props.post.createdAtUnix!)}
+              </p>
+            </Show>
+          </div>
+          <Show when={props.post.id}>
+            <Button
+              as="a"
+              href={`https://bdsmlr.com/post/${props.post.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="ghost"
+              size="icon"
+              class="size-9 text-muted-foreground"
+              aria-label="Open on BDSMLR"
+              onClick={() => trackEvent("outbound-bdsmlr", { surface: "post" })}
+            >
+              <BdsmlrIcon class="size-4" />
+            </Button>
+          </Show>
         </div>
-      )}
 
-      <div class="post-detail-meta">
-        <Show
-          when={user() && props.post.id}
-          fallback={
-            <span>
-              <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
-            </span>
-          }
-        >
-          <button
-            type="button"
-            class={interaction().liked ? "post-action active" : "post-action"}
-            onClick={handleLike}
-            disabled={busy()}
-            title={interaction().liked ? "Unlike" : "Like"}
-            aria-label={interaction().liked ? "Unlike post" : "Like post"}
-            aria-pressed={interaction().liked}
-          >
-            <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
-          </button>
+        <div class="px-3">
+          <ReblogAttribution
+            originBlogName={props.post.originBlogName}
+            originPostId={props.post.originPostId}
+            variant={props.post.variant}
+          />
+        </div>
+
+        <Show when={props.post.title?.trim()}>
+          <h1 class="px-3 pb-2 text-xl font-semibold leading-snug">
+            {props.post.title!.trim()}
+          </h1>
         </Show>
-        <span>
-          <ChatIcon /> {commentsCount()}
-        </span>
-        <Show
-          when={user() && props.post.id}
-          fallback={
-            <span>
-              <ReblogIcon /> {interaction().reblogsCount}
-            </span>
-          }
-        >
-          <button
-            type="button"
-            class={
-              interaction().reblogged ? "post-action active" : "post-action"
+
+        <Show when={contentHtml()}>
+          <div
+            class="post-content px-3 pb-3"
+            innerHTML={contentHtml()!}
+            onClick={(event) => {
+              const target = event.target as HTMLElement;
+              if (target.tagName === "IMG" && target.getAttribute("src")) {
+                props.onImageClick?.(
+                  target.getAttribute("src")!,
+                  props.post.id,
+                );
+              }
+            }}
+          />
+        </Show>
+
+        <Show when={props.post.type !== PostType.Text && mediaItems().length > 0}>
+          <PostMediaList
+            items={mediaItems()}
+            showAll
+            onImageClick={(url) => props.onImageClick?.(url, props.post.id)}
+          />
+        </Show>
+
+        <Show when={props.post.tags && props.post.tags.length > 0}>
+          <div class="flex flex-wrap gap-1.5 px-3 py-3">
+            <For each={props.post.tags}>
+              {(tag) => (
+                <A
+                  href={tagSearchHref(
+                    tag,
+                    props.blogGone ? undefined : props.post.blogName,
+                  )}
+                  class="rounded-md bg-secondary px-2 py-1 text-xs text-secondary-foreground hover:bg-secondary/80"
+                  onClick={() => trackEvent("tag-click", { surface: "post" })}
+                >
+                  #{tag}
+                </A>
+              )}
+            </For>
+          </div>
+        </Show>
+
+        <div class="flex flex-wrap items-center gap-1 border-t border-border px-2 py-2">
+          <Show
+            when={user() && props.post.id}
+            fallback={
+              <span class="inline-flex h-9 items-center gap-1.5 px-2 text-sm text-muted-foreground">
+                <Heart class="size-4" /> {interaction().likesCount}
+              </span>
             }
-            onClick={() => setShowReblog(true)}
-            disabled={busy()}
-            title={interaction().reblogged ? "Reblog again" : "Reblog"}
-            aria-label={
-              interaction().reblogged ? "Reblog post again" : "Reblog post"
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              class="h-9 gap-1.5 px-2"
+              classList={{ "text-rose-400": interaction().liked }}
+              onClick={handleLike}
+              disabled={busy()}
+              title={interaction().liked ? "Unlike" : "Like"}
+              aria-label={interaction().liked ? "Unlike post" : "Like post"}
+              aria-pressed={interaction().liked}
+            >
+              <Heart
+                class="size-4"
+                fill={interaction().liked ? "currentColor" : "none"}
+              />
+              {interaction().likesCount}
+            </Button>
+          </Show>
+
+          <span class="inline-flex h-9 items-center gap-1.5 px-2 text-sm text-muted-foreground">
+            <MessageCircle class="size-4" /> {commentsCount()}
+          </span>
+
+          <Show
+            when={user() && props.post.id}
+            fallback={
+              <span class="inline-flex h-9 items-center gap-1.5 px-2 text-sm text-muted-foreground">
+                <Repeat2 class="size-4" /> {interaction().reblogsCount}
+              </span>
             }
           >
-            <ReblogIcon /> {interaction().reblogsCount}
-          </button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              class="h-9 gap-1.5 px-2"
+              classList={{ "text-emerald-400": interaction().reblogged }}
+              onClick={() => setShowReblog(true)}
+              disabled={busy()}
+              title={interaction().reblogged ? "Reblog again" : "Reblog"}
+              aria-label={
+                interaction().reblogged ? "Reblog post again" : "Reblog post"
+              }
+            >
+              <Repeat2 class="size-4" />
+              {interaction().reblogsCount}
+            </Button>
+          </Show>
+
+          <Show when={props.post.id}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              class="h-9 gap-1.5 px-2"
+              onClick={handleEngagement}
+              title="Likes and reblogs"
+              aria-label="View likes and reblogs"
+            >
+              <BarChart3 class="size-4" />
+            </Button>
+          </Show>
+
+          <Show when={ownsPost()}>
+            <div class="ml-auto flex items-center gap-1">
+              <Button
+                as={A}
+                href={`/compose?post=${props.post.id}`}
+                variant="ghost"
+                size="sm"
+                class="h-9 gap-1.5"
+              >
+                <Pencil class="size-4" />
+                Edit
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                class="h-9 gap-1.5 text-destructive hover:text-destructive"
+                onClick={handleDelete}
+              >
+                <Trash2 class="size-4" />
+                Delete
+              </Button>
+            </div>
+          </Show>
+        </div>
+
+        <Show when={actionError()}>
+          <div class="px-3 pb-3">
+            <Alert variant="destructive">
+              <AlertDescription>{actionError()}</AlertDescription>
+            </Alert>
+          </div>
         </Show>
+      </Card>
+
+      <div class="px-3 py-4 sm:px-0">
         <Show when={props.post.id}>
-          <button
-            type="button"
-            class="download-btn"
-            onClick={handleEngagement}
-            title="Likes and reblogs"
-            aria-label="View likes and reblogs"
-          >
-            <ChartNoAxesColumnIcon />
-          </button>
-        </Show>
-        <Show when={props.post.id}>
-          <a
-            href={`https://bdsmlr.com/post/${props.post.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="download-btn"
-            title="Open on BDSMLR"
-            onClick={handleOutbound}
-          >
-            <BdsmlrIcon />
-          </a>
-        </Show>
-        <Show when={ownsPost()}>
-          <A
-            href={`/compose?post=${props.post.id}`}
-            class="download-btn post-meta-action"
-          >
-            Edit
-          </A>
-          <button
-            type="button"
-            class="download-btn post-meta-action danger-text"
-            onClick={handleDelete}
-          >
-            Delete
-          </button>
+          <Comments
+            postId={props.post.id}
+            initialCount={props.post.commentsCount ?? 0}
+            onCountChange={setCommentsCount}
+          />
         </Show>
       </div>
-      <Show when={actionError()}>
-        <p class="action-error">{actionError()}</p>
-      </Show>
-      <Show when={notice()}>
-        <p class="action-notice">{notice()}</p>
-      </Show>
+
       <Show when={showReblog()}>
         <ReblogComposer
           post={props.post}
           onClose={() => setShowReblog(false)}
-        />
-      </Show>
-      <Show when={props.post.id}>
-        <Comments
-          postId={props.post.id}
-          initialCount={props.post.commentsCount ?? 0}
-          onCountChange={setCommentsCount}
         />
       </Show>
       <Show when={showEngagement()}>

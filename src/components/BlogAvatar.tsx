@@ -1,51 +1,42 @@
-import { Show } from 'solid-js'
-import { A } from '@solidjs/router'
-import { useBlogAvatar } from '~/lib/blogAvatar'
+import { Show } from "solid-js";
+import { A } from "@solidjs/router";
+import { useBlogAvatar } from "~/lib/blogAvatar";
+import { Avatar } from "./ui/avatar";
 
 interface BlogAvatarProps {
-  blogId?: number | null
-  blogName?: string | null
-  size?: number
-  linkable?: boolean
+  blogId?: number | null;
+  blogName?: string | null;
+  size?: number;
+  linkable?: boolean;
+  class?: string;
 }
 
 export function BlogAvatar(props: BlogAvatarProps) {
-  const avatar = useBlogAvatar(() => props.blogId ?? null)
-  const size = () => props.size ?? 28
-  const letter = () => ((props.blogName || '?')[0] || '?').toUpperCase()
+  const avatar = useBlogAvatar(() => props.blogId ?? null);
+  const size = () => props.size ?? 28;
 
   const content = () => (
-    <Show
-      when={avatar()}
-      fallback={
-        <span
-          class="blog-avatar-placeholder"
-          style={{
-            width: `${size()}px`,
-            height: `${size()}px`,
-            'font-size': `${Math.round(size() * 0.42)}px`,
-          }}
-        >
-          {letter()}
-        </span>
-      }
-    >
-      <img
-        class="blog-avatar-img"
-        src={avatar()!}
-        alt=""
-        style={{ width: `${size()}px`, height: `${size()}px` }}
-      />
-    </Show>
-  )
+    <Avatar
+      src={avatar()}
+      fallback={props.blogName ?? "?"}
+      class={props.class}
+      style={{ width: `${size()}px`, height: `${size()}px` }}
+    />
+  );
 
-  const linkable = () => props.linkable !== false && !!props.blogName
+  const linkable = () => props.linkable !== false && !!props.blogName;
 
   return (
-    <Show when={linkable()} fallback={<span class="blog-avatar-link">{content()}</span>}>
-      <A href={`/${props.blogName}`} class="blog-avatar-link">
+    <Show
+      when={linkable()}
+      fallback={<span class="inline-flex shrink-0">{content()}</span>}
+    >
+      <A
+        href={`/${props.blogName}`}
+        class="inline-flex shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
         {content()}
       </A>
     </Show>
-  )
+  );
 }

@@ -3,6 +3,13 @@ import { useParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { PostType } from "~/lib/api";
 import { PostSearchResults } from "~/components/PostSearchResults";
+import { PageHeader } from "~/components/Page";
+import { Button } from "~/components/ui/button";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldLabel,
+} from "~/components/ui/text-field";
 
 const TYPES = [
   { id: PostType.Text, label: "Text" },
@@ -37,39 +44,45 @@ export default function ArchivePage() {
   return (
     <>
       <Title>{name()} archive - bbdsmlr</Title>
-      <main>
-        <h2 class="social-list-title">Archive</h2>
-        <div class="archive-controls">
-          <label class="archive-month">
-            <span>Month</span>
-            <input
-              type="month"
-              value={month()}
-              onInput={(e) => setMonth(e.currentTarget.value)}
-            />
-          </label>
-          <div class="activity-filters">
-            <button
+      <main class="mx-auto flex w-full max-w-2xl flex-1 flex-col px-3 py-4 sm:px-4">
+        <PageHeader title="Archive" />
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
+          <TextField
+            class="w-full gap-1.5 sm:w-auto sm:max-w-56"
+            value={month()}
+            onChange={setMonth}
+          >
+            <TextFieldLabel>Month</TextFieldLabel>
+            <TextFieldInput type="month" class="h-11 md:h-9" />
+          </TextField>
+          <div
+            class="flex flex-wrap gap-2"
+            role="group"
+            aria-label="Filter by post type"
+          >
+            <Button
               type="button"
-              class={types().length === 0 ? "activity-filter active" : "activity-filter"}
+              size="sm"
+              variant={types().length === 0 ? "default" : "outline"}
+              class="h-11 rounded-full px-4 text-xs sm:h-9 sm:px-3"
               onClick={() => setTypes([])}
             >
               All
-            </button>
+            </Button>
             <For each={TYPES}>
               {(type) => (
-                <button
+                <Button
                   type="button"
-                  class={
-                    types().includes(type.id)
-                      ? "activity-filter active"
-                      : "activity-filter"
+                  size="sm"
+                  variant={
+                    types().includes(type.id) ? "default" : "outline"
                   }
+                  class="h-11 rounded-full px-4 text-xs sm:h-9 sm:px-3"
                   onClick={() => toggleType(type.id)}
                   aria-pressed={types().includes(type.id)}
                 >
                   {type.label}
-                </button>
+                </Button>
               )}
             </For>
           </div>

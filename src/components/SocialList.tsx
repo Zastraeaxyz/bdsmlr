@@ -9,6 +9,12 @@ import {
 } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
 import { setCachedFollowingIds } from "~/lib/following";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Avatar } from "./ui/avatar";
+import { Badge } from "./ui/badge";
+import { Card } from "./ui/card";
+import { Skeleton } from "./ui/skeleton";
+import { EmptyState } from "./FeedStates";
 
 export type SocialKind = "following" | "followers" | "siblings";
 
@@ -82,10 +88,7 @@ export function SocialList(props: { blogName: string; kind: SocialKind }) {
       }
       const normalized = all.map(normalizeEdge);
       setItems(normalized);
-      if (
-        props.kind === "following" &&
-        activeBlogId() === resolved.blogId
-      ) {
+      if (props.kind === "following" && activeBlogId() === resolved.blogId) {
         setCachedFollowingIds(
           normalized.map((item) => item.blogId),
           activeBlogId(),
@@ -118,55 +121,70 @@ export function SocialList(props: { blogName: string; kind: SocialKind }) {
   };
 
   return (
-    <main>
-      <h2 class="social-list-title">
-        {title()}
-        {!loading() ? ` (${items().length})` : ""}
-      </h2>
-      {error() && <FeedErrorNotice message={error()} />}
-      {loading() && <p class="loading">Loading…</p>}
+
+    <main class="flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">{title()}</h2>
+        <Show when={!loading()}>
+          <Badge variant="secondary">{items().length}</Badge>
+        </Show>
+      </div>
+
+      <Show when={error()}>
+        <FeedErrorNotice message={error()} onRetry={() => void load()} />
+      </Show>
+
+      <Show when={loading()}>
+        <div class="flex flex-col gap-2">
+          <For each={[0, 1, 2, 3, 4]}>
+            {() => (
+              <div class="flex items-center gap-3 rounded-lg border p-3">
+                <Skeleton class="size-10 rounded-full" />
+                <div class="flex-1 space-y-2">
+                  <Skeleton class="h-3.5 w-32" />
+                  <Skeleton class="h-3 w-48" />
+                </div>
+              </div>
+            )}
+          </For>
+        </div>
+      </Show>
+
+
       <Show when={!loading()}>
-        <Show when={items().length > 0} fallback={<p class="empty">{empty()}</p>}>
-          <div class="following-list">
+        <Show when={items().length > 0} fallback={<EmptyState>{empty()}</EmptyState>}>
+          <Card class="divide-y divide-border overflow-hidden bg-card py-0 shadow-none">
             <For each={items()}>
               {(item) => (
-                <A href={`/${item.blogName}`} class="following-item">
-                  <div class="following-item-avatar-wrap">
-                    <Show
-                      when={item.avatarUrl}
-                      fallback={
-                        <span class="following-item-avatar-placeholder">
-                          {(item.title || item.blogName || "?")[0]}
-                        </span>
-                      }
-                    >
-                      <img
-                        class="following-item-avatar"
-                        src={item.avatarUrl}
-                        alt=""
-                      />
-                    </Show>
-                  </div>
-                  <div class="following-item-body">
-                    <span class="following-item-name">
+                <A
+                  href={`/${item.blogName}`}
+                  class="flex items-center gap-3 px-3 py-3 hover:bg-accent"
+                >
+                  <Avatar
+                    src={item.avatarUrl}
+                    fallback={item.title || item.blogName || "?"}
+                    class="size-10"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-medium">
                       {item.title || item.blogName}
-                    </span>
+                    </p>
+                    <p class="truncate text-xs text-muted-foreground">
+                      @{item.blogName}
+                    </p>
                     <Show when={item.description}>
-                      <span class="following-item-desc">{item.description}</span>
+                      <p class="line-clamp-2 text-xs text-muted-foreground">
+                        {item.description}
+                      </p>
                     </Show>
                   </div>
-                  <Show
-                    when={
-                      activeBlog() &&
-                      item.blogId === activeBlogId()
-                    }
-                  >
-                    <span class="following-item-you">You</span>
+                  <Show when={activeBlog() && item.blogId === activeBlogId()}>
+                    <Badge variant="secondary">You</Badge>
                   </Show>
                 </A>
               )}
             </For>
-          </div>
+          </Card>
         </Show>
       </Show>
     </main>

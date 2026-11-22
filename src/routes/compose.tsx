@@ -1,7 +1,8 @@
 import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import Header from "~/components/Header";
+import { X } from "lucide-solid";
+import { Page } from "~/components/Page";
 import { LightBox } from "~/components/LightBox";
 import { useAuth } from "~/lib/useAuth";
 import { features } from "~/lib/features";
@@ -29,6 +30,18 @@ import {
 } from "~/lib/legacy";
 import type { LegacyEditablePost } from "~/lib/legacyDrafts";
 import { isDeletedPostError } from "~/lib/requestError";
+
+import { cx } from "~/lib/cva";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldLabel,
+  TextFieldTextArea,
+} from "~/components/ui/text-field";
+
 
 const TYPES: { id: LegacyPostType; label: string }[] = [
   { id: "text", label: "Text" },
@@ -467,411 +480,444 @@ export default function ComposePage() {
 
   return (
     <Show when={!authLoading() && user()} fallback={null}>
-      <Title>{pageTitle()} - bbdsmlr</Title>
-      <div class="home-page">
-        <Header info={pageTitle()}>
+      <Page
+        info={pageTitle()}
+        actions={
           <Show when={editBlogName() || activeBlog()}>
-            <span class="compose-blog">
+            <span class="truncate text-xs text-muted-foreground">
               Posting to @{editBlogName() || activeBlog()!.name}
             </span>
           </Show>
-        </Header>
-        <main>
+        }
+      >
+        <Title>{pageTitle()} - bbdsmlr</Title>
+
+        <Show
+          when={!editLoading()}
+          fallback={
+            <p class="py-12 text-center text-sm text-muted-foreground">
+              Loading editor…
+            </p>
+          }
+        >
           <Show
-            when={!editLoading()}
-            fallback={<p class="loading">Loading editor…</p>}
-          >
-            <Show
-              when={!scope}
-              fallback={
-                <div class="compose-tabs">
-                  <button type="button" class="compose-tab active" disabled>
-                    {typeLabel()}
-                  </button>
-                </div>
-              }
-            >
-              <div class="compose-tabs">
-                <For each={TYPES}>
-                  {(type) => (
-                    <button
-                      type="button"
-                      class={kind() === type.id ? "compose-tab active" : "compose-tab"}
-                      onClick={() => switchKind(type.id)}
-                    >
-                      {type.label}
-                    </button>
-                  )}
-                </For>
+            when={!scope}
+            fallback={
+              <div class="mb-4 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  class="h-10 rounded-full px-4"
+                  disabled
+                >
+                  {typeLabel()}
+                </Button>
               </div>
+            }
+          >
+            <div
+              class="mb-4 flex flex-wrap gap-2"
+              role="group"
+              aria-label="Post type"
+            >
+              <For each={TYPES}>
+                {(type) => (
+                  <Button
+                    type="button"
+                    variant={kind() === type.id ? "default" : "outline"}
+                    aria-pressed={kind() === type.id}
+                    class="h-10 rounded-full px-4"
+                    onClick={() => switchKind(type.id)}
+                  >
+                    {type.label}
+                  </Button>
+                )}
+              </For>
+            </div>
+          </Show>
+
+          <Card class="gap-4 p-4 sm:p-5">
+            <Show when={kind() === "text"}>
+              <TextField value={title()} onChange={setTitle}>
+                <TextFieldLabel>Title</TextFieldLabel>
+                <TextFieldInput
+                  type="text"
+                  placeholder="Post title"
+                  class="h-11 md:h-9"
+                />
+              </TextField>
+              <TextField value={content()} onChange={setContent}>
+                <TextFieldLabel>Body</TextFieldLabel>
+                <TextFieldTextArea
+                  rows={10}
+                  placeholder="Write your post…"
+                  class="min-h-40"
+                />
+              </TextField>
             </Show>
 
-            <section class="compose-card">
-              <Show when={kind() === "text"}>
-                <label class="compose-field">
-                  <span>Title</span>
-                  <input
-                    type="text"
-                    value={title()}
-                    onInput={(e) => setTitle(e.currentTarget.value)}
-                    placeholder="Post title"
-                  />
-                </label>
-                <label class="compose-field">
-                  <span>Body</span>
-                  <textarea
-                    rows={10}
-                    value={content()}
-                    onInput={(e) => setContent(e.currentTarget.value)}
-                    placeholder="Write your post…"
-                  />
-                </label>
-              </Show>
+            <Show when={kind() === "quote"}>
+              <TextField value={title()} onChange={setTitle}>
+                <TextFieldLabel>Quote</TextFieldLabel>
+                <TextFieldTextArea
+                  rows={5}
+                  placeholder="Quote text"
+                  class="min-h-28"
+                />
+              </TextField>
+              <TextField value={content()} onChange={setContent}>
+                <TextFieldLabel>Source (optional)</TextFieldLabel>
+                <TextFieldInput
+                  type="text"
+                  placeholder="Source"
+                  class="h-11 md:h-9"
+                />
+              </TextField>
+            </Show>
 
-              <Show when={kind() === "quote"}>
-                <label class="compose-field">
-                  <span>Quote</span>
-                  <textarea
-                    rows={5}
-                    value={title()}
-                    onInput={(e) => setTitle(e.currentTarget.value)}
-                    placeholder="Quote text"
-                  />
-                </label>
-                <label class="compose-field">
-                  <span>Source (optional)</span>
-                  <input
-                    type="text"
-                    value={content()}
-                    onInput={(e) => setContent(e.currentTarget.value)}
-                    placeholder="Source"
-                  />
-                </label>
-              </Show>
+            <Show when={kind() === "chat"}>
+              <TextField value={title()} onChange={setTitle}>
+                <TextFieldLabel>Title</TextFieldLabel>
+                <TextFieldInput
+                  type="text"
+                  placeholder="Chat title"
+                  class="h-11 md:h-9"
+                />
+              </TextField>
+              <TextField value={content()} onChange={setContent}>
+                <TextFieldLabel>Transcript</TextFieldLabel>
+                <TextFieldTextArea
+                  rows={10}
+                  placeholder="You: …&#10;Me: …"
+                  class="min-h-40"
+                />
+              </TextField>
+            </Show>
 
-              <Show when={kind() === "chat"}>
-                <label class="compose-field">
-                  <span>Title</span>
-                  <input
-                    type="text"
-                    value={title()}
-                    onInput={(e) => setTitle(e.currentTarget.value)}
-                    placeholder="Chat title"
-                  />
-                </label>
-                <label class="compose-field">
-                  <span>Transcript</span>
-                  <textarea
-                    rows={10}
-                    value={content()}
-                    onInput={(e) => setContent(e.currentTarget.value)}
-                    placeholder="You: …&#10;Me: …"
-                  />
-                </label>
-              </Show>
-
-              <Show when={kind() === "link"}>
-                <label class="compose-field">
-                  <span>URL</span>
-                  <div class="compose-inline">
-                    <input
-                      type="url"
-                      value={url()}
-                      onInput={(e) => setUrl(e.currentTarget.value)}
-                      placeholder="https://example.com"
-                    />
-                    <button
-                      type="button"
-                      class="btn-ghost"
-                      onClick={fetchPreview}
-                      disabled={!url().trim() || previewBusy()}
-                    >
-                      {previewBusy() ? "Loading…" : "Fetch preview"}
-                    </button>
-                  </div>
-                </label>
-                <label class="compose-field">
-                  <span>Title</span>
-                  <input
-                    type="text"
-                    value={title()}
-                    onInput={(e) => setTitle(e.currentTarget.value)}
-                    placeholder="Link title"
-                  />
-                </label>
-                <label class="compose-field">
-                  <span>Description</span>
-                  <textarea
-                    rows={4}
-                    value={description()}
-                    onInput={(e) => setDescription(e.currentTarget.value)}
-                    placeholder="Link description"
-                  />
-                </label>
-                <label class="compose-field">
-                  <span>Preview image URL (optional)</span>
-                  <input
+            <Show when={kind() === "link"}>
+              <TextField value={url()} onChange={setUrl}>
+                <TextFieldLabel>URL</TextFieldLabel>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <TextFieldInput
                     type="url"
-                    value={image()}
-                    onInput={(e) => setImage(e.currentTarget.value)}
-                    placeholder="https://example.com/image.jpg"
+                    placeholder="https://example.com"
+                    class="h-11 flex-1 md:h-9"
                   />
-                </label>
-              </Show>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    class="h-11 w-full sm:w-auto md:h-9"
+                    onClick={fetchPreview}
+                    disabled={!url().trim() || previewBusy()}
+                  >
+                    {previewBusy() ? "Loading…" : "Fetch preview"}
+                  </Button>
+                </div>
+              </TextField>
+              <TextField value={title()} onChange={setTitle}>
+                <TextFieldLabel>Title</TextFieldLabel>
+                <TextFieldInput
+                  type="text"
+                  placeholder="Link title"
+                  class="h-11 md:h-9"
+                />
+              </TextField>
+              <TextField value={description()} onChange={setDescription}>
+                <TextFieldLabel>Description</TextFieldLabel>
+                <TextFieldTextArea
+                  rows={4}
+                  placeholder="Link description"
+                  class="min-h-24"
+                />
+              </TextField>
+              <TextField value={image()} onChange={setImage}>
+                <TextFieldLabel>Preview image URL (optional)</TextFieldLabel>
+                <TextFieldInput
+                  type="url"
+                  placeholder="https://example.com/image.jpg"
+                  class="h-11 md:h-9"
+                />
+              </TextField>
+            </Show>
 
-              <Show when={kind() === "photo" || kind() === "video" || kind() === "audio"}>
-                <Show
-                  when={!scope}
-                  fallback={
-                    <p class="compose-note">
-                      Media cannot be changed in this editor. You can edit the
-                      caption and tags.
-                    </p>
-                  }
-                >
-                  <div class="compose-field">
-                    <span>
-                      {kind() === "photo"
-                        ? "Images"
-                        : kind() === "video"
-                          ? "Video"
-                          : "Audio"}
+            <Show when={kind() === "photo" || kind() === "video" || kind() === "audio"}>
+              <Show
+                when={!scope}
+                fallback={
+                  <p class="text-sm text-muted-foreground">
+                    Media cannot be changed in this editor. You can edit the
+                    caption and tags.
+                  </p>
+                }
+              >
+                <div class="flex flex-col gap-2">
+                  <span class="text-sm font-medium">
+                    {kind() === "photo"
+                      ? "Images"
+                      : kind() === "video"
+                        ? "Video"
+                        : "Audio"}
+                  </span>
+                  <div
+                    class={cx(
+                      "relative flex min-h-32 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-input bg-muted/30 px-4 py-6 text-center transition-colors",
+                      "focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/40",
+                      dragging() && "border-primary bg-accent",
+                    )}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragging(true);
+                    }}
+                    onDragLeave={() => setDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragging(false);
+                      addUploads(e.dataTransfer?.files ?? null);
+                    }}
+                  >
+                    <input
+                      class="absolute inset-0 size-full cursor-pointer opacity-0"
+                      type="file"
+                      accept={fileAccept()}
+                      multiple={fileMultiple()}
+                      aria-label={
+                        fileMultiple() ? "Choose images" : "Choose a file"
+                      }
+                      onChange={(e) => {
+                        addUploads(e.currentTarget.files);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+                    <strong class="text-sm font-semibold text-foreground">
+                      {fileMultiple() ? "Choose images" : "Choose a file"}
+                    </strong>
+                    <span class="text-xs text-muted-foreground">
+                      or drag and drop {fileMultiple() ? "them" : "it"} here
                     </span>
-                    <div
-                      class="compose-drop"
-                      classList={{ "compose-drop-active": dragging() }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setDragging(true);
-                      }}
-                      onDragLeave={() => setDragging(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setDragging(false);
-                        addUploads(e.dataTransfer?.files ?? null);
-                      }}
-                    >
-                      <input
-                        class="compose-drop-input"
-                        type="file"
-                        accept={fileAccept()}
-                        multiple={fileMultiple()}
-                        aria-label={
-                          fileMultiple() ? "Choose images" : "Choose a file"
-                        }
-                        onChange={(e) => {
-                          addUploads(e.currentTarget.files);
-                          e.currentTarget.value = "";
-                        }}
-                      />
-                      <strong>
-                        {fileMultiple() ? "Choose images" : "Choose a file"}
-                      </strong>
-                      <span>or drag and drop {fileMultiple() ? "them" : "it"} here</span>
-                      <span class="compose-drop-hint">{fileAcceptLabel()}</span>
-                    </div>
+                    <span class="text-[11px] text-muted-foreground">
+                      {fileAcceptLabel()}
+                    </span>
                   </div>
-                  <Show when={uploads().length > 0}>
-                    <div class="compose-upload-summary">
-                      <span>
-                        {uploads().length} {uploadNoun()} · {uploadTotalSize()}
-                      </span>
-                      <button
-                        type="button"
-                        class="btn-ghost compose-upload-clear"
-                        onClick={clearUploads}
-                      >
-                        Remove all
-                      </button>
-                    </div>
-                    <ul
-                      class="compose-previews"
-                      classList={{
-                        "compose-previews-single": !fileMultiple(),
-                      }}
+                </div>
+                <Show when={uploads().length > 0}>
+                  <div class="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <span>
+                      {uploads().length} {uploadNoun()} · {uploadTotalSize()}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-10"
+                      onClick={clearUploads}
                     >
-                      <For each={uploads()}>
-                        {(entry, index) => (
-                          <li class="compose-preview">
-                            <Show
-                              when={kind() === "photo"}
-                              fallback={
-                                <Show
-                                  when={kind() === "video"}
-                                  fallback={
-                                    <div class="compose-preview-audio">
-                                      <audio
-                                        src={entry.url}
-                                        controls
-                                        preload="metadata"
-                                      />
-                                    </div>
-                                  }
-                                >
-                                  <video
-                                    class="compose-preview-media"
-                                    src={entry.url}
-                                    controls
-                                    preload="metadata"
-                                    playsinline
-                                  />
-                                </Show>
-                              }
-                            >
-                              <button
-                                type="button"
-                                class="compose-preview-thumb"
-                                onClick={() => setPreviewUrl(entry.url)}
-                                aria-label={`Enlarge ${entry.file.name}`}
+                      Remove all
+                    </Button>
+                  </div>
+                  <ul
+                    class={cx(
+                      "m-0 grid list-none gap-2 p-0",
+                      fileMultiple() ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-1",
+                    )}
+                  >
+                    <For each={uploads()}>
+                      {(entry, index) => (
+                        <li class="relative flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-2">
+                          <Show
+                            when={kind() === "photo"}
+                            fallback={
+                              <Show
+                                when={kind() === "video"}
+                                fallback={
+                                  <div class="py-1">
+                                    <audio
+                                      src={entry.url}
+                                      controls
+                                      preload="metadata"
+                                      class="w-full"
+                                    />
+                                  </div>
+                                }
                               >
-                                <img
+                                <video
+                                  class="aspect-video w-full rounded-md bg-black object-contain"
                                   src={entry.url}
-                                  alt={entry.file.name}
-                                  loading="lazy"
+                                  controls
+                                  preload="metadata"
+                                  playsinline
                                 />
-                              </button>
-                            </Show>
-                            <div class="compose-preview-meta">
-                              <span
-                                class="compose-preview-name"
-                                title={entry.file.name}
-                              >
-                                {entry.file.name}
-                              </span>
-                              <span>{formatBytes(entry.file.size)}</span>
-                            </div>
+                              </Show>
+                            }
+                          >
                             <button
                               type="button"
-                              class="compose-preview-remove"
-                              onClick={() => removeUpload(index())}
-                              aria-label={`Remove ${entry.file.name}`}
+                              class="block aspect-square w-full cursor-zoom-in overflow-hidden rounded-md bg-muted"
+                              onClick={() => setPreviewUrl(entry.url)}
+                              aria-label={`Enlarge ${entry.file.name}`}
                             >
-                              ✕
+                              <img
+                                src={entry.url}
+                                alt={entry.file.name}
+                                loading="lazy"
+                                class="size-full object-cover"
+                              />
                             </button>
-                          </li>
-                        )}
-                      </For>
-                    </ul>
-                  </Show>
+                          </Show>
+                          <div class="flex min-w-0 flex-col gap-0.5 text-[11px] text-muted-foreground">
+                            <span
+                              class="truncate text-xs text-foreground"
+                              title={entry.file.name}
+                            >
+                              {entry.file.name}
+                            </span>
+                            <span>{formatBytes(entry.file.size)}</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            class="absolute top-1.5 right-1.5 size-10 rounded-full border bg-background/80 backdrop-blur hover:bg-destructive hover:text-white"
+                            onClick={() => removeUpload(index())}
+                            aria-label={`Remove ${entry.file.name}`}
+                          >
+                            <X class="size-3.5" />
+                          </Button>
+                        </li>
+                      )}
+                    </For>
+                  </ul>
                 </Show>
-                <label class="compose-field">
-                  <span>Description (optional)</span>
-                  <textarea
-                    rows={5}
-                    value={content()}
-                    onInput={(e) => setContent(e.currentTarget.value)}
-                    placeholder="Add a description"
-                  />
-                </label>
               </Show>
-
-              <label class="compose-field">
-                <span>Tags</span>
-                <input
-                  type="text"
-                  value={tags()}
-                  onInput={(e) => setTags(e.currentTarget.value)}
-                  placeholder="tag one, tag two"
+              <TextField value={content()} onChange={setContent}>
+                <TextFieldLabel>Description (optional)</TextFieldLabel>
+                <TextFieldTextArea
+                  rows={5}
+                  placeholder="Add a description"
+                  class="min-h-28"
                 />
-              </label>
+              </TextField>
+            </Show>
 
-              <Show when={error()}>
-                <p class="error">{error()}</p>
-              </Show>
-              <Show when={success()}>
-                <p class="action-notice">{success()}</p>
-              </Show>
+            <TextField value={tags()} onChange={setTags}>
+              <TextFieldLabel>Tags</TextFieldLabel>
+              <TextFieldInput
+                type="text"
+                placeholder="tag one, tag two"
+                class="h-11 md:h-9"
+              />
+            </TextField>
 
-              <div class="compose-actions">
-                <Show
-                  when={scope}
-                  fallback={
-                    <>
-                      <button
-                        type="button"
-                        class="btn-ghost"
-                        onClick={() => submit("draft")}
-                        disabled={!canSubmit() || busy()}
-                      >
-                        Save draft
-                      </button>
-                      <button
-                        type="button"
-                        class="btn-ghost"
-                        onClick={() => submit("queue")}
-                        disabled={!canSubmit() || busy()}
-                      >
-                        Add to queue
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => submit("live")}
-                        disabled={!canSubmit() || busy()}
-                      >
-                        {busy() ? "Publishing…" : "Publish"}
-                      </button>
-                    </>
-                  }
+            <Show when={error()}>
+              <Alert variant="destructive">
+                <AlertDescription>{error()}</AlertDescription>
+              </Alert>
+            </Show>
+            <Show when={success()}>
+              <Alert class="border-primary/40 bg-primary/10">
+                <AlertDescription class="text-foreground">
+                  {success()}
+                </AlertDescription>
+              </Alert>
+            </Show>
+
+            <div class="flex flex-col gap-2 pt-1 sm:flex-row sm:flex-wrap sm:justify-end">
+              <Show
+                when={scope}
+                fallback={
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      class="h-11 w-full sm:h-9 sm:w-auto"
+                      onClick={() => submit("draft")}
+                      disabled={!canSubmit() || busy()}
+                    >
+                      Save draft
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      class="h-11 w-full sm:h-9 sm:w-auto"
+                      onClick={() => submit("queue")}
+                      disabled={!canSubmit() || busy()}
+                    >
+                      Add to queue
+                    </Button>
+                    <Button
+                      type="button"
+                      class="h-11 w-full sm:h-9 sm:w-auto"
+                      onClick={() => submit("live")}
+                      disabled={!canSubmit() || busy()}
+                    >
+                      {busy() ? "Publishing…" : "Publish"}
+                    </Button>
+                  </>
+                }
+              >
+                <Button
+                  type="button"
+                  class="h-11 w-full sm:h-9 sm:w-auto"
+                  onClick={() => submit("live")}
+                  disabled={!canSubmit() || busy()}
                 >
-                  <button
-                    type="button"
-                    onClick={() => submit("live")}
-                    disabled={!canSubmit() || busy()}
+                  {busy() ? "Saving…" : "Save changes"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="h-11 w-full sm:h-9 sm:w-auto"
+                  onClick={cancelEdit}
+                  disabled={busy()}
+                >
+                  Cancel
+                </Button>
+              </Show>
+            </div>
+          </Card>
+
+          <p class="mt-3 text-xs leading-relaxed text-muted-foreground">
+            Posts are published through BDSMLR's legacy composer. If BDSMLR
+            rejects or rate limits the request, wait a moment and try again.
+          </p>
+
+          <Show
+            when={
+              !scope &&
+              (features.legacyAsks || features.legacyAdvancedSettings)
+            }
+          >
+            <section class="mt-6 border-t pt-5">
+              <h3 class="text-sm font-semibold">Legacy tools</h3>
+              <p class="mt-1 text-sm text-muted-foreground">
+                Asks and advanced blog settings still live on BDSMLR.
+              </p>
+              <div class="mt-2.5 flex flex-wrap gap-4 text-sm">
+                <Show when={features.legacyAsks}>
+                  <a
+                    href="https://bdsmlr.com/asks"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-primary underline-offset-4 hover:underline"
                   >
-                    {busy() ? "Saving…" : "Save changes"}
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-ghost"
-                    onClick={cancelEdit}
-                    disabled={busy()}
+                    Asks
+                  </a>
+                </Show>
+                <Show when={features.legacyAdvancedSettings}>
+                  <a
+                    href="https://bdsmlr.com/settings"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-primary underline-offset-4 hover:underline"
                   >
-                    Cancel
-                  </button>
+                    Settings
+                  </a>
                 </Show>
               </div>
             </section>
-
-            <p class="compose-note">
-              Posts are published through BDSMLR's legacy composer. If BDSMLR
-              rejects or rate limits the request, wait a moment and try again.
-            </p>
-
-            <Show
-              when={
-                !scope &&
-                (features.legacyAsks || features.legacyAdvancedSettings)
-              }
-            >
-              <section class="compose-legacy">
-                <h3>Legacy tools</h3>
-                <p>Asks and advanced blog settings still live on BDSMLR.</p>
-                <div class="compose-legacy-links">
-                  <Show when={features.legacyAsks}>
-                    <a
-                      href="https://bdsmlr.com/asks"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Asks
-                    </a>
-                  </Show>
-                  <Show when={features.legacyAdvancedSettings}>
-                    <a
-                      href="https://bdsmlr.com/settings"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Settings
-                    </a>
-                  </Show>
-                </div>
-              </section>
-            </Show>
           </Show>
-        </main>
+        </Show>
         <LightBox url={previewUrl()} onClose={() => setPreviewUrl(null)} />
-      </div>
+      </Page>
     </Show>
   );
 }

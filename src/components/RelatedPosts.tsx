@@ -3,7 +3,9 @@ import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { useNavigate } from "@solidjs/router";
 import { relatedPosts, type Post } from "~/lib/api";
 import { useAuth } from "~/lib/useAuth";
-import { PostCard } from "~/components/PostCard";
+import { PostFeed } from "~/components/PostFeed";
+import { FeedSkeleton, EmptyState } from "~/components/FeedStates";
+import { Alert, AlertDescription } from "./ui/alert";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
 import { createMediaGallery } from "~/lib/mediaGallery";
@@ -84,26 +86,22 @@ export function RelatedPostsFeed(props: { postId: number }) {
 
   return (
     <>
-      {error() && <FeedErrorNotice message={error()} />}
-      {loading() && <p class="loading">Loading related posts…</p>}
+<Show when={error()}>
+        <FeedErrorNotice message={error()} />
+      </Show>
+      <Show when={loading()}>
+        <FeedSkeleton count={2} />
+      </Show>
       <Show when={!loading()}>
         <Show
           when={posts().length > 0}
-          fallback={<p class="empty">No related posts found.</p>}
+          fallback={<EmptyState>No related posts found.</EmptyState>}
         >
-          <div class="feed">
-            <For each={posts()}>
-              {(post) => (
-                <PostCard
-                  post={post}
-                  onTagClick={openTag}
-                  onImageClick={(url, postId) =>
-                    gallery.open(url, postId)
-                  }
-                />
-              )}
-            </For>
-          </div>
+          <PostFeed
+            posts={posts()}
+            onTagClick={openTag}
+            onImageClick={(url, postId) => gallery.open(url, postId)}
+          />
         </Show>
       </Show>
       <Show when={nextPageToken()}>
@@ -111,7 +109,6 @@ export function RelatedPostsFeed(props: { postId: number }) {
           onLoad={loadMore}
           loading={loadingMore()}
           ready={!loading()}
-          style="display:block;margin:16px auto 0"
           label="Load more related posts"
         />
       </Show>
@@ -126,8 +123,8 @@ export function RelatedPostsFeed(props: { postId: number }) {
  */
 export function RelatedPosts(props: { postId: number }) {
   return (
-    <section class="related-posts">
-      <h3 class="section-title">More like this</h3>
+    <section class="mt-6">
+      <h3 class="mb-3 text-lg font-semibold">More like this</h3>
       <RelatedPostsFeed postId={props.postId} />
     </section>
   );

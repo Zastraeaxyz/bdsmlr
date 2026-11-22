@@ -1,7 +1,9 @@
 import { useParams, useNavigate, A } from "@solidjs/router";
+import { Show } from "solid-js";
 import { useAuth } from "~/lib/useAuth";
-import Header from "~/components/Header";
 import PostDetail from "~/components/PostDetail";
+import { Page } from "~/components/Page";
+import { Button } from "~/components/ui/button";
 
 export default function PostPage() {
   const params = useParams();
@@ -23,24 +25,38 @@ export default function PostPage() {
   };
 
   return (
-    <div class="home-page">
-      <Header info={user()?.blog_name || user()?.username || undefined}>
-        <A href="/home" class="btn-ghost">
-          Home
-        </A>
-        {user() && (
-          <A href={`/${user()!.blog_name}`} class="btn-ghost">
-            My feed
-          </A>
-        )}
-      </Header>
-      <main>
-        <PostDetail
-          postId={Number(params.id)}
-          checkBlogGone
-          onAuthorKnown={handleAuthorKnown}
-        />
-      </main>
-    </div>
+    <Page
+      padded={false}
+      actions={
+        <>
+          <Button
+            as={A}
+            href="/home"
+            variant="ghost"
+            size="sm"
+            class="hidden h-9 sm:inline-flex"
+          >
+            Home
+          </Button>
+          <Show when={user()}>
+            <Button
+              as={A}
+              href={`/${user()!.blog_name}`}
+              variant="ghost"
+              size="sm"
+              class="hidden h-9 sm:inline-flex"
+            >
+              My feed
+            </Button>
+          </Show>
+        </>
+      }
+    >
+      <PostDetail
+        postId={Number(params.id)}
+        checkBlogGone
+        onAuthorKnown={handleAuthorKnown}
+      />
+    </Page>
   );
 }

@@ -1,5 +1,14 @@
-import { createSignal, For, Show, onCleanup, onMount } from "solid-js";
+import { For, Show } from "solid-js";
+import { ArrowUpDown, Check } from "lucide-solid";
 import { SortField, SortOrder } from "~/lib/api";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface SortOption {
   field: number;
@@ -9,48 +18,13 @@ interface SortOption {
 }
 
 const ALL_OPTIONS: SortOption[] = [
-  {
-    field: SortField.Date,
-    order: SortOrder.Descending,
-    label: "Newest",
-    value: "1-2",
-  },
-  {
-    field: SortField.Date,
-    order: SortOrder.Ascending,
-    label: "Oldest",
-    value: "1-1",
-  },
-  {
-    field: SortField.Popularity,
-    order: SortOrder.Descending,
-    label: "Most popular",
-    value: "6-2",
-  },
-  {
-    field: SortField.Popularity,
-    order: SortOrder.Ascending,
-    label: "Least popular",
-    value: "6-1",
-  },
-  {
-    field: SortField.Likes,
-    order: SortOrder.Descending,
-    label: "Most liked",
-    value: "2-2",
-  },
-  {
-    field: SortField.Comments,
-    order: SortOrder.Descending,
-    label: "Most commented",
-    value: "3-2",
-  },
-  {
-    field: SortField.Reblogs,
-    order: SortOrder.Descending,
-    label: "Most reblogged",
-    value: "4-2",
-  },
+  { field: SortField.Date, order: SortOrder.Descending, label: "Newest", value: "1-2" },
+  { field: SortField.Date, order: SortOrder.Ascending, label: "Oldest", value: "1-1" },
+  { field: SortField.Popularity, order: SortOrder.Descending, label: "Most popular", value: "6-2" },
+  { field: SortField.Popularity, order: SortOrder.Ascending, label: "Least popular", value: "6-1" },
+  { field: SortField.Likes, order: SortOrder.Descending, label: "Most liked", value: "2-2" },
+  { field: SortField.Comments, order: SortOrder.Descending, label: "Most commented", value: "3-2" },
+  { field: SortField.Reblogs, order: SortOrder.Descending, label: "Most reblogged", value: "4-2" },
 ];
 
 export function sortOptionLabel(field: number, order: number): string {
@@ -73,9 +47,6 @@ export interface SortDropdownProps {
 }
 
 export default function SortDropdown(props: SortDropdownProps) {
-  const [open, setOpen] = createSignal(false);
-  let containerRef: HTMLDivElement | undefined;
-
   const enabledMap = () => {
     const opts = props.options ?? {};
     return {
@@ -108,78 +79,38 @@ export default function SortDropdown(props: SortDropdownProps) {
     return found?.label ?? "Sort";
   };
 
-  const handleSelect = (option: SortOption) => {
-    props.onChange(option.field, option.order);
-    setOpen(false);
-  };
-
-  const handleClickOutside = (e: MouseEvent) => {
-    if (containerRef && !containerRef.contains(e.target as Node)) {
-      setOpen(false);
-    }
-  };
-
-  const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setOpen(false);
-    }
-  };
-
-  onMount(() => {
-    if (typeof document === "undefined") return;
-    document.addEventListener("click", handleClickOutside);
-    document.addEventListener("keydown", handleKeydown);
-  });
-
-  onCleanup(() => {
-    if (typeof document === "undefined") return;
-    document.removeEventListener("click", handleClickOutside);
-    document.removeEventListener("keydown", handleKeydown);
-  });
-
   return (
-    <div class="sort-dropdown" ref={containerRef}>
-      <button
-        type="button"
-        class="sort-dropdown-trigger"
-        onClick={() => setOpen(!open())}
-        aria-haspopup="listbox"
-        aria-expanded={open()}
-      >
-        {currentLabel()}
-        <span class="sort-dropdown-chevron" aria-hidden="true">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path
-              d={open() ? "M2 8L6 4L10 8" : "M2 4L6 8L10 4"}
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </span>
-      </button>
-
-      <Show when={open()}>
-        <div class="sort-dropdown-menu" role="listbox">
+    <DropdownMenu>
+      <DropdownMenuTrigger<typeof Button>
+        as={(triggerProps) => (
+          <Button
+            {...triggerProps}
+            variant="outline"
+            size="sm"
+            class="gap-2"
+            aria-label={`Sort: ${currentLabel()}`}
+          >
+            <ArrowUpDown class="size-4" />
+            <span class="max-w-32 truncate">{currentLabel()}</span>
+          </Button>
+        )}
+      />
+      <DropdownMenuPortal>
+        <DropdownMenuContent class="w-48">
           <For each={availableOptions()}>
             {(option) => (
-              <button
-                type="button"
-                class="sort-dropdown-item"
-                classList={{
-                  "sort-dropdown-item-active": option.value === props.value,
-                }}
-                role="option"
-                aria-selected={option.value === props.value}
-                onClick={() => handleSelect(option)}
+              <DropdownMenuItem
+                onSelect={() => props.onChange(option.field, option.order)}
               >
-                {option.label}
-              </button>
+                <span class="flex-1">{option.label}</span>
+                <Show when={option.value === props.value}>
+                  <Check class="size-4 text-primary" />
+                </Show>
+              </DropdownMenuItem>
             )}
           </For>
-        </div>
-      </Show>
-    </div>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
+    </DropdownMenu>
   );
 }

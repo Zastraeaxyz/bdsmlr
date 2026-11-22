@@ -2,6 +2,7 @@ import { createSignal, createEffect, For, Show, untrack } from "solid-js";
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { useLocation, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
+import { Search, X } from "lucide-solid";
 import {
   listBlogsRecentActivity,
   searchPostsByTag,
@@ -38,6 +39,10 @@ import {
   addSearchHistory,
   removeSearchHistory,
 } from "~/lib/searchHistory";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { EmptyState, FeedSkeleton } from "./FeedStates";
 
 const HISTORY_KEY = "bdsmlr:searchHistory:home";
 const PAGE_SIZE = 20;
@@ -69,10 +74,11 @@ export default function HomeFeed() {
     loadSearchHistory(HISTORY_KEY),
   );
   const gallery = createMediaGallery({ posts: () => posts() });
-  const [sortField, setSortField] = createSignal(SortField.Date);
-  const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
+  const [sortField, setSortField] = createSignal<number>(SortField.Date);
+  const [sortOrder, setSortOrder] = createSignal<number>(SortOrder.Descending);
   const [view, setView] = createSignal<FeedView>(loadFeedView());
-  let nextPageToken: string | null = searchParams.page_token || null;
+  let nextPageToken: string | null =
+    typeof searchParams.page_token === "string" ? searchParams.page_token : null;
   let loadedKey = "";
   let searchPage = 1;
   let searchSession: string | null = null;
@@ -307,119 +313,162 @@ export default function HomeFeed() {
   return (
     <Show when={!authLoading() && user()} fallback={null}>
       <Title>Following feed — bbdsmlr</Title>
-      <div class="home-page">
+      <div class="flex min-h-dvh flex-col">
         <Header info="Following feed" />
-        <main>
-          <form class="search-bar search-bar-feed" onSubmit={doSearch}>
-            <SortDropdown
-              value={`${sortField()}-${sortOrder()}`}
-              onChange={(sf, so) => {
-                trackEvent("sort-change", {
-                  surface: "following",
-                  sort: sortOptionLabel(sf, so),
-                });
-                setSortField(sf);
-                setSortOrder(so);
-                nextPageToken = null;
-                if (activeQuery())
-                  setSearchParams({ page: undefined, session: undefined });
-                fetchFeed(1);
-              }}
-              options={{
-                newest: true,
-                oldest: true,
-                mostPopular: true,
-                leastPopular: true,
-                mostLiked: true,
-                mostCommented: true,
-                mostReblogged: true,
-              }}
-            />
-            <div class="search-input-wrap">
-              <input
-                type="text"
-                placeholder="Search posts…"
-                value={query()}
-                onInput={(e) => setQuery(e.currentTarget.value)}
-              />
-              {activeQuery() && (
-                <button
-                  type="button"
-                  class="search-input-clear"
-                  onClick={clearSearch}
-                >
-                  ×
-                </button>
-              )}
-              <SearchHistory
-                entries={history()}
-                onSelect={runSearch}
-                onDelete={(q) =>
-                  setHistory(removeSearchHistory(HISTORY_KEY, q))
-                }
-              />
-            </div>
-            <button type="submit">Search</button>
-            <SearchHelp onFill={runSearch} />
-            <ViewDropdown
-              value={view()}
-              onChange={(v) => {
-                trackEvent("view-change", { surface: "following", view: v });
-                setView(v);
-                saveFeedView(v);
-              }}
-            />
-          </form>
 
-          {error() && (
-            <FeedErrorNotice
-              message={error()}
-              onRetry={() => void fetchFeed(currentUrlPage())}
-            />
-          )}
+        <main class="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+          <div class="sticky top-14 z-30 space-y-2 border-b border-border bg-background/95 p-3 backdrop-blur">
+            <form class="flex items-center gap-2" onSubmit={doSearch}>
+              <div class="relative flex min-w-0 flex-1 items-center rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/40">
+                <Search class="pointer-events-none absolute left-2.5 size-4 text-muted-foreground" />
+                <input
+                  type="search"
+                  inputMode="search"
+                  class="h-10 w-full bg-transparent pl-8 pr-16 text-base outline-none placeholder:text-muted-foreground md:text-sm"
+                  placeholder="Search posts…"
+                  value={query()}
+                  onInput={(event) => setQuery(event.currentTarget.value)}
+                  aria-label="Search posts"
+                />
+                <div class="absolute right-1 flex items-center">
+                  <Show when={activeQuery()}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      class="size-8"
+                      onClick={clearSearch}
+                      aria-label="Clear search"
+                    >
+                      <X class="size-4" />
+                    </Button>
+                  </Show>
+                  <SearchHistory
+                    entries={history()}
+                    onSelect={runSearch}
+                    onDelete={(q) =>
+                      setHistory(removeSearchHistory(HISTORY_KEY, q))
+                    }
+                  />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                size="icon"
+                class="size-10 shrink-0"
+                aria-label="Search"
 
-          {loading() && <p class="loading">Loading feed…</p>}
-
-          <Show when={!loading()}>
-            <Show
-              when={posts().length > 0}
-              fallback={
-                <p class="empty">
-                  {activeQuery()
-                    ? "No results found."
-                    : "No posts from followed blogs."}
-                </p>
-              }
-            >
-              <div
-                class={view() === "grid" ? "feed feed-grid" : "feed"}
               >
-                <For each={posts()}>
-                  {(post) => (
-                    <PostCard
-                      post={post}
-                      onTagClick={handleTagClick}
-                      onImageClick={(url, postId) =>
-                        gallery.open(url, postId)
-                      }
-                    />
-                  )}
-                </For>
+                <Search class="size-4" />
+              </Button>
+              <SearchHelp onFill={runSearch} />
+            </form>
+
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <SortDropdown
+                  value={`${sortField()}-${sortOrder()}`}
+                  onChange={(sf, so) => {
+                    trackEvent("sort-change", {
+                      surface: "following",
+                      sort: sortOptionLabel(sf, so),
+                    });
+                    setSortField(sf);
+                    setSortOrder(so);
+                    nextPageToken = null;
+                    if (activeQuery())
+                      setSearchParams({ page: undefined, session: undefined });
+                    fetchFeed(1);
+                  }}
+                  options={{
+                    newest: true,
+                    oldest: true,
+                    mostPopular: true,
+                    leastPopular: true,
+                    mostLiked: true,
+                    mostCommented: true,
+                    mostReblogged: true,
+                  }}
+                />
+                <ViewDropdown
+                  value={view()}
+                  onChange={(value) => {
+                    trackEvent("view-change", {
+                      surface: "following",
+                      view: value,
+                    });
+                    setView(value);
+                    saveFeedView(value);
+                  }}
+                />
+              </div>
+              <Show when={activeQuery()}>
+                <Badge variant="secondary" class="max-w-[55vw] truncate font-normal">
+                  {activeQuery()}
+                </Badge>
+              </Show>
+            </div>
+          </div>
+
+          <div class="flex flex-1 flex-col gap-2 py-2 sm:gap-3">
+            <Show when={error()}>
+              <div class="px-3">
+                <FeedErrorNotice
+                  message={error()}
+                  onRetry={() => void fetchFeed(currentUrlPage())}
+                />
               </div>
             </Show>
-          </Show>
 
-          <AutoLoadMore
-            onLoad={() => {
-              trackEvent("load-more", { surface: "following" });
-              void loadMore();
-            }}
-            loading={loadingMore()}
-            ready={!loading()}
-          />
+            <Show when={loading()}>
+              <div class="px-3">
+                <FeedSkeleton />
+              </div>
+            </Show>
+
+            <Show when={!loading()}>
+              <Show
+                when={posts().length > 0}
+                fallback={
+                  <EmptyState title={activeQuery() ? "No results" : "Nothing here yet"}>
+                    {activeQuery()
+                      ? "No posts matched that search."
+                      : "Follow some blogs to see their latest posts."}
+                  </EmptyState>
+                }
+              >
+                <div
+                  class={
+                    view() === "grid"
+                      ? "grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3"
+                      : "flex flex-col gap-2 sm:gap-3"
+                  }
+                >
+                  <For each={posts()}>
+                    {(post) => (
+                      <PostCard
+                        post={post}
+                        onTagClick={handleTagClick}
+                        onImageClick={(url, postId) => gallery.open(url, postId)}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
+            </Show>
+
+            <AutoLoadMore
+              onLoad={() => {
+                trackEvent("load-more", { surface: "following" });
+                void loadMore();
+              }}
+              loading={loadingMore()}
+              ready={!loading()}
+            />
+          </div>
         </main>
-        <LightBox gallery={gallery} />
       </div>
+      <LightBox gallery={gallery} />
     </Show>
   );
 }

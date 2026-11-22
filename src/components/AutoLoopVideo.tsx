@@ -1,4 +1,5 @@
-import { createEffect, createSignal, onCleanup, onMount } from 'solid-js'
+import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
+import { Play } from 'lucide-solid'
 
 interface AutoLoopVideoProps {
   src: string
@@ -26,6 +27,7 @@ function isMostlyVisible(entry: IntersectionObserverEntry) {
 
 export function AutoLoopVideo(props: AutoLoopVideoProps) {
   const [length, setLength] = createSignal<VideoLength>('unknown')
+  const [playing, setPlaying] = createSignal(false)
   let video: HTMLVideoElement | undefined
   let userInteracted = false
 
@@ -67,27 +69,50 @@ export function AutoLoopVideo(props: AutoLoopVideoProps) {
     userInteracted = true
   }
 
+  const start = () => {
+    userInteracted = true
+    void video?.play().catch(() => {})
+  }
+
   return (
-    <video
-      ref={video}
-      src={props.src}
-      muted
-      playsinline
-      controls={showControls()}
-      preload="metadata"
-      loop={isShort()}
-      onError={props.onError}
-      onClick={rememberInteraction}
-      onKeyDown={rememberInteraction}
-      onLoadedMetadata={(e) => {
-        const element = e.currentTarget as HTMLVideoElement
-        const duration = element.duration
-        setLength(
-          Number.isFinite(duration) && duration < SHORT_VIDEO_THRESHOLD_SECONDS
-            ? 'short'
-            : 'long',
-        )
-      }}
-    />
+    <div class="relative w-full">
+      <video
+        ref={video}
+        src={props.src}
+        muted
+        playsinline
+        controls={showControls()}
+        preload="metadata"
+        loop={isShort()}
+        class="w-full"
+        onError={props.onError}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => setPlaying(false)}
+        onClick={rememberInteraction}
+        onKeyDown={rememberInteraction}
+        onLoadedMetadata={(e) => {
+          const element = e.currentTarget as HTMLVideoElement
+          const duration = element.duration
+          setLength(
+            Number.isFinite(duration) && duration < SHORT_VIDEO_THRESHOLD_SECONDS
+              ? 'short'
+              : 'long',
+          )
+        }}
+      />
+      <Show when={!playing()}>
+        <button
+          type="button"
+          class="absolute inset-0 flex items-center justify-center bg-black/20 text-white transition-colors hover:bg-black/30"
+          onClick={start}
+          aria-label="Play video"
+        >
+          <span class="flex size-14 items-center justify-center rounded-full bg-black/60 backdrop-blur">
+            <Play class="size-6 translate-x-0.5" fill="currentColor" />
+          </span>
+        </button>
+      </Show>
+    </div>
   )
 }

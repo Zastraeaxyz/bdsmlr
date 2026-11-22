@@ -8,7 +8,12 @@ import {
   SortOrder,
   type Post,
 } from "~/lib/api";
-import { PostCard } from "~/components/PostCard";
+import { PostFeed } from "~/components/PostFeed";
+import { FeedSkeleton, EmptyState } from "~/components/FeedStates";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader } from "./ui/card";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
@@ -177,9 +182,9 @@ export function ActivityFeed(props: { blogName: string }) {
   };
 
   return (
-    <div>
-      <div class="activity-controls">
-        <div class="activity-filters">
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-wrap items-center gap-1.5">
           <For
             each={
               [
@@ -191,25 +196,26 @@ export function ActivityFeed(props: { blogName: string }) {
             }
           >
             {(entry) => (
-              <button
+              <Button
                 type="button"
-                class={
-                  selected().includes(entry[0])
-                    ? "activity-filter active"
-                    : "activity-filter"
-                }
+                size="sm"
+                variant={selected().includes(entry[0]) ? "default" : "outline"}
+                class="h-8 rounded-full px-3 text-xs"
                 onClick={() => toggleKind(entry[0])}
                 aria-pressed={selected().includes(entry[0])}
               >
                 {entry[1]}
-              </button>
+              </Button>
             )}
           </For>
         </div>
         <SortDropdown
           value={`${sortField()}-${sortOrder()}`}
           onChange={(sf, so) => {
-            trackEvent("sort-change", { surface: "activity", sort: sortOptionLabel(sf, so) });
+            trackEvent("sort-change", {
+              surface: "activity",
+              sort: sortOptionLabel(sf, so),
+            });
             setSortField(sf);
             setSortOrder(so);
           }}
@@ -226,53 +232,57 @@ export function ActivityFeed(props: { blogName: string }) {
       </div>
 
       <Show when={error()}>
-        <FeedErrorNotice
+<FeedErrorNotice
           message={error()}
           blogName={props.blogName}
           onRetry={() => void load()}
         />
       </Show>
-      {loading() && <p class="loading">Loading activity…</p>}
+
+      <Show when={loading()}>
+        <FeedSkeleton />
+      </Show>
+
       <Show when={!loading()}>
         <Show
           when={visible().length > 0}
-          fallback={<p class="empty">No activity for these filters.</p>}
+          fallback={<EmptyState>No activity for these filters.</EmptyState>}
         >
-          <div class="feed">
+          <div class="flex flex-col gap-2 sm:gap-3">
             <For each={visible()}>
               {(item) => (
                 <Show
                   when={item.type === 1 && item.post}
                   fallback={
-                    <div class="activity-cluster">
-                      <div class="activity-cluster-head">
-                        <span class="activity-cluster-label">
+                    <Card class="gap-0 rounded-none border-x-0 bg-card py-0 shadow-none sm:rounded-xl sm:border-x">
+                      <CardHeader class="flex-row items-center justify-between gap-2 border-b px-3 py-2.5">
+                        <span class="text-sm font-medium">
                           {item.cluster?.label ?? "Activity"}
                         </span>
-                        <span class="activity-cluster-count">
+                        <Badge variant="secondary">
                           {item.cluster?.interactions?.length ?? 0}
-                        </span>
-                      </div>
-                      <div class="activity-cluster-list">
+                        </Badge>
+                      </CardHeader>
+                      <CardContent class="p-0">
                         <For each={item.cluster?.interactions ?? []}>
                           {(interaction, index) => (
                             <Show when={index() < 12}>
                               <A
                                 href={`/${interaction.blogName}/post/${interaction.id}`}
-                                class="activity-cluster-item"
+                                class="flex items-start gap-3 px-3 py-2.5 hover:bg-accent"
                               >
                                 <BlogAvatar
                                   blogId={interaction.blogId}
                                   blogName={interaction.blogName}
-                                  size={24}
+                                  size={28}
                                   linkable={false}
                                 />
-                                <span class="activity-cluster-main">
-                                  <span class="activity-cluster-blog">
+                                <span class="min-w-0 flex-1">
+                                  <span class="block text-sm font-medium">
                                     {interaction.blogName}
                                   </span>
                                   <Show when={postSnippet(interaction)}>
-                                    <span class="activity-cluster-snippet">
+                                    <span class="line-clamp-2 block text-xs text-muted-foreground">
                                       {postSnippet(interaction)}
                                     </span>
                                   </Show>
@@ -281,26 +291,19 @@ export function ActivityFeed(props: { blogName: string }) {
                             </Show>
                           )}
                         </For>
-                        <Show
-                          when={
-                            (item.cluster?.interactions?.length ?? 0) > 12
-                          }
-                        >
-                          <span class="activity-cluster-more">
-                            and {(item.cluster?.interactions?.length ?? 0) - 12}{" "}
-                            more
-                          </span>
+                        <Show when={(item.cluster?.interactions?.length ?? 0) > 12}>
+                          <p class="px-3 py-2 text-xs text-muted-foreground">
+                            and {(item.cluster?.interactions?.length ?? 0) - 12} more
+                          </p>
                         </Show>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   }
                 >
-                  <PostCard
-                    post={item.post!}
+                  <PostFeed
+                    posts={[item.post!]}
                     onTagClick={openTag}
-                    onImageClick={(url, postId) =>
-                      gallery.open(url, postId)
-                    }
+                    onImageClick={(url, postId) => gallery.open(url, postId)}
                   />
                 </Show>
               )}
@@ -308,6 +311,7 @@ export function ActivityFeed(props: { blogName: string }) {
           </div>
         </Show>
       </Show>
+
       <Show when={nextPageToken}>
         <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
       </Show>

@@ -1,4 +1,12 @@
-import { createSignal, For, Show, onMount, onCleanup } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
+import { History, Trash2, X } from "lucide-solid";
+import { Button } from "./ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverPortal,
+  PopoverTrigger,
+} from "./ui/popover";
 
 interface SearchHistoryProps {
   entries: string[];
@@ -9,107 +17,101 @@ interface SearchHistoryProps {
 export default function SearchHistory(props: SearchHistoryProps) {
   const [open, setOpen] = createSignal(false);
   const [armDelete, setArmDelete] = createSignal<string | null>(null);
-  let containerRef: HTMLSpanElement | undefined;
 
   const close = () => {
     setOpen(false);
     setArmDelete(null);
   };
 
-  const handleClickOutside = (e: MouseEvent) => {
-    if (containerRef && !containerRef.contains(e.target as Node)) {
-      close();
-    }
-  };
-
-  const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") close();
-  };
-
-  onMount(() => {
-    if (typeof document === "undefined") return;
-    document.addEventListener("click", handleClickOutside);
-    document.addEventListener("keydown", handleKeydown);
-  });
-
-  onCleanup(() => {
-    if (typeof document === "undefined") return;
-    document.removeEventListener("click", handleClickOutside);
-    document.removeEventListener("keydown", handleKeydown);
-  });
-
-  const handleItemClick = (q: string) => {
-    if (armDelete() === q) {
+  const handleItemClick = (query: string) => {
+    if (armDelete() === query) {
       setArmDelete(null);
       return;
     }
-    props.onSelect(q);
+    props.onSelect(query);
     close();
   };
 
-  const handleDeleteClick = (e: MouseEvent, q: string) => {
-    e.stopPropagation();
-    if (armDelete() === q) {
-      props.onDelete(q);
+  const handleDeleteClick = (event: MouseEvent, query: string) => {
+    event.stopPropagation();
+    if (armDelete() === query) {
+      props.onDelete(query);
       setArmDelete(null);
     } else {
-      setArmDelete(q);
+      setArmDelete(query);
     }
   };
 
   return (
-    <span class="search-history" ref={containerRef}>
-      <button
-        type="button"
-        class="search-history-btn"
-        onClick={() => setOpen(!open())}
-        aria-label="Search history"
-        aria-haspopup="listbox"
-        aria-expanded={open()}
-      >
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path
-            d={open() ? "M2 8L6 4L10 8" : "M2 4L6 8L10 4"}
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </button>
-
-      <Show when={open()}>
-        <div class="search-history-dropdown" role="listbox">
+    <Popover open={open()} onOpenChange={setOpen}>
+      <PopoverTrigger<typeof Button>
+        as={(triggerProps) => (
+          <Button
+            {...triggerProps}
+            type="button"
+            variant="ghost"
+            size="icon"
+            class="size-9 shrink-0"
+            aria-label="Search history"
+          >
+            <History class="size-4" />
+          </Button>
+        )}
+      />
+      <PopoverPortal>
+        <PopoverContent class="w-72 p-2">
           <Show
             when={props.entries.length > 0}
             fallback={
-              <p class="search-history-empty">No search history yet.</p>
+              <p class="px-2 py-3 text-sm text-muted-foreground">
+                No search history yet.
+              </p>
             }
           >
             <For each={props.entries}>
-              {(q) => (
-                <div
-                  class="search-history-item"
-                  classList={{ armed: armDelete() === q }}
-                  onClick={() => handleItemClick(q)}
-                  role="option"
-                >
-                  <span class="search-history-query">{q}</span>
+              {(query) => (
+                <div class="flex items-center gap-1 rounded-md hover:bg-accent">
                   <button
                     type="button"
-                    class="search-history-delete"
-                    classList={{ confirm: armDelete() === q }}
-                    aria-label={armDelete() === q ? "Confirm delete" : "Delete entry"}
-                    onClick={(e) => handleDeleteClick(e, q)}
+                    class="min-w-0 flex-1 px-2 py-2 text-left text-sm"
+                    onClick={() => handleItemClick(query)}
                   >
-                    {armDelete() === q ? "Delete" : "×"}
+                    <span class="block truncate">{query}</span>
                   </button>
+                  <Button
+                    type="button"
+                    variant={armDelete() === query ? "destructive" : "ghost"}
+                    size="sm"
+                    class="mr-1 h-7 shrink-0 px-2"
+                    aria-label={
+                      armDelete() === query ? "Confirm delete" : "Delete entry"
+                    }
+                    onClick={(event) => handleDeleteClick(event, query)}
+                  >
+                    <Show
+                      when={armDelete() === query}
+                      fallback={<Trash2 class="size-3.5" />}
+                    >
+                      Delete
+                    </Show>
+                  </Button>
                 </div>
               )}
             </For>
           </Show>
-        </div>
-      </Show>
-    </span>
+          <div class="mt-1 flex justify-end border-t pt-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              class="h-7 text-xs"
+              onClick={close}
+            >
+              <X class="size-3.5" /> Close
+            </Button>
+          </div>
+        </PopoverContent>
+      </PopoverPortal>
+    </Popover>
   );
 }

@@ -1,5 +1,8 @@
 import { createEffect, ErrorBoundary, on, type JSX } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
+import { AlertTriangle } from "lucide-solid";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Button } from "./ui/button";
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -26,37 +29,41 @@ export function AppErrorBoundary(props: {
       fallback={(error, reset) => {
         resetBoundary = reset;
         return (
-          <section
-            class={
-              props.compact
-                ? "error-boundary error-boundary-compact"
-                : "error-boundary"
-            }
+          <Alert
+            variant="destructive"
+            class="mx-auto my-6 w-[calc(100%-2rem)] max-w-2xl"
             role="alert"
           >
-            <h2>
+            <AlertTriangle class="size-4" />
+            <AlertTitle>
               {props.compact
                 ? "Could not load this section"
                 : "Something went wrong"}
-            </h2>
-            <p>
-              {props.compact
-                ? "The rest of the page is still available."
-                : "This page ran into a problem. Try again or head back to your feed."}
-            </p>
-            <div class="error-boundary-actions">
-              <button type="button" onClick={() => reset()}>
-                Try again
-              </button>
-              <A href="/home" class="btn-ghost">
-                Go to feed
-              </A>
-            </div>
-            <details class="error-boundary-details">
-              <summary>Technical details</summary>
-              <pre>{errorMessage(error)}</pre>
-            </details>
-          </section>
+            </AlertTitle>
+            <AlertDescription class="flex flex-col items-start gap-3">
+              <span>
+                {props.compact
+                  ? "The rest of the page is still available."
+                  : "This page ran into a problem. Try again or head back to your feed."}
+              </span>
+              <div class="flex flex-wrap gap-2">
+                <Button type="button" size="sm" onClick={() => reset()}>
+                  Try again
+                </Button>
+                <Button as={A} href="/home" variant="outline" size="sm">
+                  Go to feed
+                </Button>
+              </div>
+              <details class="w-full text-xs text-muted-foreground">
+                <summary class="cursor-pointer select-none">
+                  Technical details
+                </summary>
+                <pre class="mt-2 overflow-x-auto rounded-md bg-background/60 p-3">
+                  {errorMessage(error)}
+                </pre>
+              </details>
+            </AlertDescription>
+          </Alert>
         );
       }}
     >

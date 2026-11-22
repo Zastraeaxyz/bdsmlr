@@ -1,6 +1,14 @@
-import { createSignal, For, Show, onCleanup, onMount } from "solid-js";
-import { ListViewIcon, GridViewIcon } from "~/components/Icons";
+import { For, Show } from "solid-js";
+import { Check, Grid2x2, List } from "lucide-solid";
 import type { FeedView } from "~/lib/feedView";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface ViewOption {
   value: FeedView;
@@ -18,96 +26,44 @@ export interface ViewDropdownProps {
 }
 
 export default function ViewDropdown(props: ViewDropdownProps) {
-  const [open, setOpen] = createSignal(false);
-  let containerRef: HTMLDivElement | undefined;
-
-  const currentLabel = () => {
-    const found = OPTIONS.find((o) => o.value === props.value);
-    return found?.label ?? "List";
-  };
-
-  const handleSelect = (value: FeedView) => {
-    props.onChange(value);
-    setOpen(false);
-  };
-
-  const handleClickOutside = (e: MouseEvent) => {
-    if (containerRef && !containerRef.contains(e.target as Node)) {
-      setOpen(false);
-    }
-  };
-
-  const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setOpen(false);
-    }
-  };
-
-  onMount(() => {
-    if (typeof document === "undefined") return;
-    document.addEventListener("click", handleClickOutside);
-    document.addEventListener("keydown", handleKeydown);
-  });
-
-  onCleanup(() => {
-    if (typeof document === "undefined") return;
-    document.removeEventListener("click", handleClickOutside);
-    document.removeEventListener("keydown", handleKeydown);
-  });
+  const currentLabel = () =>
+    OPTIONS.find((option) => option.value === props.value)?.label ?? "List";
 
   return (
-    <div class="view-dropdown" ref={containerRef}>
-      <button
-        type="button"
-        class="view-dropdown-trigger"
-        onClick={() => setOpen(!open())}
-        aria-haspopup="listbox"
-        aria-expanded={open()}
-        aria-label={`View: ${currentLabel()}`}
-        title={`View: ${currentLabel()}`}
-      >
-        <Show when={props.value === "list"} fallback={<GridViewIcon />}>
-          <ListViewIcon />
-        </Show>
-        <span class="view-dropdown-chevron" aria-hidden="true">
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-            <path
-              d={open() ? "M2 8L6 4L10 8" : "M2 4L6 8L10 4"}
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </span>
-      </button>
-
-      <Show when={open()}>
-        <div class="view-dropdown-menu" role="listbox">
+    <DropdownMenu>
+      <DropdownMenuTrigger<typeof Button>
+        as={(triggerProps) => (
+          <Button
+            {...triggerProps}
+            variant="outline"
+            size="icon"
+            class="size-9"
+            aria-label={`View: ${currentLabel()}`}
+            title={`View: ${currentLabel()}`}
+          >
+            <Show when={props.value === "list"} fallback={<Grid2x2 class="size-4" />}>
+              <List class="size-4" />
+            </Show>
+          </Button>
+        )}
+      />
+      <DropdownMenuPortal>
+        <DropdownMenuContent class="w-36">
           <For each={OPTIONS}>
             {(option) => (
-              <button
-                type="button"
-                class="view-dropdown-item"
-                classList={{
-                  "view-dropdown-item-active": option.value === props.value,
-                }}
-                role="option"
-                aria-selected={option.value === props.value}
-                onClick={() => handleSelect(option.value)}
-              >
-                <Show
-                  when={option.value === "list"}
-                  fallback={<GridViewIcon />}
-                >
-                  <ListViewIcon />
+              <DropdownMenuItem onSelect={() => props.onChange(option.value)}>
+                <Show when={option.value === "list"} fallback={<Grid2x2 class="size-4" />}>
+                  <List class="size-4" />
                 </Show>
-                {option.label}
-              </button>
+                <span class="flex-1">{option.label}</span>
+                <Show when={option.value === props.value}>
+                  <Check class="size-4 text-primary" />
+                </Show>
+              </DropdownMenuItem>
             )}
           </For>
-        </div>
-      </Show>
-    </div>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
+    </DropdownMenu>
   );
 }

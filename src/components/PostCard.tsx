@@ -1,5 +1,11 @@
 import { createSignal, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
+import {
+  ExternalLink,
+  Heart,
+  MessageCircle,
+  Repeat2,
+} from "lucide-solid";
 import { PostType, type Post } from "~/lib/api";
 import {
   sanitizeHtml,
@@ -9,12 +15,7 @@ import {
 } from "~/lib/sanitize";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
-import {
-  HeartIcon,
-  ChatIcon,
-  ReblogIcon,
-  BdsmlrIcon,
-} from "~/components/Icons";
+import { BdsmlrIcon } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
 import { Comments } from "~/components/Comments";
 import { ReblogComposer } from "~/components/ReblogComposer";
@@ -27,6 +28,17 @@ import { useAuth } from "~/lib/useAuth";
 import { toggleLike, usePostInteraction } from "~/lib/postInteractions";
 import { postTypeName } from "~/lib/postTypes";
 import { surfaceForPath, trackEvent } from "~/lib/analytics";
+import { sheetDialogClass } from "~/lib/ui";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogPortal,
+  DialogTitle,
+} from "./ui/dialog";
 
 const NO_HIDDEN_IMAGES: ReadonlySet<string> = new Set();
 
@@ -62,8 +74,6 @@ export function PostCard(props: PostCardProps) {
       setBusy(false);
     }
   };
-
-  const postTypeLabel = (type?: number) => postTypeName(type);
 
   const surface = () =>
     typeof window === "undefined"
@@ -126,144 +136,217 @@ export function PostCard(props: PostCardProps) {
   };
 
   return (
-    <div class="feed-card">
-      <div class="feed-card-header">
-        <BlogAvatar blogId={post.blogId} blogName={post.blogName} />
-        <A href={`/${post.blogName}`} class="feed-card-blog">
-          {post.blogName}
-        </A>
-        <span class="feed-card-type">{postTypeLabel(post.type)}</span>
-        <Show when={!post.id}>
-          <span class="feed-card-type">DELETED</span>
+    <Card class="gap-0 overflow-hidden rounded-none border-x-0 bg-card py-0 shadow-none sm:rounded-xl sm:border-x">
+      <div class="flex items-center gap-2 px-3 py-3">
+        <BlogAvatar blogId={post.blogId} blogName={post.blogName} size={34} />
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <A
+              href={`/${post.blogName}`}
+              class="truncate text-sm font-semibold hover:underline"
+            >
+              {post.blogName}
+            </A>
+            <Badge variant="secondary" class="shrink-0 text-[10px]">
+              {postTypeName(post.type)}
+            </Badge>
+            <Show when={!post.id}>
+              <Badge variant="destructive" class="shrink-0 text-[10px]">
+                DELETED
+              </Badge>
+            </Show>
+          </div>
+          <Show when={post.createdAtUnix}>
+            <p class="text-xs text-muted-foreground">
+              {formatRelativeDate(post.createdAtUnix!)}
+            </p>
+          </Show>
+        </div>
+        <Show when={post.id}>
+          <Button
+            as="a"
+            href={`https://bdsmlr.com/post/${post.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="ghost"
+            size="icon"
+            class="size-9 text-muted-foreground"
+            aria-label="Open on BDSMLR"
+            onClick={handleOutbound}
+          >
+            <BdsmlrIcon class="size-4" />
+          </Button>
         </Show>
-        {post.createdAtUnix && (
-          <span class="feed-card-time">
-            {formatRelativeDate(post.createdAtUnix)}
-          </span>
-        )}
+        <Show when={post.id}>
+          <Button
+            as={A}
+            href={
+              post.blogName
+                ? `/${post.blogName}/post/${post.id}`
+                : `/post/${post.id}`
+            }
+            variant="ghost"
+            size="icon"
+            class="size-9 text-muted-foreground"
+            aria-label="Open permalink"
+            onClick={handlePermalink}
+          >
+            <ExternalLink class="size-4" />
+          </Button>
+        </Show>
       </div>
-      <ReblogAttribution
-        originBlogName={post.originBlogName}
-        originPostId={post.originPostId}
-        variant={post.variant}
-      />
-      {post.title && <div class="feed-card-title">{post.title}</div>}
-      {contentHtml() && (
+
+      <div class="px-3">
+        <ReblogAttribution
+          originBlogName={post.originBlogName}
+          originPostId={post.originPostId}
+          variant={post.variant}
+        />
+      </div>
+
+      <Show when={post.title?.trim()}>
+        <h2 class="px-3 pb-2 text-lg font-semibold leading-snug">
+          {post.title!.trim()}
+        </h2>
+      </Show>
+
+      <Show when={contentHtml()}>
         <div
-          class="feed-card-body"
+          class="post-content px-3 pb-3"
           innerHTML={contentHtml()!}
-          onClick={(e) => {
-            const target = e.target as HTMLElement;
+          onClick={(event) => {
+            const target = event.target as HTMLElement;
             if (target.tagName === "IMG" && target.getAttribute("src")) {
               props.onImageClick?.(target.getAttribute("src")!, post.id);
             }
           }}
         />
-      )}
-      {post.type !== PostType.Text && mediaItems().length > 0 && (
+      </Show>
+
+      <Show when={post.type !== PostType.Text && mediaItems().length > 0}>
         <PostMediaList
           items={mediaItems()}
-          class="feed-card-images"
           onImageClick={(url) => props.onImageClick?.(url, post.id)}
         />
-      )}
-      {post.tags && post.tags.length > 0 && (
-        <div class="feed-card-tags">
+      </Show>
+
+      <Show when={post.tags && post.tags.length > 0}>
+        <div class="flex flex-wrap gap-1.5 px-3 py-3">
           <For each={post.tags}>
-            {(t) => (
+            {(tag) => (
               <Show
                 when={props.onTagClick}
-                fallback={<span class="tag">#{t}</span>}
+                fallback={
+                  <Badge variant="secondary" class="font-normal">
+                    #{tag}
+                  </Badge>
+                }
               >
                 <Show
                   when={props.tagHref}
                   fallback={
-                    <button
+                    <Button
                       type="button"
-                      class="tag"
-                      onClick={() => handleTagClick(t)}
+                      variant="secondary"
+                      size="sm"
+                      class="h-7 text-xs"
+                      onClick={() => handleTagClick(tag)}
                     >
-                      #{t}
-                    </button>
+                      #{tag}
+                    </Button>
                   }
                 >
                   <a
-                    href={props.tagHref!(t)}
-                    class="tag"
-                    onClick={(e) => {
+                    href={props.tagHref!(tag)}
+                    class="rounded-md bg-secondary px-2 py-1 text-xs text-secondary-foreground hover:bg-secondary/80"
+                    onClick={(event) => {
                       if (
-                        e.metaKey ||
-                        e.ctrlKey ||
-                        e.shiftKey ||
-                        e.altKey ||
-                        e.button !== 0
+                        event.metaKey ||
+                        event.ctrlKey ||
+                        event.shiftKey ||
+                        event.altKey ||
+                        event.button !== 0
                       ) {
                         return;
                       }
-                      e.preventDefault();
-                      handleTagClick(t);
+                      event.preventDefault();
+                      handleTagClick(tag);
                     }}
                   >
-                    #{t}
+                    #{tag}
                   </a>
                 </Show>
               </Show>
             )}
           </For>
         </div>
-      )}
-      <div class="feed-card-meta">
+      </Show>
+
+      <div class="flex items-center gap-1 border-t border-border px-1 py-1">
         <Show
           when={user() && post.id}
           fallback={
-            <span>
-              <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
+            <span class="inline-flex h-9 items-center gap-1.5 px-2 text-sm text-muted-foreground">
+              <Heart class="size-4" /> {interaction().likesCount}
             </span>
           }
         >
-          <button
+          <Button
             type="button"
-            class={interaction().liked ? "post-action active" : "post-action"}
+            variant="ghost"
+            size="sm"
+            class="h-9 gap-1.5 px-2"
+            classList={{ "text-rose-400": interaction().liked }}
             onClick={handleLike}
             disabled={busy()}
             title={interaction().liked ? "Unlike" : "Like"}
             aria-label={interaction().liked ? "Unlike post" : "Like post"}
             aria-pressed={interaction().liked}
           >
-            <HeartIcon class={interaction().liked ? "icon heart-filled" : "icon"} /> {interaction().likesCount}
-          </button>
+            <Heart
+              class="size-4"
+              fill={interaction().liked ? "currentColor" : "none"}
+            />
+            {interaction().likesCount}
+          </Button>
         </Show>
+
         <Show
           when={post.id}
           fallback={
-            <span>
-              <ChatIcon /> {commentsCount()}
+            <span class="inline-flex h-9 items-center gap-1.5 px-2 text-sm text-muted-foreground">
+              <MessageCircle class="size-4" /> {commentsCount()}
             </span>
           }
         >
-          <button
+          <Button
             type="button"
-            class="post-action"
+            variant="ghost"
+            size="sm"
+            class="h-9 gap-1.5 px-2"
             onClick={handleCommentsOpen}
             title="View comments"
             aria-label={`View ${commentsCount()} comments`}
           >
-            <ChatIcon /> {commentsCount()}
-          </button>
+            <MessageCircle class="size-4" />
+            {commentsCount()}
+          </Button>
         </Show>
+
         <Show
           when={user() && post.id}
           fallback={
-            <span>
-              <ReblogIcon /> {interaction().reblogsCount}
+            <span class="inline-flex h-9 items-center gap-1.5 px-2 text-sm text-muted-foreground">
+              <Repeat2 class="size-4" /> {interaction().reblogsCount}
             </span>
           }
         >
-          <button
+          <Button
             type="button"
-            class={
-              interaction().reblogged ? "post-action active" : "post-action"
-            }
+            variant="ghost"
+            size="sm"
+            class="h-9 gap-1.5 px-2"
+            classList={{ "text-emerald-400": interaction().reblogged }}
             onClick={() => setShowReblog(true)}
             disabled={busy()}
             title={interaction().reblogged ? "Reblog again" : "Reblog"}
@@ -271,69 +354,40 @@ export function PostCard(props: PostCardProps) {
               interaction().reblogged ? "Reblog post again" : "Reblog post"
             }
           >
-            <ReblogIcon /> {interaction().reblogsCount}
-          </button>
-        </Show>
-        <Show when={post.id}>
-          <a
-            href={`https://bdsmlr.com/post/${post.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="download-btn"
-            title="Open on BDSMLR"
-            onClick={handleOutbound}
-          >
-            <BdsmlrIcon />
-          </a>
-        </Show>
-        <Show when={post.id}>
-          <A
-            href={
-              post.blogName
-                ? `/${post.blogName}/post/${post.id}`
-                : `/post/${post.id}`
-            }
-            class="feed-card-permalink"
-            onClick={handlePermalink}
-          >
-            Permalink
-          </A>
+            <Repeat2 class="size-4" />
+            {interaction().reblogsCount}
+          </Button>
         </Show>
       </div>
+
       <Show when={actionError()}>
-        <p class="action-error">{actionError()}</p>
-      </Show>
-      <Show when={showReblog()}>
-        <ReblogComposer
-          post={post}
-          onClose={() => setShowReblog(false)}
-        />
-      </Show>
-      <Show when={showComments()}>
-        <div
-          class="tag-modal-backdrop"
-          onClick={() => setShowComments(false)}
-        >
-          <div
-            class="tag-modal comments-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              class="tag-modal-close"
-              onClick={() => setShowComments(false)}
-              aria-label="Close comments"
-            >
-              ×
-            </button>
-            <Comments
-              postId={post.id}
-              initialCount={post.commentsCount ?? 0}
-              onCountChange={setCommentsCount}
-            />
-          </div>
+        <div class="px-3 pb-3">
+          <Alert variant="destructive">
+            <AlertDescription>{actionError()}</AlertDescription>
+          </Alert>
         </div>
       </Show>
-    </div>
+
+      <Show when={showReblog()}>
+        <ReblogComposer post={post} onClose={() => setShowReblog(false)} />
+      </Show>
+
+      <Show when={showComments()}>
+        <Dialog open onOpenChange={(open) => !open && setShowComments(false)}>
+          <DialogPortal>
+            <DialogContent
+              class={`${sheetDialogClass} max-h-[85dvh] overflow-y-auto`}
+            >
+              <DialogTitle class="sr-only">Comments</DialogTitle>
+              <Comments
+                postId={post.id}
+                initialCount={post.commentsCount ?? 0}
+                onCountChange={setCommentsCount}
+              />
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      </Show>
+    </Card>
   );
 }

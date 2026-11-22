@@ -1,7 +1,35 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import Header from "~/components/Header";
+import { Page, PageHeader } from "~/components/Page";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import {
+  Checkbox,
+  CheckboxControl,
+  CheckboxLabel,
+} from "~/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectPortal,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldLabel,
+  TextFieldTextArea,
+} from "~/components/ui/text-field";
 import { useAuth } from "~/lib/useAuth";
 import { features } from "~/lib/features";
 import { FeatureDisabled } from "~/components/FeatureDisabled";
@@ -57,6 +85,62 @@ const COLORS = [
   ["link_bg", "Links"],
   ["tag_color", "Tags"],
 ] as const;
+
+type Choice = { value: string; label: string };
+
+function SelectField(props: {
+  label: string;
+  options: Choice[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <Select<Choice>
+      options={props.options}
+      optionValue="value"
+      optionTextValue="label"
+      placeholder="Select"
+      value={
+        props.options.find((option) => option.value === props.value) ?? null
+      }
+      onChange={(option) => {
+        if (option) props.onChange(option.value);
+      }}
+      itemComponent={(itemProps) => (
+        <SelectItem item={itemProps.item}>
+          {itemProps.item.rawValue.label}
+        </SelectItem>
+      )}
+    >
+      <SelectLabel>{props.label}</SelectLabel>
+      <SelectTrigger class="h-11 w-full md:h-9">
+        <SelectValue<Choice>>
+          {(state) => state.selectedOption()?.label ?? "Select"}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectPortal>
+        <SelectContent />
+      </SelectPortal>
+    </Select>
+  );
+}
+
+function CheckField(props: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <Checkbox
+      class="flex min-h-11 items-center gap-3"
+      checked={props.checked}
+      onChange={props.onChange}
+    >
+      <CheckboxControl class="size-5" />
+      <CheckboxLabel class="text-sm font-normal">{props.label}</CheckboxLabel>
+    </Checkbox>
+  );
+}
 
 export default function CustomizePage() {
   const navigate = useNavigate();
@@ -189,110 +273,106 @@ export default function CustomizePage() {
 
   return (
     <Show when={!authLoading() && user()} fallback={null}>
-      <Title>Customize blog - bbdsmlr</Title>
-      <div class="home-page">
-        <Header info="Customize blog" />
-        <main>
-          <h2 class="social-list-title">
-            Customize {activeBlog()?.name ? `@${activeBlog()!.name}` : "blog"}
-          </h2>
-          {error() && <p class="error">{error()}</p>}
-          {notice() && <p class="action-notice">{notice()}</p>}
-          {loading() && <p class="loading">Loading customization…</p>}
-          <Show when={!loading() && data()}>
-            <form class="customize-form" onSubmit={save}>
-              <section class="compose-card">
-                <h3 class="customize-heading">Basics</h3>
-                <label class="compose-field">
-                  <span>Title</span>
-                  <input
-                    type="text"
-                    value={value("title")}
-                    onInput={(e) => setField("title", e.currentTarget.value)}
-                  />
-                </label>
-                <label class="compose-field">
-                  <span>Description</span>
-                  <textarea
-                    rows={5}
-                    value={value("description")}
-                    onInput={(e) =>
-                      setField("description", e.currentTarget.value)
-                    }
-                  />
-                </label>
-                <div class="customize-two">
-                  <label class="compose-field">
-                    <span>Theme</span>
-                    <select
-                      value={value("Style")}
-                      onChange={(e) => setField("Style", e.currentTarget.value)}
-                    >
-                      <For each={THEMES}>
-                        {(theme) => (
-                          <option value={theme.value}>{theme.label}</option>
-                        )}
-                      </For>
-                    </select>
-                  </label>
-                  <label class="compose-field">
-                    <span>Font</span>
-                    <select
-                      value={value("font")}
-                      onChange={(e) => setField("font", e.currentTarget.value)}
-                    >
-                      <For each={FONTS}>
-                        {(font) => (
-                          <option value={font.value}>{font.label}</option>
-                        )}
-                      </For>
-                    </select>
-                  </label>
-                </div>
-                <div class="customize-two">
-                  <label class="compose-field">
-                    <span>Avatar shape</span>
-                    <select
-                      value={value("avatar_shape")}
-                      onChange={(e) =>
-                        setField("avatar_shape", e.currentTarget.value)
-                      }
-                    >
-                      <option value="square">Square</option>
-                      <option value="round">Round</option>
-                    </select>
-                  </label>
-                </div>
-              </section>
+      <Page info="Customize blog">
+        <Title>Customize blog - bbdsmlr</Title>
+        <PageHeader
+          title={`Customize ${activeBlog()?.name ? `@${activeBlog()!.name}` : "blog"}`}
+          description="Theme, colors, images, and what your blog shows."
+        />
 
-              <section class="compose-card">
-                <h3 class="customize-heading">Colors</h3>
-                <div class="customize-colors">
-                  <For each={COLORS}>
-                    {(color) => (
-                      <label class="compose-field">
-                        <span>{color[1]}</span>
-                        <input
-                          type="text"
-                          value={value(color[0])}
-                          onInput={(e) =>
-                            setField(color[0], e.currentTarget.value)
-                          }
-                        />
-                      </label>
-                    )}
-                  </For>
-                </div>
-              </section>
+        <Show when={error()}>
+          <Alert variant="destructive" class="mb-3">
+            <AlertDescription>{error()}</AlertDescription>
+          </Alert>
+        </Show>
+        <Show when={notice()}>
+          <Alert class="mb-3">
+            <AlertDescription>{notice()}</AlertDescription>
+          </Alert>
+        </Show>
+        <Show when={loading()}>
+          <p class="text-sm text-muted-foreground">Loading customization…</p>
+        </Show>
 
-              <section class="compose-card">
-                <h3 class="customize-heading">Images</h3>
-                <div class="customize-two">
-                  <div class="compose-field">
-                    <span>Avatar</span>
+        <Show when={!loading() && data()}>
+          <form class="flex flex-col gap-3 pb-6" onSubmit={save}>
+            <Card class="gap-4">
+              <CardHeader>
+                <CardTitle>Basics</CardTitle>
+              </CardHeader>
+              <CardContent class="flex flex-col gap-3">
+                <TextField
+                  value={value("title")}
+                  onChange={(next) => setField("title", next)}
+                >
+                  <TextFieldLabel>Title</TextFieldLabel>
+                  <TextFieldInput type="text" class="h-11 md:h-9" />
+                </TextField>
+                <TextField
+                  value={value("description")}
+                  onChange={(next) => setField("description", next)}
+                >
+                  <TextFieldLabel>Description</TextFieldLabel>
+                  <TextFieldTextArea rows={5} />
+                </TextField>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <SelectField
+                    label="Theme"
+                    options={THEMES}
+                    value={value("Style")}
+                    onChange={(next) => setField("Style", next)}
+                  />
+                  <SelectField
+                    label="Font"
+                    options={FONTS}
+                    value={value("font")}
+                    onChange={(next) => setField("font", next)}
+                  />
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <SelectField
+                    label="Avatar shape"
+                    options={[
+                      { value: "square", label: "Square" },
+                      { value: "round", label: "Round" },
+                    ]}
+                    value={value("avatar_shape")}
+                    onChange={(next) => setField("avatar_shape", next)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card class="gap-4">
+              <CardHeader>
+                <CardTitle>Colors</CardTitle>
+              </CardHeader>
+              <CardContent class="grid gap-3 sm:grid-cols-2">
+                <For each={COLORS}>
+                  {(color) => (
+                    <TextField
+                      value={value(color[0])}
+                      onChange={(next) => setField(color[0], next)}
+                    >
+                      <TextFieldLabel>{color[1]}</TextFieldLabel>
+                      <TextFieldInput type="text" class="h-11 md:h-9" />
+                    </TextField>
+                  )}
+                </For>
+              </CardContent>
+            </Card>
+
+            <Card class="gap-4">
+              <CardHeader>
+                <CardTitle>Images</CardTitle>
+              </CardHeader>
+              <CardContent class="flex flex-col gap-4">
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="flex flex-col gap-2">
+                    <span class="text-sm font-medium">Avatar</span>
                     <Show when={value("avatar")}>
                       <img
-                        class="customize-avatar"
+                        class="size-20 rounded-xl border border-border object-cover"
                         src={previewUrl(value("avatar"))}
                         alt=""
                       />
@@ -301,17 +381,19 @@ export default function CustomizePage() {
                       ref={avatarInput}
                       type="file"
                       accept="image/*"
+                      aria-label="Avatar"
+                      class="block w-full text-sm text-muted-foreground file:mr-3 file:h-11 file:cursor-pointer file:rounded-md file:border-0 file:bg-secondary file:px-4 file:text-sm file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
                       onChange={(e) => {
                         const file = e.currentTarget.files?.[0];
                         if (file) void uploadAvatar(file);
                       }}
                     />
                   </div>
-                  <div class="compose-field">
-                    <span>Header background</span>
+                  <div class="flex flex-col gap-2">
+                    <span class="text-sm font-medium">Header background</span>
                     <Show when={value("header_background")}>
                       <img
-                        class="customize-header"
+                        class="h-24 w-full rounded-lg border border-border object-cover"
                         src={previewUrl(value("header_background"))}
                         alt=""
                       />
@@ -320,6 +402,8 @@ export default function CustomizePage() {
                       ref={headerInput}
                       type="file"
                       accept="image/*"
+                      aria-label="Header background"
+                      class="block w-full text-sm text-muted-foreground file:mr-3 file:h-11 file:cursor-pointer file:rounded-md file:border-0 file:bg-secondary file:px-4 file:text-sm file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
                       onChange={(e) => {
                         const file = e.currentTarget.files?.[0];
                         if (file)
@@ -332,12 +416,14 @@ export default function CustomizePage() {
                     />
                   </div>
                 </div>
-                <div class="compose-field">
-                  <span>Blog background</span>
+                <div class="flex flex-col gap-2">
+                  <span class="text-sm font-medium">Blog background</span>
                   <input
                     ref={backgroundInput}
                     type="file"
                     accept="image/*"
+                    aria-label="Blog background"
+                    class="block w-full text-sm text-muted-foreground file:mr-3 file:h-11 file:cursor-pointer file:rounded-md file:border-0 file:bg-secondary file:px-4 file:text-sm file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
                     onChange={(e) => {
                       const file = e.currentTarget.files?.[0];
                       if (file)
@@ -349,81 +435,66 @@ export default function CustomizePage() {
                     }}
                   />
                 </div>
-              </section>
+              </CardContent>
+            </Card>
 
-              <section class="compose-card">
-                <h3 class="customize-heading">Display</h3>
-                <div class="customize-checks">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={checked("date")}
-                      onChange={(e) => setField("date", e.currentTarget.checked)}
-                    />
-                    Show dates
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={checked("hideavatar")}
-                      onChange={(e) =>
-                        setField("hideavatar", e.currentTarget.checked)
-                      }
-                    />
-                    Hide avatar
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={checked("header_photo")}
-                      onChange={(e) =>
-                        setField("header_photo", e.currentTarget.checked)
-                      }
-                    />
-                    Show header photo
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={checked("headerwidth")}
-                      onChange={(e) =>
-                        setField("headerwidth", e.currentTarget.checked)
-                      }
-                    />
-                    Full width header
-                  </label>
-                </div>
-              </section>
+            <Card class="gap-4">
+              <CardHeader>
+                <CardTitle>Display</CardTitle>
+              </CardHeader>
+              <CardContent class="flex flex-col gap-1">
+                <CheckField
+                  label="Show dates"
+                  checked={checked("date")}
+                  onChange={(next) => setField("date", next)}
+                />
+                <CheckField
+                  label="Hide avatar"
+                  checked={checked("hideavatar")}
+                  onChange={(next) => setField("hideavatar", next)}
+                />
+                <CheckField
+                  label="Show header photo"
+                  checked={checked("header_photo")}
+                  onChange={(next) => setField("header_photo", next)}
+                />
+                <CheckField
+                  label="Full width header"
+                  checked={checked("headerwidth")}
+                  onChange={(next) => setField("headerwidth", next)}
+                />
+              </CardContent>
+            </Card>
 
-              <section class="compose-card">
-                <h3 class="customize-heading">Interests</h3>
-                <div class="customize-checks customize-interests">
-                  <For each={INTERESTS}>
-                    {(interest) => (
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={checked(interest[0])}
-                          onChange={(e) =>
-                            setField(interest[0], e.currentTarget.checked)
-                          }
-                        />
-                        {interest[1]}
-                      </label>
-                    )}
-                  </For>
-                </div>
-              </section>
+            <Card class="gap-4">
+              <CardHeader>
+                <CardTitle>Interests</CardTitle>
+              </CardHeader>
+              <CardContent class="grid gap-1 sm:grid-cols-2">
+                <For each={INTERESTS}>
+                  {(interest) => (
+                    <CheckField
+                      label={interest[1]}
+                      checked={checked(interest[0])}
+                      onChange={(next) => setField(interest[0], next)}
+                    />
+                  )}
+                </For>
+              </CardContent>
+            </Card>
 
-              <div class="compose-actions">
-                <button type="submit" disabled={busy() !== ""}>
-                  {busy() === "save" ? "Saving…" : "Save customization"}
-                </button>
-              </div>
-            </form>
-          </Show>
-        </main>
-      </div>
+            <div class="flex justify-end">
+              <Button
+                type="submit"
+                class="h-11 md:h-9 w-full sm:w-auto"
+                disabled={busy() !== ""}
+              >
+                {busy() === "save" ? "Saving…" : "Save customization"}
+              </Button>
+            </div>
+          </form>
+        </Show>
+      </Page>
     </Show>
   );
 }

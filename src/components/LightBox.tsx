@@ -5,10 +5,12 @@ import {
   createSignal,
   onCleanup,
 } from "solid-js";
+import { ChevronLeft, ChevronRight, X } from "lucide-solid";
 import { getMediaType } from "../lib/sanitize";
 import { surfaceForPath, trackEvent } from "../lib/analytics";
 import { AutoLoopVideo } from "./AutoLoopVideo";
 import type { GalleryItem, MediaGallery } from "../lib/mediaGallery";
+import { Button } from "./ui/button";
 
 interface LightBoxProps {
   /** Single-item mode, used by the composer preview. */
@@ -34,6 +36,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export function LightBox(props: LightBoxProps) {
   let closeButton: HTMLButtonElement | undefined;
   let wasOpen = false;
+  let touchStartX = 0;
 
   const isOpen = () =>
     props.gallery ? props.gallery.isOpen() : props.url != null;
@@ -77,6 +80,8 @@ export function LightBox(props: LightBoxProps) {
     const index = Math.min(candidateIndex() + 1, list.length - 1);
     setCandidateState({ item: current, index });
   };
+
+  const hasGallery = () => !!props.gallery && props.gallery.itemCount() > 1;
 
   createEffect(() => {
     const open = isOpen();
@@ -134,10 +139,22 @@ export function LightBox(props: LightBoxProps) {
     onCleanup(() => window.removeEventListener("keydown", handler));
   });
 
+  const onTouchStart = (event: TouchEvent) => {
+    touchStartX = event.touches[0]?.clientX ?? 0;
+  };
+
+  const onTouchEnd = (event: TouchEvent) => {
+    if (!props.gallery || !hasGallery()) return;
+    const delta = (event.changedTouches[0]?.clientX ?? 0) - touchStartX;
+    if (Math.abs(delta) < 48) return;
+    if (delta > 0) props.gallery.prevItem();
+    else props.gallery.nextItem();
+  };
+
   return (
     <Show when={isOpen()}>
       <div
-        class="lightbox-backdrop"
+        class="fixed inset-0 z-[60] flex flex-col bg-black/95"
         role="dialog"
         aria-modal="true"
         aria-label="Media viewer"
@@ -145,36 +162,78 @@ export function LightBox(props: LightBoxProps) {
           if (event.target === event.currentTarget) close();
         }}
       >
-        <div class="lightbox-content">
-          <button
+        <div class="safe-top flex items-center justify-between p-2">
+          <Show when={hasGallery()}>
+            <span class="px-3 text-sm text-white/80" aria-live="polite">
+              {props.gallery!.itemIndex() + 1} / {props.gallery!.itemCount()}
+            </span>
+          </Show>
+          <Button
             ref={closeButton}
             type="button"
-            class="lightbox-close"
+            variant="secondary"
+            size="icon"
+            class="ml-auto size-11 rounded-full"
             onClick={close}
             aria-label="Close media viewer"
           >
-            ✕
-          </button>
+            <X class="size-5" />
+          </Button>
+        </div>
+
+        <div
+          class="flex min-h-0 flex-1 items-center justify-center px-2 pb-4"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <Show when={hasGallery()}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              class="absolute left-2 top-1/2 z-10 size-11 -translate-y-1/2 rounded-full opacity-90"
+              aria-label="Previous media"
+              onClick={() => props.gallery!.prevItem()}
+            >
+              <ChevronLeft class="size-5" />
+            </Button>
+          </Show>
+
           <Show when={candidate()} keyed>
             {(current) => (
               <Show
                 when={current.type === "image"}
                 fallback={
-                  <AutoLoopVideo
-                    src={current.url}
-                    onError={nextCandidate}
-                    forceControls
-                  />
+                  <div class="w-full [&_video]:mx-auto [&_video]:max-h-[80dvh] [&_video]:max-w-full">
+                    <AutoLoopVideo
+                      src={current.url}
+                      onError={nextCandidate}
+                      forceControls
+                    />
+                  </div>
                 }
               >
-                <img src={current.url} alt="" onError={nextCandidate} />
+                <img
+                  src={current.url}
+                  alt=""
+                  class="max-h-[80dvh] max-w-full object-contain"
+                  onError={nextCandidate}
+                />
               </Show>
             )}
           </Show>
-          <Show when={props.gallery && props.gallery.itemCount() > 1}>
-            <div class="lightbox-counter" aria-live="polite">
-              {props.gallery!.itemIndex() + 1} / {props.gallery!.itemCount()}
-            </div>
+
+          <Show when={hasGallery()}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              class="absolute right-2 top-1/2 z-10 size-11 -translate-y-1/2 rounded-full opacity-90"
+              aria-label="Next media"
+              onClick={() => props.gallery!.nextItem()}
+            >
+              <ChevronRight class="size-5" />
+            </Button>
           </Show>
         </div>
       </div>

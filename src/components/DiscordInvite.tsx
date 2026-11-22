@@ -8,11 +8,12 @@ import { trackEvent } from "~/lib/analytics";
  */
 export function DiscordInvite(props: { location: string }) {
   return (
-    <p class="discord-invite">
-      <DiscordIcon class="icon" />
+    <p class="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
+      <DiscordIcon class="size-4" />
       <span>
         Need a BDSMLR invite?{" "}
         <a
+          class="font-medium text-primary underline-offset-4 hover:underline"
           href={DISCORD_URL}
           target="_blank"
           rel="noopener noreferrer"

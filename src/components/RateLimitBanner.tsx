@@ -1,5 +1,8 @@
 import { createEffect, createSignal, onCleanup, Show } from "solid-js";
+import { AlertTriangle } from "lucide-solid";
 import { upstreamLimitedUntil } from "~/lib/upstreamLimit";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Badge } from "./ui/badge";
 
 /**
  * Shows up when BDSMLR's edge starts refusing requests. Without this a user
@@ -21,16 +24,23 @@ export default function RateLimitBanner() {
 
   return (
     <Show when={remaining() > 0}>
-      <div class="rate-limit-banner" role="status">
-        <strong>BDSMLR is rate limiting us.</strong>
-        <span>
-          Some feeds and posts may not load for a minute or two. The site itself
-          is fine and nothing was lost.
-        </span>
-        <span class="rate-limit-banner-count">
-          Try again in {remaining()}s
-        </span>
-      </div>
+      <Alert
+        variant="warning"
+        role="status"
+        class="mx-auto w-full max-w-3xl rounded-none border-x-0 border-t-0"
+      >
+        <AlertTriangle class="size-4" />
+        <AlertTitle>BDSMLR is rate limiting us.</AlertTitle>
+        <AlertDescription class="flex flex-wrap items-center gap-2">
+          <span>
+            Some feeds and posts may not load for a minute or two. The site
+            itself is fine and nothing was lost.
+          </span>
+          <Badge variant="outline" class="shrink-0">
+            Try again in {remaining()}s
+          </Badge>
+        </AlertDescription>
+      </Alert>
     </Show>
   );
 }

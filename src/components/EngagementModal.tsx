@@ -1,6 +1,7 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A } from "@solidjs/router";
+import { Heart, Repeat2 } from "lucide-solid";
 import {
   listPostLikes,
   listPostReblogs,
@@ -9,8 +10,18 @@ import {
 } from "~/lib/api";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
-import { HeartIcon, ReblogIcon } from "~/components/Icons";
 import { formatRelativeDate } from "~/lib/date";
+import { sheetDialogClass } from "~/lib/ui";
+import { Alert, AlertDescription } from "./ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "./ui/dialog";
+import { Skeleton } from "./ui/skeleton";
 
 const PAGE_SIZE = 30;
 
@@ -56,9 +67,7 @@ export function EngagementModal(props: {
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [error, setError] = createSignal("");
   const [nextLikeToken, setNextLikeToken] = createSignal<string | null>(null);
-  const [nextReblogToken, setNextReblogToken] = createSignal<string | null>(
-    null,
-  );
+  const [nextReblogToken, setNextReblogToken] = createSignal<string | null>(null);
 
   const hasMore = () => !!nextLikeToken() || !!nextReblogToken();
 
@@ -116,67 +125,89 @@ export function EngagementModal(props: {
   };
 
   return (
-    <div class="tag-modal-backdrop" onClick={props.onClose}>
-      <div
-        class="tag-modal engagement-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          class="tag-modal-close"
-          onClick={props.onClose}
-          aria-label="Close"
-        >
-          ×
-        </button>
-        <h3>Likes and reblogs</h3>
-        {error() && <FeedErrorNotice message={error()} />}
-        {loading() && <p class="loading">Loading…</p>}
-        <Show when={!loading()}>
-          <Show
-            when={items().length > 0}
-            fallback={<p class="empty">No likes or reblogs yet.</p>}
-          >
-            <div class="engagement-list">
-              <For each={items()}>
-                {(item) => (
-                  <A href={`/${item.blogName}`} class="engagement-item">
-                    <BlogAvatar
-                      blogId={item.blogId}
-                      blogName={item.blogName}
-                      size={28}
-                      linkable={false}
-                    />
-                    <span class="engagement-name">{item.blogName}</span>
-                    <span class="engagement-action-label">
-                      <Show
-                        when={item.kind === "like"}
-                        fallback={<ReblogIcon class="engagement-icon" />}
-                      >
-                        <HeartIcon class="engagement-icon" />
-                      </Show>
-                      {item.kind === "like" ? "Liked" : "Reblogged"}
-                    </span>
-                    <Show when={item.createdAtUnix}>
-                      <span class="engagement-time">
-                        {formatRelativeDate(item.createdAtUnix!)}
-                      </span>
-                    </Show>
-                  </A>
+
+    <Dialog open onOpenChange={(open) => !open && props.onClose()}>
+      <DialogPortal>
+        <DialogContent class={`${sheetDialogClass} max-h-[80dvh] overflow-y-auto`}>
+          <DialogHeader>
+            <DialogTitle>Likes and reblogs</DialogTitle>
+            <DialogDescription>
+              People who liked or reblogged this post.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Show when={error()}>
+            <FeedErrorNotice message={error()} onRetry={() => void load()} />
+          </Show>
+
+          <Show when={loading()}>
+            <div class="flex flex-col gap-3">
+              <For each={[0, 1, 2, 3]}>
+                {() => (
+                  <div class="flex items-center gap-3">
+                    <Skeleton class="size-8 rounded-full" />
+                    <Skeleton class="h-4 w-40" />
+                  </div>
+
                 )}
               </For>
             </div>
-            <Show when={hasMore()}>
-              <AutoLoadMore
-                onLoad={loadMore}
-                loading={loadingMore()}
-                class="engagement-more"
-                loadingLabel="Loading…"
-              />
+          </Show>
+
+          <Show when={!loading()}>
+            <Show
+              when={items().length > 0}
+              fallback={
+                <p class="py-8 text-center text-sm text-muted-foreground">
+                  No likes or reblogs yet.
+                </p>
+              }
+            >
+              <div class="flex flex-col">
+                <For each={items()}>
+                  {(item) => (
+                    <A
+                      href={`/${item.blogName}`}
+                      class="flex items-center gap-3 rounded-md px-1 py-2 hover:bg-accent"
+                    >
+                      <BlogAvatar
+                        blogId={item.blogId}
+                        blogName={item.blogName}
+                        size={32}
+                        linkable={false}
+                      />
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-medium">
+                          {item.blogName}
+                        </p>
+                        <p class="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Show
+                            when={item.kind === "like"}
+                            fallback={<Repeat2 class="size-3.5" />}
+                          >
+                            <Heart class="size-3.5" />
+                          </Show>
+                          {item.kind === "like" ? "Liked" : "Reblogged"}
+                          <Show when={item.createdAtUnix}>
+                            <span>· {formatRelativeDate(item.createdAtUnix!)}</span>
+                          </Show>
+                        </p>
+                      </div>
+                    </A>
+                  )}
+                </For>
+              </div>
+              <Show when={hasMore()}>
+                <AutoLoadMore
+                  onLoad={loadMore}
+                  loading={loadingMore()}
+                  loadingLabel="Loading…"
+                />
+              </Show>
             </Show>
           </Show>
-        </Show>
-      </div>
-    </div>
+        </DialogContent>
+      </DialogPortal>
+    </Dialog>
   );
 }

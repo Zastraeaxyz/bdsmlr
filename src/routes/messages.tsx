@@ -9,8 +9,70 @@ import {
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import Header from "~/components/Header";
+import {
+  AlertCircle,
+  Archive,
+  ArrowLeft,
+  Ban,
+  CheckCircle2,
+  Loader2,
+  MessageSquare,
+  MoreVertical,
+  Paperclip,
+  Plus,
+  Search,
+  Send,
+  Trash2,
+} from "lucide-solid";
+import { Page } from "~/components/Page";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
+import { Avatar } from "~/components/ui/avatar";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import {
+  Checkbox,
+  CheckboxControl,
+  CheckboxInput,
+  CheckboxLabel,
+} from "~/components/ui/checkbox";
+import { Skeleton } from "~/components/ui/skeleton";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldLabel,
+  TextFieldTextArea,
+} from "~/components/ui/text-field";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPortal,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { cx } from "~/lib/cva";
+import { sheetDialogClass } from "~/lib/ui";
 import { useAuth } from "~/lib/useAuth";
 import {
   archiveMessageThread,
@@ -55,6 +117,31 @@ function avatarUrl(url?: string): string | null {
   return null;
 }
 
+function StatusAlerts(props: {
+  error?: string;
+  notice?: string;
+  class?: string;
+}) {
+  return (
+    <Show when={props.error || props.notice}>
+      <div class={cx("flex flex-col gap-2", props.class)} aria-live="polite">
+        <Show when={props.error}>
+          <Alert variant="destructive">
+            <AlertCircle class="size-4" />
+            <AlertDescription>{props.error}</AlertDescription>
+          </Alert>
+        </Show>
+        <Show when={props.notice}>
+          <Alert>
+            <CheckCircle2 class="size-4" />
+            <AlertDescription>{props.notice}</AlertDescription>
+          </Alert>
+        </Show>
+      </div>
+    </Show>
+  );
+}
+
 export default function Messages() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -81,6 +168,8 @@ export default function Messages() {
   const [suggestions, setSuggestions] = createSignal<Blog[]>([]);
   const [suppressSuggestions, setSuppressSuggestions] = createSignal(false);
   const [canAutoLoadOlder, setCanAutoLoadOlder] = createSignal(false);
+  const [archiveOpen, setArchiveOpen] = createSignal(false);
+  const [clearOpen, setClearOpen] = createSignal(false);
   let conversationRef: HTMLDivElement | undefined;
   let imageInputRef: HTMLInputElement | undefined;
 
@@ -328,7 +417,6 @@ export default function Messages() {
   const archiveThread = async () => {
     const current = thread();
     if (!current || threadActionBusy()) return;
-    if (!window.confirm("Archive this conversation?")) return;
     setThreadActionBusy(true);
     setError("");
     setNotice("");
@@ -353,12 +441,6 @@ export default function Messages() {
   const clearThread = async () => {
     const current = thread();
     if (!current || threadActionBusy()) return;
-    if (
-      !window.confirm(
-        "Clear this conversation for your account? This removes it from your inbox.",
-      )
-    )
-      return;
     setThreadActionBusy(true);
     setError("");
     setNotice("");
@@ -408,239 +490,392 @@ export default function Messages() {
     }
   };
 
+  const openNew = () => {
+    setError("");
+    setNotice("");
+    setSuppressSuggestions(false);
+    setShowNew(true);
+  };
+
+  const closeNew = () => {
+    setShowNew(false);
+    setSuggestions([]);
+  };
+
+  const closeConversation = () => {
+    setSelectedId(null);
+    setThread(null);
+  };
+
   return (
     <Show when={!authLoading() && user()} fallback={null}>
       <Title>Messages - bbdsmlr</Title>
-      <div class="home-page messages-page">
-        <Header info="Messages">
-          <button
+      <Page
+        info="Messages"
+        width="xl"
+        padded={false}
+        class="md:min-h-0 md:flex-row md:overflow-hidden"
+        actions={
+          <Button
             type="button"
-            class="btn-ghost"
-            onClick={() => {
-              setError("");
-              setNotice("");
-              setSuppressSuggestions(false);
-              setShowNew(true);
-            }}
+            variant="ghost"
+            size="icon"
+            aria-label="New message"
+            title="New message"
+            onClick={openNew}
           >
-            New message
-          </button>
-        </Header>
-        <main class="messages-layout">
-          <aside class="messages-sidebar">
-            <div class="messages-filters">
-              <input
-                type="search"
-                placeholder="Search messages…"
-                value={search()}
-                onInput={(e) => setSearch(e.currentTarget.value)}
-              />
-              <label class="messages-archived">
-                <input
-                  type="checkbox"
-                  checked={showArchived()}
-                  onChange={(e) => setShowArchived(e.currentTarget.checked)}
-                />
-                Show archived
-              </label>
-            </div>
-            <Show when={loading()}>
-              <p class="loading messages-loading">Loading messages…</p>
-            </Show>
-            <Show when={!loading() && filteredThreads().length === 0}>
-              <p class="empty messages-loading">No conversations found.</p>
-            </Show>
-            <div class="messages-list">
-              <For each={filteredThreads()}>
-                {(item) => (
-                  <button
-                    type="button"
-                    class={
-                      item.id === selectedId()
-                        ? "message-thread active"
-                        : "message-thread"
-                    }
-                    onClick={() => openThread(item.id)}
-                  >
-                    <Show
-                      when={avatarUrl(item.avatar_url)}
-                      fallback={
-                        <span class="message-avatar message-avatar-fallback">
-                          {item.name[0]?.toUpperCase() ?? "?"}
-                        </span>
-                      }
-                    >
-                      <img
-                        class="message-avatar"
-                        src={avatarUrl(item.avatar_url)!}
-                        alt=""
-                      />
-                    </Show>
-                    <span class="message-thread-text">
-                      <span class="message-thread-top">
-                        <span class="message-thread-name">{item.name}</span>
-                        <Show when={item.archived}>
-                          <span class="message-thread-chip">Archived</span>
-                        </Show>
-                        <Show when={item.blocked}>
-                          <span class="message-thread-chip danger">
-                            Blocked
-                          </span>
-                        </Show>
-                        <span class="message-thread-time">
-                          {messageTime(item.updated_at)}
-                        </span>
-                      </span>
-                      <span class="message-thread-preview">
-                        {item.preview}
-                      </span>
-                    </span>
-                    <Show when={item.unread}>
-                      <span class="message-unread-dot" />
-                    </Show>
-                  </button>
-                )}
-              </For>
-            </div>
-          </aside>
-
-          <section class="messages-panel">
-            <Show
-              when={thread()}
-              fallback={
-                <div class="messages-placeholder">
-                  <Show
-                    when={threadLoading()}
-                    fallback={
-                      <p class="empty">Select a conversation to start reading.</p>
-                    }
-                  >
-                    <p class="loading">Loading conversation…</p>
-                  </Show>
-                </div>
-              }
+            <Plus class="size-5" />
+          </Button>
+        }
+      >
+        <aside
+          class={cx(
+            "flex w-full flex-col border-border md:min-h-0 md:w-80 md:shrink-0 md:border-r",
+            selectedId() !== null && "max-md:hidden",
+          )}
+        >
+          <div class="shrink-0 space-y-3 border-b border-border px-3 py-3">
+            <TextField
+              value={search()}
+              onChange={setSearch}
+              class="gap-0"
             >
-              <header class="messages-panel-header">
-                <Show
-                  when={avatarUrl(thread()!.thread.avatar_url)}
-                  fallback={
-                    <span class="message-avatar message-avatar-fallback">
-                      {thread()!.thread.name[0]?.toUpperCase() ?? "?"}
-                    </span>
-                  }
-                >
-                  <img
-                    class="message-avatar"
-                    src={avatarUrl(thread()!.thread.avatar_url)!}
-                    alt=""
-                  />
-                </Show>
-                <div class="messages-panel-title">
-                  <A
-                    href={`/${thread()!.thread.name}`}
-                    class="messages-panel-name"
-                  >
-                    {thread()!.thread.name}
-                  </A>
-                  <div class="messages-panel-meta">
-                    {thread()!.thread.preview}
-                  </div>
-                </div>
-                <div class="messages-panel-actions">
-                  <button
-                    type="button"
-                    class="messages-thread-action"
-                    onClick={toggleBlock}
-                    disabled={threadActionBusy()}
-                  >
-                    {thread()!.thread.blocked ? "Unblock" : "Block"}
-                  </button>
-                  <button
-                    type="button"
-                    class="messages-thread-action"
-                    onClick={archiveThread}
-                    disabled={threadActionBusy()}
-                  >
-                    Archive
-                  </button>
-                  <button
-                    type="button"
-                    class="messages-thread-action danger-text"
-                    onClick={clearThread}
-                    disabled={threadActionBusy()}
-                  >
-                    Clear
-                  </button>
-                </div>
-              </header>
+              <div class="relative">
+                <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <TextFieldInput
+                  type="search"
+                  placeholder="Search messages…"
+                  aria-label="Search messages"
+                  class="w-full pl-9"
+                />
+              </div>
+            </TextField>
+            <Checkbox
+              checked={showArchived()}
+              onChange={setShowArchived}
+              class="flex items-center gap-2"
+            >
+              <CheckboxInput />
+              <CheckboxControl />
+              <CheckboxLabel>Show archived</CheckboxLabel>
+            </Checkbox>
+          </div>
 
-              <div
-                class="messages-conversation"
-                ref={(el) => (conversationRef = el)}
-              >
-                <Show when={thread()!.thread.blocked}>
-                  <p class="messages-blocked-note">
-                    This conversation is blocked. Unblock it to send messages.
-                  </p>
-                </Show>
-                <Show when={thread()!.next_before}>
-                  <AutoLoadMore
-                    onLoad={() => void loadOlder()}
-                    loading={loadingOlder()}
-                    ready={canAutoLoadOlder()}
-                    loadingLabel="Loading…"
-                    label="Load older messages"
-                    class="messages-older"
-                    style="margin:0 auto 8px"
-                    root={() => conversationRef}
-                    rootMargin="200px 0px 0px 0px"
-                  />
-                </Show>
-                <For each={thread()!.messages ?? []}>
-                  {(message) => (
-                    <div
-                      class={
-                        message.sent_by_me
-                          ? "message-bubble mine"
-                          : "message-bubble"
-                      }
-                    >
-                      <Show when={message.body}>
-                        <div class="message-bubble-body">{message.body}</div>
-                      </Show>
-                      <Show when={(message.media_urls?.length ?? 0) > 0}>
-                        <div class="message-bubble-media">
-                          <For each={message.media_urls ?? []}>
-                            {(url) => <img src={url} alt="Shared image" />}
-                          </For>
-                        </div>
-                      </Show>
-                      <div class="message-bubble-time">
-                        {fullTime(message.created_at)}
+          <div class="shrink-0 md:hidden">
+            <StatusAlerts
+              error={error()}
+              notice={notice()}
+              class="px-3 pt-3"
+            />
+          </div>
+
+          <div class="min-h-0 flex-1 md:overflow-y-auto">
+            <Show when={loading()}>
+              <div class="flex flex-col gap-1 p-2" aria-busy="true" aria-label="Loading messages">
+                <For each={[0, 1, 2, 3, 4, 5]}>
+                  {() => (
+                    <div class="flex items-center gap-3 rounded-lg px-2 py-2.5">
+                      <Skeleton class="size-10 shrink-0 rounded-full" />
+                      <div class="min-w-0 flex-1 space-y-2">
+                        <Skeleton class="h-3.5 w-32" />
+                        <Skeleton class="h-3 w-full max-w-44" />
                       </div>
                     </div>
                   )}
                 </For>
               </div>
+            </Show>
 
-              <form class="messages-composer" onSubmit={submitMessage}>
-                <label class="messages-attach" title="Attach image">
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImage}
-                    disabled={
-                      sendingImage() || !!thread()!.thread.blocked
+            <Show when={!loading() && filteredThreads().length === 0}>
+              <div class="flex flex-col items-center gap-2 px-4 py-16 text-center">
+                <MessageSquare class="size-8 text-muted-foreground" />
+                <p class="text-sm text-muted-foreground">
+                  No conversations found.
+                </p>
+              </div>
+            </Show>
+
+            <div class="flex flex-col py-1">
+              <For each={filteredThreads()}>
+                {(item) => (
+                  <button
+                    type="button"
+                    class={cx(
+                      "flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors",
+                      item.id === selectedId()
+                        ? "bg-primary/10"
+                        : "hover:bg-accent/60",
+                    )}
+                    aria-current={
+                      item.id === selectedId() ? "true" : undefined
                     }
-                  />
-                  <span>{sendingImage() ? "…" : "📎"}</span>
-                </label>
-                <textarea
+                    onClick={() => openThread(item.id)}
+                  >
+                    <Avatar
+                      src={avatarUrl(item.avatar_url)}
+                      fallback={item.name}
+                      alt=""
+                      class="size-10"
+                    />
+                    <span class="min-w-0 flex-1">
+                      <span class="flex items-center gap-1.5">
+                        <span class="truncate text-sm font-semibold">
+                          {item.name}
+                        </span>
+                        <Show when={item.archived}>
+                          <Badge
+                            variant="secondary"
+                            class="px-1.5 py-0 text-[10px]"
+                          >
+                            Archived
+                          </Badge>
+                        </Show>
+                        <Show when={item.blocked}>
+                          <Badge
+                            variant="destructive"
+                            class="px-1.5 py-0 text-[10px]"
+                          >
+                            Blocked
+                          </Badge>
+                        </Show>
+                        <span class="ml-auto shrink-0 text-[11px] text-muted-foreground">
+                          {messageTime(item.updated_at)}
+                        </span>
+                      </span>
+                      <span class="mt-0.5 block truncate text-xs text-muted-foreground">
+                        {item.preview}
+                      </span>
+                    </span>
+                    <Show when={item.unread}>
+                      <span
+                        class="size-2 shrink-0 rounded-full bg-primary"
+                        aria-label="Unread"
+                      />
+                    </Show>
+                  </button>
+                )}
+              </For>
+            </div>
+          </div>
+        </aside>
+
+        <section
+          class={cx(
+            "flex min-h-0 w-full flex-1 flex-col bg-background",
+            "max-md:fixed max-md:inset-x-0 max-md:top-[calc(3.5rem_+_env(safe-area-inset-top))] max-md:bottom-[calc(4rem_+_max(0.5rem,env(safe-area-inset-bottom)))] max-md:z-30",
+            selectedId() === null ? "max-md:hidden" : "max-md:flex",
+          )}
+          aria-label="Conversation"
+        >
+          <StatusAlerts
+            error={error()}
+            notice={notice()}
+            class="shrink-0 px-3 pt-3"
+          />
+          <Show
+            when={thread()}
+            fallback={
+              <div class="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+                <Show
+                  when={threadLoading()}
+                  fallback={
+                    <>
+                      <MessageSquare class="size-10 text-muted-foreground" />
+                      <p class="text-sm text-muted-foreground">
+                        Select a conversation to start reading.
+                      </p>
+                    </>
+                  }
+                >
+                  <Loader2 class="size-6 animate-spin text-muted-foreground" />
+                  <p class="text-sm text-muted-foreground">
+                    Loading conversation…
+                  </p>
+                </Show>
+              </div>
+            }
+          >
+            <header class="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b border-border bg-background/95 px-2 py-2 backdrop-blur">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="md:hidden"
+                aria-label="Back to conversations"
+                onClick={closeConversation}
+              >
+                <ArrowLeft class="size-5" />
+              </Button>
+              <Avatar
+                src={avatarUrl(thread()!.thread.avatar_url)}
+                fallback={thread()!.thread.name}
+                alt=""
+                class="size-9"
+              />
+              <div class="min-w-0 flex-1">
+                <A
+                  href={`/${thread()!.thread.name}`}
+                  class="block truncate text-sm font-semibold hover:underline"
+                >
+                  {thread()!.thread.name}
+                </A>
+                <p class="truncate text-xs text-muted-foreground">
+                  {thread()!.thread.preview}
+                </p>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger<typeof Button>
+                  as={(triggerProps) => (
+                    <Button
+                      {...triggerProps}
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Conversation actions"
+                      disabled={threadActionBusy()}
+                    >
+                      <MoreVertical class="size-5" />
+                    </Button>
+                  )}
+                />
+                <DropdownMenuPortal>
+                  <DropdownMenuContent class="w-52">
+                    <DropdownMenuItem
+                      disabled={threadActionBusy()}
+                      onSelect={toggleBlock}
+                    >
+                      <Ban class="size-4" />
+                      {thread()!.thread.blocked ? "Unblock" : "Block"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={threadActionBusy()}
+                      onSelect={() => setArchiveOpen(true)}
+                    >
+                      <Archive class="size-4" />
+                      Archive
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      disabled={threadActionBusy()}
+                      onSelect={() => setClearOpen(true)}
+                    >
+                      <Trash2 class="size-4" />
+                      Clear conversation
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
+              </DropdownMenu>
+            </header>
+
+            <div
+              class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-3"
+              ref={(el) => (conversationRef = el)}
+            >
+              <Show when={thread()!.thread.blocked}>
+                <Alert variant="warning" class="shrink-0">
+                  <Ban class="size-4" />
+                  <AlertDescription>
+                    This conversation is blocked. Unblock it to send messages.
+                  </AlertDescription>
+                </Alert>
+              </Show>
+
+              <Show when={thread()!.next_before}>
+                <AutoLoadMore
+                  onLoad={() => void loadOlder()}
+                  loading={loadingOlder()}
+                  ready={canAutoLoadOlder()}
+                  loadingLabel="Loading…"
+                  label="Load older messages"
+                  class="flex justify-center py-1"
+                  root={() => conversationRef}
+                  rootMargin="200px 0px 0px 0px"
+                />
+              </Show>
+
+              <For each={thread()!.messages ?? []}>
+                {(message) => (
+                  <div
+                    class={cx(
+                      "flex w-full",
+                      message.sent_by_me ? "justify-end" : "justify-start",
+                    )}
+                  >
+                    <div
+                      class={cx(
+                        "max-w-[85%] rounded-2xl border px-3 py-2 sm:max-w-[75%]",
+                        message.sent_by_me
+                          ? "rounded-br-sm border-primary/40 bg-primary/15"
+                          : "rounded-bl-sm bg-card",
+                      )}
+                    >
+                      <Show when={message.body}>
+                        <p class="whitespace-pre-wrap text-sm break-words">
+                          {message.body}
+                        </p>
+                      </Show>
+                      <Show when={(message.media_urls?.length ?? 0) > 0}>
+                        <div class="mt-1.5 flex flex-col gap-1.5">
+                          <For each={message.media_urls ?? []}>
+                            {(url) => (
+                              <img
+                                src={url}
+                                alt="Shared image"
+                                loading="lazy"
+                                class="max-h-72 w-full rounded-lg object-cover"
+                              />
+                            )}
+                          </For>
+                        </div>
+                      </Show>
+                      <p class="mt-1 text-[10px] text-muted-foreground">
+                        {fullTime(message.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+
+            <form
+              class="sticky bottom-0 z-10 flex shrink-0 items-end gap-2 border-t border-border bg-background px-3 py-2"
+              onSubmit={submitMessage}
+            >
+              <Button
+                as="label"
+                variant="ghost"
+                size="icon"
+                class="shrink-0 cursor-pointer"
+                title="Attach image"
+                aria-label="Attach image"
+              >
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  class="sr-only"
+                  onChange={handleImage}
+                  disabled={sendingImage() || !!thread()!.thread.blocked}
+                />
+                <Show
+                  when={sendingImage()}
+                  fallback={<Paperclip class="size-5" />}
+                >
+                  <Loader2 class="size-5 animate-spin" />
+                </Show>
+              </Button>
+
+              <TextField
+                value={draft()}
+                onChange={setDraft}
+                class="min-w-0 flex-1 gap-0"
+              >
+                <TextFieldTextArea
                   rows={2}
                   placeholder="Write a message…"
-                  value={draft()}
-                  onInput={(e) => setDraft(e.currentTarget.value)}
+                  aria-label="Write a message"
+                  class="max-h-32 min-h-10 resize-none py-2"
                   disabled={!!thread()!.thread.blocked}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -649,130 +884,191 @@ export default function Messages() {
                     }
                   }}
                 />
-                <button
+              </TextField>
+
+              <Button
+                type="submit"
+                size="icon"
+                class="shrink-0"
+                aria-label="Send message"
+                disabled={
+                  !draft().trim() ||
+                  sending() ||
+                  !!thread()!.thread.blocked
+                }
+              >
+                <Show when={sending()} fallback={<Send class="size-5" />}>
+                  <Loader2 class="size-5 animate-spin" />
+                </Show>
+              </Button>
+            </form>
+          </Show>
+        </section>
+      </Page>
+
+      <Dialog
+        open={showNew()}
+        onOpenChange={(open) => {
+          if (!open) closeNew();
+        }}
+      >
+        <DialogPortal>
+          <DialogContent
+            class={cx(sheetDialogClass, "max-h-[90dvh] overflow-y-auto")}
+          >
+            <DialogHeader>
+              <DialogTitle>New message</DialogTitle>
+              <DialogDescription>
+                Send a message to another blog.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form class="grid gap-4" onSubmit={submitNew}>
+              <TextField
+                value={newTo()}
+                onChange={(value) => {
+                  setSuppressSuggestions(false);
+                  setNewTo(value);
+                }}
+              >
+                <TextFieldLabel>To</TextFieldLabel>
+                <TextFieldInput
+                  type="text"
+                  placeholder="Blog name"
+                  autocomplete="off"
+                  aria-label="Recipient blog name"
+                  class="w-full"
+                />
+                <Show when={suggestions().length > 0}>
+                  <div class="max-h-56 overflow-y-auto rounded-md border border-border">
+                    <For each={suggestions()}>
+                      {(blog) => (
+                        <button
+                          type="button"
+                          class="flex w-full items-center gap-2 px-2 py-2 text-left transition-colors hover:bg-accent"
+                          onClick={() => {
+                            setSuppressSuggestions(true);
+                            setNewTo(blog.name);
+                            setSuggestions([]);
+                          }}
+                        >
+                          <Avatar
+                            src={blog.avatarUrl}
+                            fallback={blog.title || blog.name}
+                            alt=""
+                            class="size-8"
+                          />
+                          <span class="min-w-0 flex-1">
+                            <span class="block truncate text-sm font-medium">
+                              {blog.name}
+                            </span>
+                            <Show when={blog.title}>
+                              <span class="block truncate text-xs text-muted-foreground">
+                                {blog.title}
+                              </span>
+                            </Show>
+                          </span>
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                </Show>
+              </TextField>
+
+              <TextField value={newBody()} onChange={setNewBody}>
+                <TextFieldLabel>Message</TextFieldLabel>
+                <TextFieldTextArea
+                  rows={5}
+                  placeholder="Write a message…"
+                  aria-label="Message"
+                  class="min-h-28"
+                />
+              </TextField>
+
+              <Show when={error()}>
+                <Alert variant="destructive">
+                  <AlertCircle class="size-4" />
+                  <AlertDescription>{error()}</AlertDescription>
+                </Alert>
+              </Show>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={closeNew}>
+                  Cancel
+                </Button>
+                <Button
                   type="submit"
+                  class="gap-2"
                   disabled={
-                    !draft().trim() ||
-                    sending() ||
-                    !!thread()!.thread.blocked
+                    !newTo().trim() || !newBody().trim() || creating()
                   }
                 >
-                  {sending() ? "Sending…" : "Send"}
-                </button>
-              </form>
-            </Show>
-          </section>
-        </main>
+                  <Show
+                    when={creating()}
+                    fallback={<Send class="size-4" />}
+                  >
+                    <Loader2 class="size-4 animate-spin" />
+                  </Show>
+                  {creating() ? "Sending…" : "Send message"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
 
-        <Show when={error()}>
-          <FeedErrorNotice message={error() ?? ""} />
-        </Show>
-        <Show when={notice()}>
-          <p class="action-notice messages-notice">{notice()}</p>
-        </Show>
-      </div>
 
-      <Show when={showNew()}>
-        <div
-          class="tag-modal-backdrop"
-          onClick={() => {
-            setShowNew(false);
-            setSuggestions([]);
-          }}
-        >
-          <form
-            class="tag-modal new-message-modal"
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={submitNew}
-          >
-            <button
-              type="button"
-              class="tag-modal-close"
-              onClick={() => {
-                setShowNew(false);
-                setSuggestions([]);
-              }}
-              aria-label="Close new message"
-            >
-              ×
-            </button>
-            <h3>New message</h3>
-            <label class="new-message-label new-message-recipient">
-              To
-              <input
-                type="text"
-                placeholder="Blog name"
-                autocomplete="off"
-                value={newTo()}
-                onInput={(e) => {
-                  setSuppressSuggestions(false);
-                  setNewTo(e.currentTarget.value);
-                }}
-              />
-              <Show when={suggestions().length > 0}>
-                <div class="recipient-suggestions">
-                  <For each={suggestions()}>
-                    {(blog) => (
-                      <button
-                        type="button"
-                        class="recipient-suggestion"
-                        onClick={() => {
-                          setSuppressSuggestions(true);
-                          setNewTo(blog.name);
-                          setSuggestions([]);
-                        }}
-                      >
-                        <Show
-                          when={blog.avatarUrl}
-                          fallback={
-                            <span class="recipient-suggestion-avatar">
-                              {(blog.title || blog.name || "?")[0]}
-                            </span>
-                          }
-                        >
-                          <img
-                            class="recipient-suggestion-avatar"
-                            src={blog.avatarUrl}
-                            alt=""
-                          />
-                        </Show>
-                        <span class="recipient-suggestion-text">
-                          <span class="recipient-suggestion-name">
-                            {blog.name}
-                          </span>
-                          <Show when={blog.title}>
-                            <span class="recipient-suggestion-title">
-                              {blog.title}
-                            </span>
-                          </Show>
-                        </span>
-                      </button>
-                    )}
-                  </For>
-                </div>
-              </Show>
-            </label>
-            <label class="new-message-label">
-              Message
-              <textarea
-                rows={5}
-                placeholder="Write a message…"
-                value={newBody()}
-                onInput={(e) => setNewBody(e.currentTarget.value)}
-              />
-            </label>
-            <Show when={error()}>
-              <FeedErrorNotice message={error() ?? ""} />
-            </Show>
-            <button
-              type="submit"
-              disabled={!newTo().trim() || !newBody().trim() || creating()}
-            >
-              {creating() ? "Sending…" : "Send message"}
-            </button>
-          </form>
-        </div>
-      </Show>
+      <AlertDialog open={archiveOpen()} onOpenChange={setArchiveOpen}>
+        <AlertDialogPortal>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Archive this conversation?</AlertDialogTitle>
+              <AlertDialogDescription>
+                It moves out of your inbox. You can still find it with Show
+                archived turned on.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={threadActionBusy()}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={threadActionBusy()}
+                onClick={() => void archiveThread()}
+              >
+                Archive
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogPortal>
+      </AlertDialog>
+
+      <AlertDialog open={clearOpen()} onOpenChange={setClearOpen}>
+        <AlertDialogPortal>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Clear this conversation?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This removes it from your inbox for your account. This cannot
+                be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={threadActionBusy()}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={threadActionBusy()}
+                class="bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive/60"
+                onClick={() => void clearThread()}
+              >
+                Clear conversation
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogPortal>
+      </AlertDialog>
+
     </Show>
   );
 }

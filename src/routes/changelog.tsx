@@ -1,12 +1,14 @@
 import { Title } from "@solidjs/meta";
 import { createSignal, For, onMount, Show } from "solid-js";
-import Header from "~/components/Header";
-import { changelog, entryId } from "~/lib/changelog";
+import { Page, PageHeader } from "~/components/Page";
+import { changelog, entryId, type ChangelogKind } from "~/lib/changelog";
 import {
   isChangelogEntryNew,
   markChangelogSeen,
   refreshChangelogSeen,
 } from "~/lib/changelogSeen";
+import { Badge } from "~/components/ui/badge";
+import { Card } from "~/components/ui/card";
 
 const MONTHS = [
   "January",
@@ -80,6 +82,13 @@ function dayLabel(value: string, today: Date | null): string {
   return formatDate(value);
 }
 
+const KIND_CLASS: Record<ChangelogKind, string> = {
+  Added: "border-emerald-500/50 bg-emerald-500/10 text-emerald-400",
+  Improved: "border-primary/50 bg-primary/10 text-primary",
+  Fixed: "border-amber-500/50 bg-amber-500/10 text-amber-400",
+  Removed: "border-destructive/50 bg-destructive/10 text-destructive",
+};
+
 function InlineText(props: { text: string }) {
   return (
     <For each={parseInline(props.text)}>
@@ -88,11 +97,15 @@ function InlineText(props: { text: string }) {
           when={segment.code}
           fallback={
             <Show when={segment.strong} fallback={segment.text}>
-              <strong>{segment.text}</strong>
+              <strong class="font-semibold text-foreground">
+                {segment.text}
+              </strong>
             </Show>
           }
         >
-          <code>{segment.text}</code>
+          <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+            {segment.text}
+          </code>
         </Show>
       )}
     </For>
@@ -122,84 +135,92 @@ export default function ChangelogPage() {
   });
 
   return (
-    <div class="home-page changelog-page">
+    <Page info="Changelog" width="lg" class="max-w-3xl">
       <Title>Changelog - bbdsmlr</Title>
-      <Header info="Changelog" />
-      <main>
-        <section class="changelog-hero">
-          <h2>What's new</h2>
-          <p class="changelog-lede">
-            Everything that shipped, newest first, grouped by the day it went
-            live.
-          </p>
-          <Show when={newIds().size > 0}>
-            <p class="changelog-new-summary">
-              {newIds().size} new since your last visit
-            </p>
-          </Show>
-        </section>
+      <PageHeader
+        title="What's new"
+        description="Everything that shipped, newest first, grouped by the day it went live."
+      />
+      <Show when={newIds().size > 0}>
+        <Badge
+          variant="outline"
+          class="mb-4 border-primary/50 bg-primary/10 text-primary"
+        >
+          {newIds().size} new since your last visit
+        </Badge>
+      </Show>
 
-        <div class="changelog-days">
-          <For each={changelog}>
-            {(day, index) => (
-              <article
-                class="changelog-day"
-                classList={{
-                  "changelog-day-latest": index() === 0,
-                  "changelog-day-earlier": !!day.note,
-                }}
-              >
-                <div class="changelog-day-head">
-                  <h3 class="changelog-day-date">
-                    <time dateTime={day.date}>
-                      {dayLabel(day.date, today())}
-                    </time>
-                  </h3>
-                  <span class="changelog-day-count">
-                    {day.changes.length}{" "}
-                    {day.changes.length === 1 ? "change" : "changes"}
-                  </span>
-                </div>
-                <Show when={day.note}>
-                  <p class="changelog-day-note">{day.note}</p>
-                </Show>
+      <div class="flex flex-col gap-4">
+        <For each={changelog}>
+          {(day, index) => (
+            <Card
+              class="gap-4 p-4 sm:p-5"
+              classList={{ "border-primary/45": index() === 0 }}
+            >
+              <div class="flex flex-wrap items-baseline justify-between gap-2.5">
+                <h2 class="text-lg font-semibold text-card-foreground">
+                  <time dateTime={day.date}>
+                    {dayLabel(day.date, today())}
+                  </time>
+                </h2>
+                <Badge
+                  variant="outline"
+                  class="font-normal text-muted-foreground"
+                >
+                  {day.changes.length}{" "}
+                  {day.changes.length === 1 ? "change" : "changes"}
+                </Badge>
+              </div>
+              <Show when={day.note}>
+                <p class="-mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                  {day.note}
+                </p>
+              </Show>
 
-                <ul class="changelog-items">
-                  <For each={day.changes}>
-                    {(change) => {
-                      const id = entryId(day.date, change);
-                      const isNew = () => newIds().has(id);
-                      return (
-                        <li
-                          class="changelog-item"
-                          classList={{ "changelog-item-new": isNew() }}
-                        >
-                          <span class="changelog-item-head">
-                            <Show when={isNew()}>
-                              <span class="changelog-new-pill">New</span>
-                            </Show>
-                            <span
-                              class={`changelog-kind changelog-kind-${change.kind.toLowerCase()}`}
+              <ul class="flex flex-col gap-3.5">
+                <For each={day.changes}>
+                  {(change) => {
+                    const id = entryId(day.date, change);
+                    const isNew = () => newIds().has(id);
+                    return (
+                      <li
+                        class="flex flex-col gap-1 border-l-2 pl-3"
+                        classList={{
+                          "border-primary": isNew(),
+                          "border-transparent": !isNew(),
+                        }}
+                      >
+                        <span class="flex flex-wrap items-center gap-2">
+                          <Show when={isNew()}>
+                            <Badge
+                              variant="outline"
+                              class="px-1.5 py-0 text-[10px] font-bold uppercase tracking-wider border-primary/50 bg-primary/15 text-primary"
                             >
-                              {change.kind}
-                            </span>
-                            <span class="changelog-item-title">
-                              <InlineText text={change.title} />
-                            </span>
+                              New
+                            </Badge>
+                          </Show>
+                          <Badge
+                            variant="outline"
+                            class={`px-1.5 py-0 text-[11px] font-semibold uppercase tracking-wide ${KIND_CLASS[change.kind]}`}
+                          >
+                            {change.kind}
+                          </Badge>
+                          <span class="text-sm font-semibold text-card-foreground">
+                            <InlineText text={change.title} />
                           </span>
-                          <span class="changelog-item-body">
-                            <InlineText text={change.body} />
-                          </span>
-                        </li>
-                      );
-                    }}
-                  </For>
-                </ul>
-              </article>
-            )}
-          </For>
-        </div>
-      </main>
-    </div>
+                        </span>
+                        <span class="text-sm leading-relaxed text-muted-foreground">
+                          <InlineText text={change.body} />
+                        </span>
+                      </li>
+                    );
+                  }}
+                </For>
+              </ul>
+            </Card>
+          )}
+        </For>
+      </div>
+    </Page>
   );
 }

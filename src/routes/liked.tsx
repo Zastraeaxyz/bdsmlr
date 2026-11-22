@@ -11,11 +11,13 @@ import {
 import { useAuth } from "~/lib/useAuth";
 import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
 import { createMediaGallery } from "~/lib/mediaGallery";
-import Header from "~/components/Header";
+import { Page, PageHeader } from "~/components/Page";
+import { FeedSkeleton, EmptyState } from "~/components/FeedStates";
+import { Alert, AlertDescription } from "~/components/ui/alert";
 import { LightBox } from "~/components/LightBox";
 import ViewDropdown from "~/components/ViewDropdown";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
-import { PostCard } from "~/components/PostCard";
+import { PostFeed } from "~/components/PostFeed";
 import {
   loadFeedView,
   saveFeedView,
@@ -33,10 +35,11 @@ export default function LikedPosts() {
   const [hasMore, setHasMore] = createSignal(true);
   const [error, setError] = createSignal("");
   const gallery = createMediaGallery({ posts: () => posts() });
-  const [sortField, setSortField] = createSignal(SortField.Date);
-  const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
+  const [sortField, setSortField] = createSignal<number>(SortField.Date);
+  const [sortOrder, setSortOrder] = createSignal<number>(SortOrder.Descending);
   const [view, setView] = createSignal<FeedView>(loadFeedView());
-  let nextPageToken: string | null = searchParams.page_token || null;
+  let nextPageToken: string | null =
+    typeof searchParams.page_token === "string" ? searchParams.page_token : null;
 
   const syncUrl = () => {
     setSearchParams(
@@ -114,70 +117,68 @@ export default function LikedPosts() {
   };
 
   return (
-    <div class="home-page">
+    <Page info="Liked posts">
       <Title>Liked posts — bbdsmlr</Title>
-      <Header info="Liked posts" />
-      <main>
-        <div class="search-bar">
-          <SortDropdown
-            value={`${sortField()}-${sortOrder()}`}
-            onChange={(sf, so) => {
-              trackEvent("sort-change", { surface: "liked", sort: sortOptionLabel(sf, so) });
-              setSortField(sf);
-              setSortOrder(so);
-              nextPageToken = null;
-              setPosts([]);
-              setHasMore(true);
-              fetchLiked();
-            }}
-          />
-          <ViewDropdown
-            value={view()}
-            onChange={(v) => {
-              trackEvent("view-change", { surface: "liked", view: v });
-              setView(v);
-              saveFeedView(v);
-            }}
-          />
-        </div>
+      <PageHeader title="Liked posts" description="Posts you liked on BDSMLR." />
 
-        {error() && <FeedErrorNotice message={error()} />}
 
-        {loading() && <p class="loading">Loading liked posts…</p>}
+      <div class="mb-3 flex items-center gap-2">
+        <SortDropdown
+          value={`${sortField()}-${sortOrder()}`}
+          onChange={(sf, so) => {
+            trackEvent("sort-change", {
+              surface: "liked",
+              sort: sortOptionLabel(sf, so),
+            });
+            setSortField(sf);
+            setSortOrder(so);
+            nextPageToken = null;
+            setPosts([]);
+            setHasMore(true);
+            fetchLiked();
 
-        <Show when={!loading()}>
-          <Show
-            when={posts().length > 0}
-            fallback={<p class="empty">No liked posts yet.</p>}
-          >
-            <div
-              class={view() === "grid" ? "feed feed-grid" : "feed"}
-            >
-              <For each={posts()}>
-                {(post) => (
-                  <PostCard
-                    post={post}
-                    onImageClick={(url, postId) =>
-                      gallery.open(url, postId)
-                    }
-                  />
-                )}
-              </For>
-            </div>
-          </Show>
-        </Show>
-
-        <AutoLoadMore
-          onLoad={() => {
-            trackEvent("load-more", { surface: "liked" });
-            void loadMore();
           }}
-          loading={loadingMore()}
-          ready={!loading()}
         />
-      </main>
+        <ViewDropdown
+          value={view()}
+          onChange={(value) => {
+            trackEvent("view-change", { surface: "liked", view: value });
+            setView(value);
+            saveFeedView(value);
+          }}
+        />
+      </div>
+
+      <Show when={error()}>
+        <FeedErrorNotice message={error()} />
+      </Show>
+
+      <Show when={loading()}>
+        <FeedSkeleton />
+      </Show>
+
+      <Show when={!loading()}>
+        <Show
+          when={posts().length > 0}
+          fallback={<EmptyState>No liked posts yet.</EmptyState>}
+        >
+          <PostFeed
+            posts={posts()}
+            class={view() === "grid" ? "sm:grid sm:grid-cols-2" : undefined}
+            onImageClick={(url, postId) => gallery.open(url, postId)}
+          />
+        </Show>
+      </Show>
+
+      <AutoLoadMore
+        onLoad={() => {
+          trackEvent("load-more", { surface: "liked" });
+          void loadMore();
+        }}
+        loading={loadingMore()}
+        ready={!loading()}
+      />
       <LightBox gallery={gallery} />
-    </div>
+    </Page>
   );
 }
-

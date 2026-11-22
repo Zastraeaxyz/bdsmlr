@@ -2,7 +2,12 @@ import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import Header from "~/components/Header";
+import { Page, PageHeader } from "~/components/Page";
+import { FeedSkeleton, EmptyState } from "~/components/FeedStates";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
+import { Search } from "lucide-solid";
 import { BlogCard } from "~/components/BlogCard";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { searchBlogs, blogTagAffinity, type Blog, type TagAffinityItem } from "~/lib/api";
@@ -98,77 +103,95 @@ export default function BlogSearchPage() {
   };
 
   return (
-    <div class="home-page">
+    <Page info="Blog search">
       <Title>Blog search - bbdsmlr</Title>
-      <Header info="Blog search" />
+      <PageHeader
+        title="Blog search"
+        description="Find blogs by name, title, or description."
+      />
+
       <Show when={affinity().length > 0}>
-        <section class="top-tags">
-          <div class="top-tags-inner">
-            <span
-              class="top-tags-label"
-              title="Tags from posts you liked."
-            >
+        <section class="mb-4">
+          <div class="mb-2 flex items-center gap-2">
+            <span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Tag affinity
             </span>
-            <div class="top-tags-list">
-              <For each={affinity()}>
-                {(item) => (
-                  <Show when={item.tag}>
-                    <A
-                      href={tagSearchHref(item.tag!)}
-                      class="tag"
-                      title={`Search posts tagged ${item.tag}`}
-                      onClick={() => trackEvent("tag-click", { surface: "blog-search" })}
-                    >
-                      <span class="tag-name">{item.tag}</span>
-                      <span class="tag-count">{item.count ?? 0}</span>
-                    </A>
-                  </Show>
-                )}
-              </For>
-            </div>
+            <span class="text-xs text-muted-foreground">
+              from posts you liked
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <For each={affinity()}>
+              {(item) => (
+                <Show when={item.tag}>
+                  <A
+                    href={tagSearchHref(item.tag!)}
+                    title={`Search posts tagged ${item.tag}`}
+                    onClick={() => trackEvent("tag-click", { surface: "blog-search" })}
+                  >
+                    <Badge variant="secondary" class="gap-1.5 font-normal">
+                      {item.tag}
+                      <span class="text-muted-foreground">{item.count ?? 0}</span>
+                    </Badge>
+                  </A>
+                </Show>
+              )}
+            </For>
           </div>
         </section>
       </Show>
-      <main>
-        <form class="search-bar" onSubmit={submit}>
-          <div class="search-input-wrap">
-            <input
-              type="text"
-              placeholder="Search blogs…"
-              value={query()}
-              onInput={(e) => setQuery(e.currentTarget.value)}
-            />
-          </div>
-          <button type="submit">Search</button>
-        </form>
 
-        <Show when={!activeQuery()}>
-          <p class="empty">Enter a query to search blogs.</p>
-        </Show>
 
-        {error() && <FeedErrorNotice message={error()} />}
-        {loading() && <p class="loading">Searching blogs…</p>}
-        <Show when={activeQuery() && !loading()}>
-          <Show
-            when={blogs().length > 0}
-            fallback={<p class="empty">No blogs found.</p>}
-          >
-            <div class="blog-card-grid">
-              <For each={blogs()}>
-                {(blog) => <BlogCard blog={blog} />}
-              </For>
-            </div>
-          </Show>
-        </Show>
-        <Show when={nextPageToken()}>
-          <AutoLoadMore
-            onLoad={loadMore}
-            loading={loading()}
-            label="Load more blogs"
+      <form class="mb-4 flex items-center gap-2" onSubmit={submit}>
+        <div class="relative flex min-w-0 flex-1 items-center rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/40">
+          <Search class="pointer-events-none absolute left-2.5 size-4 text-muted-foreground" />
+          <input
+            type="search"
+            class="h-10 w-full bg-transparent pl-8 pr-3 text-base outline-none placeholder:text-muted-foreground md:text-sm"
+            placeholder="Search blogs…"
+            value={query()}
+            onInput={(event) => setQuery(event.currentTarget.value)}
+            aria-label="Search blogs"
+
           />
+        </div>
+        <Button type="submit" class="h-10 shrink-0">
+          Search
+        </Button>
+      </form>
+
+      <Show when={!activeQuery()}>
+        <EmptyState title="Search blogs">Enter a query to search blogs.</EmptyState>
+      </Show>
+
+      <Show when={error()}>
+        <FeedErrorNotice message={error()} />
+      </Show>
+
+      <Show when={loading()}>
+        <FeedSkeleton count={3} />
+      </Show>
+
+      <Show when={activeQuery() && !loading()}>
+        <Show
+          when={blogs().length > 0}
+          fallback={<EmptyState title="No blogs found">Try a different query.</EmptyState>}
+        >
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <For each={blogs()}>
+              {(blog) => <BlogCard blog={blog} />}
+            </For>
+          </div>
         </Show>
-      </main>
-    </div>
+      </Show>
+
+      <Show when={nextPageToken()}>
+        <AutoLoadMore
+          onLoad={loadMore}
+          loading={loading()}
+          label="Load more blogs"
+        />
+      </Show>
+    </Page>
   );
 }

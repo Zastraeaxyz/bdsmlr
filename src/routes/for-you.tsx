@@ -5,7 +5,10 @@ import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
 import { FeatureDisabled } from "~/components/FeatureDisabled";
 import { features } from "~/lib/features";
-import { PostCard } from "~/components/PostCard";
+import { PostFeed } from "~/components/PostFeed";
+import { FeedSkeleton, EmptyState } from "~/components/FeedStates";
+import { Page, PageHeader } from "~/components/Page";
+import { Alert, AlertDescription } from "~/components/ui/alert";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { BlogCard } from "~/components/BlogCard";
 import { LightBox } from "~/components/LightBox";
@@ -102,49 +105,44 @@ export default function ForYouPage() {
   return (
     <Show when={!authLoading() && user()} fallback={null}>
       <Title>For you - bbdsmlr</Title>
-      <div class="home-page">
-        <Header info="For you" />
-        <main>
-          <Show when={blogs().length > 0}>
-            <section class="recommended-section">
-              <h2 class="section-title">Recommended blogs</h2>
-              <div class="blog-card-row">
-                <For each={blogs()}>
-                  {(blog) => <BlogCard blog={blog} />}
-                </For>
-              </div>
-            </section>
-          </Show>
+      <Page info="For you">
+        <Show when={blogs().length > 0}>
+          <section class="mb-6">
+            <PageHeader title="Recommended blogs" />
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <For each={blogs()}>
+                {(blog) => <BlogCard blog={blog} />}
+              </For>
+            </div>
+          </section>
+        </Show>
 
-          <h2 class="section-title">For you</h2>
-          {error() && <FeedErrorNotice message={error()} />}
-          {loading() && <p class="loading">Loading posts…</p>}
-          <Show when={!loading()}>
-            <Show
-              when={posts().length > 0}
-              fallback={<p class="empty">No recommendations yet.</p>}
-            >
-              <div class="feed">
-                <For each={posts()}>
-                  {(post) => (
-                    <PostCard
-                      post={post}
-                      onTagClick={openTag}
-                      onImageClick={(url, postId) =>
-                        gallery.open(url, postId)
-                      }
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
+
+        <PageHeader title="For you" />
+        <Show when={error()}>
+          <FeedErrorNotice message={error()} />
+        </Show>
+        <Show when={loading()}>
+          <FeedSkeleton />
+        </Show>
+        <Show when={!loading()}>
+          <Show
+            when={posts().length > 0}
+            fallback={<EmptyState>No recommendations yet.</EmptyState>}
+          >
+            <PostFeed
+              posts={posts()}
+              onTagClick={openTag}
+              onImageClick={(url, postId) => gallery.open(url, postId)}
+            />
+
           </Show>
-          <Show when={nextPageToken}>
-            <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
-          </Show>
-        </main>
-        <LightBox gallery={gallery} />
-      </div>
+        </Show>
+        <Show when={nextPageToken}>
+          <AutoLoadMore onLoad={loadMore} loading={loadingMore()} />
+        </Show>
+      </Page>
+      <LightBox gallery={gallery} />
     </Show>
   );
 }

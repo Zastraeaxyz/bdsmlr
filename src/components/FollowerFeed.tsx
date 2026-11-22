@@ -7,7 +7,9 @@ import {
   type Post,
 } from "~/lib/api";
 import { fetchAllFollowerIds } from "~/lib/following";
-import { PostCard } from "~/components/PostCard";
+import { PostFeed } from "~/components/PostFeed";
+import { FeedSkeleton, EmptyState } from "~/components/FeedStates";
+import { Alert, AlertDescription } from "./ui/alert";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { LightBox } from "~/components/LightBox";
 import { createMediaGallery } from "~/lib/mediaGallery";
@@ -83,26 +85,22 @@ export function FollowerFeed(props: { blogName: string }) {
 
   return (
     <div>
-      {error() && <FeedErrorNotice message={error()} />}
-      {loading() && <p class="loading">Loading follower feed…</p>}
+<Show when={error()}>
+        <FeedErrorNotice message={error()} />
+      </Show>
+      <Show when={loading()}>
+        <FeedSkeleton />
+      </Show>
       <Show when={!loading()}>
         <Show
           when={posts().length > 0}
-          fallback={<p class="empty">No posts from this blog's followers.</p>}
+          fallback={<EmptyState>No posts from this blog's followers.</EmptyState>}
         >
-          <div class="feed">
-            <For each={posts()}>
-              {(post) => (
-                <PostCard
-                  post={post}
-                  onTagClick={openTag}
-                  onImageClick={(url, postId) =>
-                    gallery.open(url, postId)
-                  }
-                />
-              )}
-            </For>
-          </div>
+          <PostFeed
+            posts={posts()}
+            onTagClick={openTag}
+            onImageClick={(url, postId) => gallery.open(url, postId)}
+          />
         </Show>
       </Show>
       <Show when={nextPageToken}>

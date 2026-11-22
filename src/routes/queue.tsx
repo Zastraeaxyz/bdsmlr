@@ -1,10 +1,12 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import Header from "~/components/Header";
+import { Page, PageHeader } from "~/components/Page";
 import { useAuth } from "~/lib/useAuth";
 import { trackEvent } from "~/lib/analytics";
 import { imageUrl } from "~/lib/legacyHtml";
+import { cx } from "~/lib/cva";
+import { sheetDialogClass } from "~/lib/ui";
 import {
   LegacyError,
   deleteLegacyQueueItem,
@@ -14,6 +16,37 @@ import {
   scheduleLegacyQueueItem,
 } from "~/lib/legacy";
 import type { LegacyQueue, LegacyQueueItem } from "~/lib/legacyQueue";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPortal,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectPortal,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  Switch,
+  SwitchControl,
+  SwitchInput,
+  SwitchLabel,
+  SwitchThumb,
+} from "~/components/ui/switch";
 
 const INTERVALS = [
   { value: "5", label: "Every 5 minutes" },
@@ -31,6 +64,18 @@ const INTERVALS = [
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 
+const HOUR_OPTIONS = HOURS.map((hour) => ({
+  value: String(hour),
+  label: `${hour}:00`,
+}));
+
+type SelectOption = { value: string; label: string };
+
+const inputClass =
+  "flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:h-9 md:text-sm dark:bg-input/30";
+
+type QueueAction = { kind: "publish" | "delete"; item: LegacyQueueItem };
+
 function toLocalInput(value: string): string {
   if (!value) return "";
   return value.replace(" ", "T").slice(0, 16);
@@ -45,6 +90,8 @@ export default function QueuePage() {
   const [error, setError] = createSignal("");
   const [notice, setNotice] = createSignal("");
   const [scheduleValues, setScheduleValues] = createSignal<Record<string, string>>({});
+  const [pending, setPending] = createSignal<QueueAction | null>(null);
+  const [confirmOpen, setConfirmOpen] = createSignal(false);
 
   createEffect(() => {
     if (!authLoading() && !user()) navigate("/login", { replace: true });
@@ -93,21 +140,37 @@ export default function QueuePage() {
   };
 
   const publish = (item: LegacyQueueItem) => {
-    if (!window.confirm(`Publish "${item.title || item.text || item.id}" now?`)) return;
-    void run(
-      "publish",
-      () => publishLegacyQueueItem(item.id),
-      "Post published.",
-    );
+    setPending({ kind: "publish", item });
+    setConfirmOpen(true);
   };
 
   const remove = (item: LegacyQueueItem) => {
-    if (!window.confirm("Remove this post from the queue?")) return;
-    void run(
-      "delete",
-      () => deleteLegacyQueueItem(item.id),
-      "Post removed from the queue.",
-    );
+    setPending({ kind: "delete", item });
+    setConfirmOpen(true);
+  };
+
+  const pendingLabel = () => {
+    const action = pending();
+    if (!action) return "";
+    return action.item.title || action.item.text || action.item.id;
+  };
+
+  const confirmPending = () => {
+    const action = pending();
+    if (!action) return;
+    if (action.kind === "publish") {
+      void run(
+        "publish",
+        () => publishLegacyQueueItem(action.item.id),
+        "Post published.",
+      );
+    } else {
+      void run(
+        "delete",
+        () => deleteLegacyQueueItem(action.item.id),
+        "Post removed from the queue.",
+      );
+    }
   };
 
   const schedule = (item: LegacyQueueItem) => {
@@ -179,174 +242,292 @@ export default function QueuePage() {
 
   return (
     <Show when={!authLoading() && user()} fallback={null}>
-      <Title>Queue - bbdsmlr</Title>
-      <div class="home-page">
-        <Header info="Queue" />
-        <main>
-          <h2 class="social-list-title">Queue</h2>
-          {error() && <p class="error">{error()}</p>}
-          {notice() && <p class="action-notice">{notice()}</p>}
-          {loading() && <p class="loading">Loading queue…</p>}
+      <Page info="Queue">
+        <Title>Queue - bbdsmlr</Title>
+        <PageHeader title="Queue" />
 
-          <Show when={!loading() && queue()}>
-            <section class="compose-card queue-settings">
-              <h3>Queue settings</h3>
-              <label class="queue-toggle">
-                <input
-                  type="checkbox"
-                  checked={queue()!.settings.running}
-                  disabled={busy() !== ""}
-                  onChange={(e) => setRunning(e.currentTarget.checked)}
-                />
-                <span>
-                  {queue()!.settings.running ? "Queue running" : "Queue paused"}
-                </span>
-              </label>
-              <div class="queue-settings-grid">
-                <label class="compose-field">
-                  <span>Start hour</span>
-                  <select
-                    value={String(queue()!.settings.startHour)}
-                    disabled={busy() !== ""}
-                    onChange={(e) => setHour("start", Number(e.currentTarget.value))}
-                  >
-                    <For each={HOURS}>
-                      {(hour) => <option value={hour}>{hour}:00</option>}
-                    </For>
-                  </select>
-                </label>
-                <label class="compose-field">
-                  <span>End hour</span>
-                  <select
-                    value={String(queue()!.settings.endHour)}
-                    disabled={busy() !== ""}
-                    onChange={(e) => setHour("end", Number(e.currentTarget.value))}
-                  >
-                    <For each={HOURS}>
-                      {(hour) => <option value={hour}>{hour}:00</option>}
-                    </For>
-                  </select>
-                </label>
-                <label class="compose-field">
-                  <span>Posting interval</span>
-                  <select
-                    value={queue()!.settings.interval}
-                    disabled={busy() !== ""}
-                    onChange={(e) => setInterval(e.currentTarget.value)}
-                  >
-                    <For each={INTERVALS}>
-                      {(entry) => <option value={entry.value}>{entry.label}</option>}
-                    </For>
-                  </select>
-                </label>
-                <label class="compose-field">
-                  <span>Timezone</span>
-                  <input
-                    type="text"
-                    value={queue()!.settings.timezone}
-                    disabled={busy() !== ""}
-                    onBlur={(e) => setTimezone(e.currentTarget.value)}
-                    onChange={(e) => setTimezone(e.currentTarget.value)}
-                    placeholder="America/New_York"
-                  />
-                </label>
-              </div>
-              <label class="queue-toggle">
-                <input
-                  type="checkbox"
-                  checked={queue()!.settings.random}
-                  disabled={busy() !== ""}
-                  onChange={(e) => setRandom(e.currentTarget.checked)}
-                />
-                <span>Randomize posting order</span>
-              </label>
-            </section>
+        <Show when={error()}>
+          <Alert variant="destructive" class="mb-3">
+            <AlertDescription>{error()}</AlertDescription>
+          </Alert>
+        </Show>
+        <Show when={notice()}>
+          <Alert class="mb-3 border-primary/40 bg-primary/10">
+            <AlertDescription class="text-foreground">{notice()}</AlertDescription>
+          </Alert>
+        </Show>
+        <Show when={loading()}>
+          <p class="py-12 text-center text-sm text-muted-foreground">
+            Loading queue…
+          </p>
+        </Show>
 
-            <p class="queue-count">
-              Posts in queue: {queue()!.count}
-            </p>
+        <Show when={!loading() && queue()}>
+          <Card class="mb-4 gap-5 p-4 sm:p-5">
+            <h3 class="text-base font-semibold">Queue settings</h3>
 
-            <Show
-              when={queue()!.items.length > 0}
-              fallback={<p class="empty">No posts in the queue.</p>}
+            <Switch
+              checked={queue()!.settings.running}
+              onChange={setRunning}
+              disabled={busy() !== ""}
+              class="flex items-center gap-3"
             >
-              <div class="draft-list">
-                <For each={queue()!.items}>
-                  {(item) => (
-                    <article class="draft-card queue-card">
-                      <Show when={item.image}>
-                        <img class="draft-image" src={imageUrl(item.image)} alt="" />
-                      </Show>
-                      <div class="draft-content">
-                        <Show when={item.title}>
-                          <h3>{item.title}</h3>
-                        </Show>
-                        <Show when={item.text}>
-                          <p>{item.text}</p>
-                        </Show>
-                        <Show when={item.tags.length > 0}>
-                          <div class="draft-tags">
-                            <For each={item.tags}>
-                              {(tag) => <span class="tag">#{tag}</span>}
-                            </For>
-                          </div>
-                        </Show>
-                        <div class="queue-schedule">
-                          <input
-                            type="datetime-local"
-                            value={
-                              scheduleValues()[item.id] ?? toLocalInput(item.scheduledAt)
-                            }
-                            onInput={(e) =>
-                              setScheduleValues((prev) => ({
-                                ...prev,
-                                [item.id]: e.currentTarget.value,
-                              }))
-                            }
-                          />
-                          <button
-                            type="button"
-                            class="btn-ghost"
-                            onClick={() => schedule(item)}
-                            disabled={busy() !== ""}
-                          >
-                            {busy() === "schedule" ? "Saving…" : "Set time"}
-                          </button>
-                        </div>
-                        <div class="draft-actions">
-                          <button
-                            type="button"
-                            onClick={() => publish(item)}
-                            disabled={busy() !== ""}
-                          >
-                            {busy() === "publish" ? "Publishing…" : "Publish now"}
-                          </button>
-                          <button
-                            type="button"
-                            class="btn-ghost"
-                            onClick={() => edit(item)}
-                            disabled={busy() !== ""}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            class="btn-ghost danger-text"
-                            onClick={() => remove(item)}
-                            disabled={busy() !== ""}
-                          >
-                            {busy() === "delete" ? "Removing…" : "Delete"}
-                          </button>
-                        </div>
-                      </div>
-                    </article>
+              <SwitchInput />
+              <SwitchControl>
+                <SwitchThumb />
+              </SwitchControl>
+              <SwitchLabel class="font-normal">
+                {queue()!.settings.running ? "Queue running" : "Queue paused"}
+              </SwitchLabel>
+            </Switch>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="flex flex-col gap-1.5">
+                <Select<SelectOption>
+                  options={HOUR_OPTIONS}
+                  optionValue="value"
+                  optionTextValue="label"
+                  value={HOUR_OPTIONS.find(
+                    (option) =>
+                      option.value === String(queue()!.settings.startHour),
                   )}
-                </For>
+                  onChange={(option) => option && setHour("start", Number(option.value))}
+                  disabled={busy() !== ""}
+                  itemComponent={(props) => (
+                    <SelectItem item={props.item}>
+                      {(props.item.rawValue as SelectOption).label}
+                    </SelectItem>
+                  )}
+                >
+                  <SelectLabel>Start hour</SelectLabel>
+                  <SelectTrigger class="h-11 w-full md:h-9">
+                    <SelectValue<SelectOption>>
+                      {(state) => state.selectedOption().label}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectContent />
+                  </SelectPortal>
+                </Select>
               </div>
-            </Show>
+
+              <div class="flex flex-col gap-1.5">
+                <Select<SelectOption>
+                  options={HOUR_OPTIONS}
+                  optionValue="value"
+                  optionTextValue="label"
+                  value={HOUR_OPTIONS.find(
+                    (option) =>
+                      option.value === String(queue()!.settings.endHour),
+                  )}
+                  onChange={(option) => option && setHour("end", Number(option.value))}
+                  disabled={busy() !== ""}
+                  itemComponent={(props) => (
+                    <SelectItem item={props.item}>
+                      {(props.item.rawValue as SelectOption).label}
+                    </SelectItem>
+                  )}
+                >
+                  <SelectLabel>End hour</SelectLabel>
+                  <SelectTrigger class="h-11 w-full md:h-9">
+                    <SelectValue<SelectOption>>
+                      {(state) => state.selectedOption().label}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectContent />
+                  </SelectPortal>
+                </Select>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <Select<SelectOption>
+                  options={INTERVALS}
+                  optionValue="value"
+                  optionTextValue="label"
+                  value={INTERVALS.find(
+                    (entry) => entry.value === queue()!.settings.interval,
+                  )}
+                  onChange={(option) => option && setInterval(option.value)}
+                  disabled={busy() !== ""}
+                  itemComponent={(props) => (
+                    <SelectItem item={props.item}>
+                      {(props.item.rawValue as SelectOption).label}
+                    </SelectItem>
+                  )}
+                >
+                  <SelectLabel>Posting interval</SelectLabel>
+                  <SelectTrigger class="h-11 w-full md:h-9">
+                    <SelectValue<SelectOption>>
+                      {(state) => state.selectedOption().label}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectContent />
+                  </SelectPortal>
+                </Select>
+              </div>
+
+              <label class="flex flex-col gap-1.5">
+                <span class="text-sm font-medium">Timezone</span>
+                <input
+                  type="text"
+                  value={queue()!.settings.timezone}
+                  disabled={busy() !== ""}
+                  onBlur={(e) => setTimezone(e.currentTarget.value)}
+                  onChange={(e) => setTimezone(e.currentTarget.value)}
+                  placeholder="America/New_York"
+                  class={inputClass}
+                />
+              </label>
+            </div>
+
+            <Switch
+              checked={queue()!.settings.random}
+              onChange={setRandom}
+              disabled={busy() !== ""}
+              class="flex items-center gap-3"
+            >
+              <SwitchInput />
+              <SwitchControl>
+                <SwitchThumb />
+              </SwitchControl>
+              <SwitchLabel class="font-normal">
+                Randomize posting order
+              </SwitchLabel>
+            </Switch>
+          </Card>
+
+          <p class="mb-2.5 text-sm text-muted-foreground">
+            Posts in queue: {queue()!.count}
+          </p>
+
+          <Show
+            when={queue()!.items.length > 0}
+            fallback={
+              <p class="py-10 text-center text-sm text-muted-foreground">
+                No posts in the queue.
+              </p>
+            }
+          >
+            <div class="flex flex-col gap-3">
+              <For each={queue()!.items}>
+                {(item) => (
+                  <Card class="flex-col gap-3 p-3 sm:flex-row sm:gap-4">
+                    <Show when={item.image}>
+                      <img
+                        class="h-40 w-full rounded-lg border object-cover sm:size-28"
+                        src={imageUrl(item.image)}
+                        alt=""
+                      />
+                    </Show>
+                    <div class="min-w-0 flex-1">
+                      <Show when={item.title}>
+                        <h3 class="text-sm font-semibold">{item.title}</h3>
+                      </Show>
+                      <Show when={item.text}>
+                        <p class="mt-1 text-sm leading-relaxed break-words text-muted-foreground">
+                          {item.text}
+                        </p>
+                      </Show>
+                      <Show when={item.tags.length > 0}>
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                          <For each={item.tags}>
+                            {(tag) => <Badge variant="secondary">#{tag}</Badge>}
+                          </For>
+                        </div>
+                      </Show>
+                      <div class="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <input
+                          type="datetime-local"
+                          aria-label="Schedule date and time"
+                          value={
+                            scheduleValues()[item.id] ?? toLocalInput(item.scheduledAt)
+                          }
+                          onInput={(e) =>
+                            setScheduleValues((prev) => ({
+                              ...prev,
+                              [item.id]: e.currentTarget.value,
+                            }))
+                          }
+                          class={cx(inputClass, "sm:max-w-60")}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          class="h-11 w-full sm:h-9 sm:w-auto"
+                          onClick={() => schedule(item)}
+                          disabled={busy() !== ""}
+                        >
+                          {busy() === "schedule" ? "Saving…" : "Set time"}
+                        </Button>
+                      </div>
+                      <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                        <Button
+                          type="button"
+                          class="h-11 w-full sm:h-9 sm:w-auto"
+                          onClick={() => publish(item)}
+                          disabled={busy() !== ""}
+                        >
+                          {busy() === "publish" ? "Publishing…" : "Publish now"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          class="h-11 w-full sm:h-9 sm:w-auto"
+                          onClick={() => edit(item)}
+                          disabled={busy() !== ""}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          class="h-11 w-full text-destructive hover:bg-destructive/10 hover:text-destructive sm:h-9 sm:w-auto"
+                          onClick={() => remove(item)}
+                          disabled={busy() !== ""}
+                        >
+                          {busy() === "delete" ? "Removing…" : "Delete"}
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+              </For>
+            </div>
           </Show>
-        </main>
-      </div>
+        </Show>
+
+        <AlertDialog open={confirmOpen()} onOpenChange={setConfirmOpen}>
+          <AlertDialogPortal>
+            <AlertDialogContent class={sheetDialogClass}>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {pending()?.kind === "delete" ? "Remove post?" : "Publish now?"}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {pending()?.kind === "delete"
+                    ? "Remove this post from the queue?"
+                    : `Publish "${pendingLabel()}" now?`}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  class={
+                    pending()?.kind === "delete"
+                      ? "bg-destructive text-white hover:bg-destructive/90"
+                      : undefined
+                  }
+                  onClick={confirmPending}
+                >
+                  {pending()?.kind === "delete" ? "Remove" : "Publish"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogPortal>
+        </AlertDialog>
+      </Page>
     </Show>
   );
 }

@@ -10,6 +10,13 @@ import {
 import { useParams, useLocation, A } from '@solidjs/router'
 import { Title } from '@solidjs/meta'
 import {
+  AlertTriangle,
+  Ban,
+  Flag,
+  MessageSquare,
+  MoreHorizontal,
+} from 'lucide-solid'
+import {
   resolveIdentifier,
   getBlog,
   getBlogFollowState,
@@ -22,7 +29,7 @@ import {
   type Blog,
 } from '~/lib/api'
 import Header from '~/components/Header'
-import { BdsmlrIcon, RssIcon, WarningIcon } from '~/components/Icons'
+import { BdsmlrIcon, RssIcon } from '~/components/Icons'
 import { BlogDescription } from '~/components/BlogDescription'
 import { AppErrorBoundary } from '~/components/AppErrorBoundary'
 import { FeedSettingsProvider } from '~/lib/feedSettings'
@@ -32,8 +39,52 @@ import {
   removeCachedFollowingId,
 } from '~/lib/following'
 import { trackEvent } from '~/lib/analytics'
+import { cx } from '~/lib/cva'
+import { sheetDialogClass } from '~/lib/ui'
+import { Alert, AlertDescription } from '~/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPortal,
+  AlertDialogTitle,
+} from '~/components/ui/alert-dialog'
+import { Button, buttonVariants } from '~/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from '~/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
+import {
+  TextField,
+  TextFieldTextArea,
+} from '~/components/ui/text-field'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipPortal,
+  TooltipTrigger,
+} from '~/components/ui/tooltip'
 
 const DEFAULT_FAVICON = '/favicon.ico'
+
+const RSS_TOKEN_TITLE =
+  'This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine.'
 
 function setFavicon(href: string) {
   if (typeof document === 'undefined') return
@@ -44,6 +95,29 @@ function setFavicon(href: string) {
     document.head.appendChild(link)
   }
   if (link.getAttribute('href') !== href) link.setAttribute('href', href)
+}
+
+function ProfileTab(props: {
+  href: string
+  active: boolean
+  label: string
+  tab: string
+}) {
+  return (
+    <A
+      href={props.href}
+      class={cx(
+        'inline-flex min-h-11 shrink-0 items-center justify-center border-b-2 px-3 text-sm font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        props.active
+          ? 'border-primary text-foreground'
+          : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
+      )}
+      aria-current={props.active ? 'page' : undefined}
+      onClick={() => trackEvent('profile-tab', { tab: props.tab })}
+    >
+      {props.label}
+    </A>
+  )
 }
 
 export default function UserLayout(props: ParentProps) {
@@ -70,7 +144,30 @@ export default function UserLayout(props: ParentProps) {
   const [reportBusy, setReportBusy] = createSignal(false)
   const [reportDone, setReportDone] = createSignal(false)
   const [actionError, setActionError] = createSignal('')
+  const [confirmState, setConfirmState] = createSignal<{
+    title: string
+    description: string
+    action: string
+  } | null>(null)
   let actionsRef: HTMLDivElement | undefined
+  let pendingConfirm: ((ok: boolean) => void) | undefined
+
+  const askConfirm = (options: {
+    title: string
+    description: string
+    action: string
+  }) =>
+    new Promise<boolean>((resolve) => {
+      pendingConfirm = resolve
+      setConfirmState(options)
+    })
+
+  const settleConfirm = (ok: boolean) => {
+    const resolve = pendingConfirm
+    pendingConfirm = undefined
+    setConfirmState(null)
+    resolve?.(ok)
+  }
 
   const isOwnBlog = () => {
     const current = blog()
@@ -86,7 +183,11 @@ export default function UserLayout(props: ParentProps) {
   const canAct = () => !!activeBlogId() && !!blog() && !isOwnBlog()
 
   const handleClickOutside = (e: MouseEvent) => {
-    if (actionsRef && !actionsRef.contains(e.target as Node)) {
+    const target = e.target as Node | null
+    if (!target) return
+    const element = target as Element
+    if (element.closest?.('[data-slot="dropdown-menu-content"]')) return
+    if (actionsRef && !actionsRef.contains(target)) {
       setShowActions(false)
     }
   }
@@ -140,6 +241,7 @@ export default function UserLayout(props: ParentProps) {
         setV2session(null)
         setActionError('')
         setShowActions(false)
+        settleConfirm(false)
         setShowReport(false)
         setReportDone(false)
         setReportReason('')
@@ -225,14 +327,16 @@ export default function UserLayout(props: ParentProps) {
     if (!current || !actor || blockBusy()) return
     const target = Number(current.id)
     const next = !blocked()
-    if (
-      !window.confirm(
-        next
-          ? `Block @${current.name} and the owner's other blogs?`
-          : `Unblock @${current.name}?`,
-      )
-    )
-      return
+    const confirmed = await askConfirm({
+      title: next
+        ? `Block @${current.name} and the owner's other blogs?`
+        : `Unblock @${current.name}?`,
+      description: next
+        ? 'They will no longer be able to interact with you.'
+        : 'They will be able to follow and message you again.',
+      action: next ? 'Block' : 'Unblock',
+    })
+    if (!confirmed) return
     setBlockBusy(true)
     setActionError('')
     try {
@@ -291,6 +395,8 @@ export default function UserLayout(props: ParentProps) {
 
   const rssIncludesToken = () => privateBlog() && !!v2session()
 
+  const rssActive = () => location.pathname === `/${slug()}/rss`
+
   const feedActive = () =>
     location.pathname === `/${slug()}` || location.pathname === `/${slug()}/`
   const followingActive = () => location.pathname === `/${slug()}/following`
@@ -301,209 +407,249 @@ export default function UserLayout(props: ParentProps) {
     location.pathname === `/${slug()}/follower-feed`
   const archiveActive = () => location.pathname === `/${slug()}/archive`
 
+  const rssWarning = () => (
+    <Show when={rssIncludesToken()}>
+      <Tooltip>
+        <TooltipTrigger
+          type="button"
+          class="inline-flex size-11 items-center justify-center text-amber-500 sm:size-9"
+          aria-label="This feed includes your session token"
+        >
+          <AlertTriangle class="size-4" />
+        </TooltipTrigger>
+        <TooltipPortal>
+          <TooltipContent class="max-w-64">{RSS_TOKEN_TITLE}</TooltipContent>
+        </TooltipPortal>
+      </Tooltip>
+    </Show>
+  )
+
   return (
-    <div class="home-page">
+    <div class="flex min-h-dvh flex-col">
       <Title>{slug()} - bbdsmlr</Title>
       <Header info={`@${slug()}`} />
-      {error() && <p class="error">{error()}</p>}
+      <Show when={error()}>
+        <Alert
+          variant="destructive"
+          class="mx-auto mt-4 w-[calc(100%-1.5rem)] max-w-3xl"
+        >
+          <AlertTriangle class="size-4" />
+          <AlertDescription>{error()}</AlertDescription>
+        </Alert>
+      </Show>
       <Show when={blog()}>
         {(b) => (
-          <section class="blog-header">
+          <section class="border-b border-border bg-card">
             <AppErrorBoundary compact>
-              <div class="blog-header-inner">
-              {b().avatarUrl && (
-                <img class="blog-avatar" src={b().avatarUrl} alt="" />
-              )}
-              <div class="blog-header-info">
-                {b().title && <h2 class="blog-title">{b().title}</h2>}
-                {b().description && (
-                  <BlogDescription text={b().description!} />
-                )}
-                <p class="blog-stats">
-                  {followersCount() ?? b().followersCount ?? 0} followers
-                  {b().postsCount != null ? ` · ${b().postsCount} posts` : ''}
-                </p>
-              </div>
-              <div class="blog-header-actions">
-                <Show when={canAct()}>
-                  <button
-                    type="button"
-                    class={followed() ? 'follow-btn active' : 'follow-btn'}
-                    onClick={toggleFollow}
-                    disabled={followBusy()}
-                  >
-                    {followBusy()
-                      ? '…'
-                      : followed()
-                        ? 'Following'
-                        : 'Follow'}
-                  </button>
-                  <div class="profile-actions" ref={actionsRef}>
-                    <button
-                      type="button"
-                      class="settings-btn"
-                      onClick={() => setShowActions(!showActions())}
-                      aria-label="Blog actions"
-                      aria-expanded={showActions()}
-                    >
-                      ⋯
-                    </button>
-                    <Show when={showActions()}>
-                      <div class="settings-dropdown-menu profile-actions-menu">
-                        <A
-                          href={`/messages?to=${encodeURIComponent(b().name)}`}
-                          class="settings-dropdown-item"
-                          onClick={() => setShowActions(false)}
-                        >
-                          Message
-                        </A>
-                        <button
-                          type="button"
-                          class="settings-dropdown-item"
-                          onClick={toggleBlock}
-                          disabled={blockBusy()}
-                        >
-                          {blocked() ? 'Unblock' : 'Block'}
-                        </button>
-                        <button
-                          type="button"
-                          class="settings-dropdown-item"
-                          onClick={() => {
-                            setReportDone(false)
-                            setShowReport(true)
-                            setShowActions(false)
-                          }}
-                          disabled={reportDone()}
-                        >
-                          {reportDone() ? 'Reported' : 'Report blog'}
-                        </button>
-                      </div>
+              <div class="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:gap-4">
+                <div class="flex min-w-0 flex-1 items-start gap-3">
+                  <Show when={b().avatarUrl}>
+                    <img
+                      class="size-16 shrink-0 rounded-full border-2 border-border object-cover"
+                      src={b().avatarUrl}
+                      alt=""
+                    />
+                  </Show>
+                  <div class="min-w-0 flex-1 space-y-1">
+                    <Show when={b().title}>
+                      <h2 class="text-lg leading-tight font-bold text-foreground">
+                        {b().title}
+                      </h2>
                     </Show>
+                    <Show when={b().description}>
+                      <BlogDescription text={b().description!} />
+                    </Show>
+                    <p class="pt-1 text-xs text-muted-foreground">
+                      {followersCount() ?? b().followersCount ?? 0} followers
+                      {b().postsCount != null
+                        ? ` · ${b().postsCount} posts`
+                        : ''}
+                    </p>
                   </div>
-                </Show>
-                <a
-                  href={`https://bdsmlr.com/blog/${slug()}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="download-btn"
-                  title="Open on BDSMLR"
-                  onClick={() => trackEvent('outbound-bdsmlr', { surface: 'profile' })}
-                >
-                  <BdsmlrIcon />
-                </a>
-                <a
-                  href={rssHref()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="download-btn"
-                  onClick={() => trackEvent('rss-open')}
-                  classList={{
-                    'download-btn-active': location.pathname === `/${slug()}/rss`,
-                  }}
-                  title="RSS feed options"
-                >
-                  <RssIcon />
-                </a>
-                <Show when={rssIncludesToken()}>
-                  <span
-                    class="rss-token-warning"
-                    title="This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine."
+                </div>
+                <div class="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:justify-end">
+                  <Show when={canAct()}>
+                    <Button
+                      type="button"
+                      variant={followed() ? 'outline' : 'default'}
+                      class="h-11 min-w-24 rounded-full px-5 sm:h-9"
+                      onClick={toggleFollow}
+                      disabled={followBusy()}
+                      aria-pressed={followed()}
+                    >
+                      {followBusy()
+                        ? '…'
+                        : followed()
+                          ? 'Following'
+                          : 'Follow'}
+                    </Button>
+                    <div ref={actionsRef}>
+                      <DropdownMenu
+                        open={showActions()}
+                        onOpenChange={setShowActions}
+                      >
+                        <DropdownMenuTrigger<typeof Button>
+                          as={(triggerProps) => (
+                            <Button
+                              {...triggerProps}
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              class="size-11 sm:size-9"
+                              aria-label="Blog actions"
+                            >
+                              <MoreHorizontal class="size-4" />
+                            </Button>
+                          )}
+                        />
+                        <DropdownMenuPortal>
+                          <DropdownMenuContent class="w-48">
+                            <DropdownMenuItem
+                              as={A}
+                              href={`/messages?to=${encodeURIComponent(b().name)}`}
+                              onSelect={() => setShowActions(false)}
+                            >
+                              <MessageSquare class="size-4" />
+                              Message
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={blockBusy()}
+                              onSelect={() => void toggleBlock()}
+                            >
+                              <Ban class="size-4" />
+                              {blocked() ? 'Unblock' : 'Block'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={reportDone()}
+                              onSelect={() => {
+                                setReportDone(false)
+                                setShowReport(true)
+                                setShowActions(false)
+                              }}
+                            >
+                              <Flag class="size-4" />
+                              {reportDone() ? 'Reported' : 'Report blog'}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenu>
+                    </div>
+                  </Show>
+                  <a
+                    href={`https://bdsmlr.com/blog/${slug()}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class={cx(
+                      buttonVariants({ variant: 'outline', size: 'icon' }),
+                      'size-11 sm:size-9',
+                    )}
+                    title="Open on BDSMLR"
+                    aria-label="Open on BDSMLR"
+                    onClick={() =>
+                      trackEvent('outbound-bdsmlr', { surface: 'profile' })
+                    }
                   >
-                    <WarningIcon />
-                  </span>
-                </Show>
+                    <BdsmlrIcon />
+                  </a>
+                  <a
+                    href={rssHref()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class={cx(
+                      buttonVariants({
+                        variant: rssActive() ? 'secondary' : 'outline',
+                        size: 'icon',
+                      }),
+                      'size-11 sm:size-9',
+                      rssActive() && 'border-primary text-primary',
+                    )}
+                    onClick={() => trackEvent('rss-open')}
+                    title="RSS feed options"
+                    aria-label="RSS feed options"
+                  >
+                    <RssIcon />
+                  </a>
+                  {rssWarning()}
+                </div>
               </div>
-            </div>
             </AppErrorBoundary>
             <Show when={actionError()}>
-              <p class="action-error blog-action-error">{actionError()}</p>
+              <div class="mx-auto w-full max-w-3xl px-4">
+                <Alert variant="destructive" class="mb-3">
+                  <AlertTriangle class="size-4" />
+                  <AlertDescription>{actionError()}</AlertDescription>
+                </Alert>
+              </div>
             </Show>
-            <nav class="blog-nav-tabs">
-              <A
+            <nav class="mx-auto flex w-full max-w-3xl gap-1 overflow-x-auto px-2">
+              <ProfileTab
                 href={`/${slug()}`}
-                class="blog-nav-tab"
-                classList={{ 'blog-nav-tab-active': feedActive() }}
-                onClick={() => trackEvent('profile-tab', { tab: 'feed' })}
-              >
-                Feed
-              </A>
-              <A
+                active={feedActive()}
+                label="Feed"
+                tab="feed"
+              />
+              <ProfileTab
                 href={`/${slug()}/following`}
-                class="blog-nav-tab"
-                classList={{ 'blog-nav-tab-active': followingActive() }}
-                onClick={() => trackEvent('profile-tab', { tab: 'following' })}
-              >
-                Following
-              </A>
-              <A
+                active={followingActive()}
+                label="Following"
+                tab="following"
+              />
+              <ProfileTab
                 href={`/${slug()}/followers`}
-                class="blog-nav-tab"
-                classList={{ 'blog-nav-tab-active': followersActive() }}
-                onClick={() => trackEvent('profile-tab', { tab: 'followers' })}
-              >
-                Followers
-              </A>
-              <A
+                active={followersActive()}
+                label="Followers"
+                tab="followers"
+              />
+              <ProfileTab
                 href={`/${slug()}/siblings`}
-                class="blog-nav-tab"
-                classList={{ 'blog-nav-tab-active': siblingsActive() }}
-                onClick={() => trackEvent('profile-tab', { tab: 'siblings' })}
-              >
-                Other blogs
-              </A>
-              <A
+                active={siblingsActive()}
+                label="Other blogs"
+                tab="siblings"
+              />
+              <ProfileTab
                 href={`/${slug()}/activity`}
-                class="blog-nav-tab"
-                classList={{ 'blog-nav-tab-active': activityActive() }}
-                onClick={() => trackEvent('profile-tab', { tab: 'activity' })}
-              >
-                Activity
-              </A>
-              <A
+                active={activityActive()}
+                label="Activity"
+                tab="activity"
+              />
+              <ProfileTab
                 href={`/${slug()}/follower-feed`}
-                class="blog-nav-tab"
-                classList={{ 'blog-nav-tab-active': followerFeedActive() }}
-                onClick={() => trackEvent('profile-tab', { tab: 'follower-feed' })}
-              >
-                Followers' feed
-              </A>
-              <A
+                active={followerFeedActive()}
+                label="Followers' feed"
+                tab="follower-feed"
+              />
+              <ProfileTab
                 href={`/${slug()}/archive`}
-                class="blog-nav-tab"
-                classList={{ 'blog-nav-tab-active': archiveActive() }}
-                onClick={() => trackEvent('profile-tab', { tab: 'archive' })}
-              >
-                Archive
-              </A>
+                active={archiveActive()}
+                label="Archive"
+                tab="archive"
+              />
             </nav>
           </section>
         )}
       </Show>
       <Show when={!loading() && !error() && !blog()}>
-        <section class="blog-header">
-          <div class="blog-header-inner">
-            <div class="blog-header-info">
-              <p class="blog-description">This blog is private.</p>
-            </div>
-            <div class="blog-header-actions">
+        <section class="border-b border-border bg-card">
+          <div class="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-3 px-4 py-4">
+            <p class="min-w-0 flex-1 text-sm text-muted-foreground">
+              This blog is private.
+            </p>
+            <div class="flex items-center gap-2">
               <a
                 href={rssHref()}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="download-btn"
+                class={cx(
+                  buttonVariants({ variant: 'outline', size: 'icon' }),
+                  'size-11 sm:size-9',
+                )}
                 title="RSS feed options"
+                aria-label="RSS feed options"
                 onClick={() => trackEvent('rss-open')}
               >
                 <RssIcon />
               </a>
-              <Show when={rssIncludesToken()}>
-                <span
-                  class="rss-token-warning"
-                  title="This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine."
-                >
-                  <WarningIcon />
-                </span>
-              </Show>
+              {rssWarning()}
             </div>
           </div>
         </section>
@@ -519,53 +665,96 @@ export default function UserLayout(props: ParentProps) {
         </FeedSettingsProvider>
       </AppErrorBoundary>
 
-      <Show when={showReport()}>
-        <div
-          class="tag-modal-backdrop"
-          onClick={() => {
-            if (!reportBusy()) {
-              setShowReport(false)
-              setReportReason('')
-            }
-          }}
-        >
-          <form
-            class="tag-modal report-modal"
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={submitReport}
-          >
-            <button
-              type="button"
-              class="tag-modal-close"
-              onClick={() => {
-                setShowReport(false)
-                setReportReason('')
-              }}
-              aria-label="Close report"
-              disabled={reportBusy()}
-            >
-              ×
-            </button>
-            <h3>Report @{slug()}</h3>
-            <p class="report-copy">
-              Tell the moderators what is wrong with this blog.
-            </p>
-            <textarea
-              rows={4}
-              placeholder="Reason"
-              value={reportReason()}
-              onInput={(e) => setReportReason(e.currentTarget.value)}
-            />
-            <button
-              type="submit"
-              class="danger-btn"
-              disabled={!reportReason().trim() || reportBusy()}
-            >
-              {reportBusy() ? 'Reporting…' : 'Submit report'}
-            </button>
-          </form>
-        </div>
-      </Show>
+      <Dialog
+        open={showReport()}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (reportBusy()) return
+            setShowReport(false)
+            setReportReason('')
+          }
+        }}
+      >
+        <DialogPortal>
+          <DialogContent class={cx(sheetDialogClass, 'sm:max-w-md')}>
+            <DialogHeader>
+              <DialogTitle>Report @{slug()}</DialogTitle>
+              <DialogDescription>
+                Tell the moderators what is wrong with this blog.
+              </DialogDescription>
+            </DialogHeader>
+            <form class="flex flex-col gap-3" onSubmit={submitReport}>
+              <TextField>
+                <TextFieldTextArea
+                  rows={4}
+                  placeholder="Reason"
+                  value={reportReason()}
+                  onInput={(e) => setReportReason(e.currentTarget.value)}
+                  class="min-h-28"
+                />
+              </TextField>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="h-11 sm:h-9"
+                  onClick={() => {
+                    if (reportBusy()) return
+                    setShowReport(false)
+                    setReportReason('')
+                  }}
+                  disabled={reportBusy()}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  class="h-11 sm:h-9"
+                  disabled={!reportReason().trim() || reportBusy()}
+                >
+                  {reportBusy() ? 'Reporting…' : 'Submit report'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+
+      <AlertDialog
+        open={!!confirmState()}
+        onOpenChange={(open) => {
+          if (!open) settleConfirm(false)
+        }}
+      >
+        <AlertDialogPortal>
+          <AlertDialogContent class={cx(sheetDialogClass, 'sm:max-w-md')}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{confirmState()?.title}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {confirmState()?.description}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                class="h-11 sm:h-9"
+                onClick={() => settleConfirm(false)}
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                class={buttonVariants({
+                  variant: 'destructive',
+                  class: 'h-11 sm:h-9',
+                })}
+                onClick={() => settleConfirm(true)}
+              >
+                {confirmState()?.action}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogPortal>
+      </AlertDialog>
     </div>
   )
 }

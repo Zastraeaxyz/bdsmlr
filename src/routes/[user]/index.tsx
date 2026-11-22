@@ -10,6 +10,11 @@ import {
 } from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
 import {
+  AlertTriangle,
+  Settings,
+  X,
+} from "lucide-solid";
+import {
   resolveIdentifier,
   listBlogActivity,
   listBlogTopTags,
@@ -21,7 +26,6 @@ import {
   type Post,
   type TopTag,
 } from "~/lib/api";
-import { GearIcon, WarningIcon } from "~/components/Icons";
 import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import SortDropdown, { sortOptionLabel } from "~/components/SortDropdown";
 import { createMediaGallery } from "~/lib/mediaGallery";
@@ -32,6 +36,27 @@ import SearchHistory from "~/components/SearchHistory";
 import ViewDropdown from "~/components/ViewDropdown";
 import { AutoLoadMore } from "~/components/AutoLoadMore";
 import { PostCard } from "~/components/PostCard";
+import { FeedSkeleton, EmptyState } from "~/components/FeedStates";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuGroupLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { TextField, TextFieldInput } from "~/components/ui/text-field";
 import {
   loadFeedView,
   saveFeedView,
@@ -46,9 +71,20 @@ import { freshPosts } from "~/lib/feedPagination";
 import { findRepeatingImageIdentities } from "~/lib/repeatingImages";
 import { pendingReblogsFor, prunePendingReblogs } from "~/lib/pendingReblogs";
 import { countBucket, trackEvent } from "~/lib/analytics";
+import { cx } from "~/lib/cva";
 
 const PAGE_SIZE = 20;
 const EMPTY_IMAGE_IDENTITIES: ReadonlySet<string> = new Set();
+
+const TAG_COUNT_WARNING =
+  "BDSMLR tag counts are approximate and may not match blog search results.";
+
+const SETTINGS_TRIGGER_CLASS = "size-11 shrink-0 sm:size-9";
+
+const TAG_LINK_CLASS =
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-sm text-primary transition-colors outline-none hover:border-primary focus-visible:ring-2 focus-visible:ring-ring";
+
+const TAG_COUNT_CLASS = "text-xs font-medium text-muted-foreground";
 
 function formatCount(value: number): string {
   return new Intl.NumberFormat().format(value);
@@ -72,8 +108,8 @@ export default function UserFeed() {
     (searchParams.tag_name as string) || "",
   );
   const [showAllTags, setShowAllTags] = createSignal(false);
-  const [sortField, setSortField] = createSignal(SortField.Date);
-  const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
+  const [sortField, setSortField] = createSignal<number>(SortField.Date);
+  const [sortOrder, setSortOrder] = createSignal<number>(SortOrder.Descending);
   const [view, setView] = createSignal<FeedView>(loadFeedView());
   const {
     hideReblogs,
@@ -152,7 +188,12 @@ export default function UserFeed() {
   };
 
   const handleClickOutside = (e: MouseEvent) => {
-    if (settingsRef && !settingsRef.contains(e.target as Node)) {
+    const target = e.target as Node | null;
+    if (!target) return;
+    // The menu renders in a portal, so treat clicks inside it as inside.
+    const element = target as Element;
+    if (element.closest?.('[data-slot="dropdown-menu-content"]')) return;
+    if (settingsRef && !settingsRef.contains(target)) {
       setShowSettings(false);
     }
   };
@@ -463,68 +504,67 @@ export default function UserFeed() {
     handleTagClick(tag);
   };
 
+  const feedClass = () =>
+    view() === "grid"
+      ? "grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3"
+      : "flex flex-col gap-2 sm:gap-3";
+
   return (
     <>
-      {topTags().length > 0 && (
-        <section class="top-tags">
-          <div class="top-tags-inner">
+      <Show when={topTags().length > 0}>
+        <section class="border-b border-border bg-card">
+          <div class="mx-auto flex w-full max-w-3xl flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:gap-3">
             <span
-              class="top-tags-label"
-              title="BDSMLR tag counts are approximate and may not match blog search results."
+              class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+              title={TAG_COUNT_WARNING}
             >
               Top tags
             </span>
-            <div class="top-tags-list">
+            <div class="flex flex-wrap items-center gap-1.5">
               <For each={topTags().slice(0, 5)}>
                 {(t) => (
                   <a
                     href={tagHref(t.name)}
-                    class="tag"
-                    title="BDSMLR tag counts are approximate and may not match blog search results."
+                    class={TAG_LINK_CLASS}
+                    title={TAG_COUNT_WARNING}
                     onClick={(e) => tagAnchorClick(e, t.name)}
                   >
-                    <span class="tag-name">{t.name}</span>
-                    <span class="tag-count">{t.postsCount}</span>
+                    <span>{t.name}</span>
+                    <span class={TAG_COUNT_CLASS}>{t.postsCount}</span>
                   </a>
                 )}
               </For>
-              {topTags().length > 5 && (
-                <button
+              <Show when={topTags().length > 5}>
+                <Button
                   type="button"
-                  class="tag"
+                  variant="outline"
+                  size="sm"
+                  class="h-11 rounded-full sm:h-8"
                   onClick={() => setShowAllTags(true)}
                 >
                   Show all ({topTags().length - 5})
-                </button>
-              )}
+                </Button>
+              </Show>
             </div>
           </div>
         </section>
-      )}
-      <Show when={showAllTags()}>
-        <div
-          class="tag-modal-backdrop"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowAllTags(false);
-          }}
-        >
-          <div class="tag-modal" tabIndex={0}>
-            <button
-              type="button"
-              class="tag-modal-close"
-              onClick={() => setShowAllTags(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <h3>All tags</h3>
-            <div class="tag-modal-list">
+      </Show>
+      <Dialog
+        open={showAllTags()}
+        onOpenChange={(open) => setShowAllTags(open)}
+      >
+        <DialogPortal>
+          <DialogContent class="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>All tags</DialogTitle>
+            </DialogHeader>
+            <div class="max-h-[60dvh] space-y-2 overflow-y-auto pr-1">
               <For each={topTags().slice(5)}>
                 {(t) => (
                   <a
                     href={tagHref(t.name)}
-                    class="tag"
-                    title="BDSMLR tag counts are approximate and may not match blog search results."
+                    class={cx(TAG_LINK_CLASS, "w-full justify-between")}
+                    title={TAG_COUNT_WARNING}
                     onClick={(e) => {
                       if (
                         e.metaKey ||
@@ -541,65 +581,83 @@ export default function UserFeed() {
                       setShowAllTags(false);
                     }}
                   >
-                    <span class="tag-name">{t.name}</span>
-                    <span class="tag-count">{t.postsCount}</span>
+                    <span class="min-w-0 truncate">{t.name}</span>
+                    <Badge variant="secondary" class="font-normal">
+                      {t.postsCount}
+                    </Badge>
                   </a>
                 )}
               </For>
             </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+      <main class="mx-auto flex w-full max-w-3xl flex-1 flex-col px-3 py-4 sm:px-4">
+        <form class="mb-3 flex flex-col gap-2" onSubmit={doSearch}>
+          <div class="flex items-center gap-2">
+            <div class="relative min-w-0 flex-1">
+              <TextField>
+                <TextFieldInput
+                  type="text"
+                  placeholder="Search posts…"
+                  aria-label="Search posts"
+                  class="h-11 pr-10"
+                  value={query()}
+                  onInput={(e) => setQuery(e.currentTarget.value)}
+                />
+              </TextField>
+              <Show when={activeQuery()}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  class="absolute top-1/2 right-0.5 size-9 -translate-y-1/2"
+                  aria-label="Clear search"
+                  onClick={clearSearch}
+                >
+                  <X class="size-4" />
+                </Button>
+              </Show>
+            </div>
+            <Button type="submit" class="h-11 px-4">
+              Search
+            </Button>
           </div>
-        </div>
-      </Show>
-      <main>
-        <form class="search-bar search-bar-feed" onSubmit={doSearch}>
-          <SortDropdown
-            value={`${sortField()}-${sortOrder()}`}
-            onChange={(sf, so) => {
-              trackEvent("sort-change", {
-                surface: "profile",
-                sort: sortOptionLabel(sf, so),
-              });
-              setSortField(sf);
-              setSortOrder(so);
-              nextPageToken = null;
-              searchPage = 1;
-              searchSession = null;
-              setPosts([]);
-              setHasMore(true);
-              if (activeQuery()) {
-                setSearchParams({ page: undefined, session: undefined });
-                fetchFeed(1);
-                return;
-              }
-              const name = slug();
-              if (name) loadPage(name);
-            }}
-            options={{
-              newest: true,
-              oldest: true,
-              mostPopular: true,
-              leastPopular: true,
-              mostLiked: true,
-              mostCommented: true,
-              mostReblogged: true,
-            }}
-          />
-          <div class="search-input-wrap">
-            <input
-              type="text"
-              placeholder="Search posts…"
-              value={query()}
-              onInput={(e) => setQuery(e.currentTarget.value)}
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <SortDropdown
+              value={`${sortField()}-${sortOrder()}`}
+              onChange={(sf, so) => {
+                trackEvent("sort-change", {
+                  surface: "profile",
+                  sort: sortOptionLabel(sf, so),
+                });
+                setSortField(sf);
+                setSortOrder(so);
+                nextPageToken = null;
+                searchPage = 1;
+                searchSession = null;
+                setPosts([]);
+                setHasMore(true);
+                if (activeQuery()) {
+                  setSearchParams({ page: undefined, session: undefined });
+                  fetchFeed(1);
+                  return;
+                }
+                const name = slug();
+                if (name) loadPage(name);
+              }}
+              options={{
+                newest: true,
+                oldest: true,
+                mostPopular: true,
+                leastPopular: true,
+                mostLiked: true,
+                mostCommented: true,
+                mostReblogged: true,
+              }}
+
             />
-            {activeQuery() && (
-              <button
-                type="button"
-                class="search-input-clear"
-                onClick={clearSearch}
-              >
-                ×
-              </button>
-            )}
             <SearchHistory
               entries={history()}
               onSelect={runSearch}
@@ -607,52 +665,64 @@ export default function UserFeed() {
                 setHistory(removeSearchHistory(historyKey(), q))
               }
             />
+            <SearchHelp onFill={runSearch} />
+            <div ref={settingsRef}>
+              <DropdownMenu
+                open={showSettings()}
+                onOpenChange={setShowSettings}
+              >
+                <DropdownMenuTrigger<typeof Button>
+                  as={(triggerProps) => (
+                    <Button
+                      {...triggerProps}
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      class={SETTINGS_TRIGGER_CLASS}
+                      aria-label="Settings"
+                    >
+                      <Settings class="size-4" />
+                    </Button>
+                  )}
+                />
+                <DropdownMenuPortal>
+                  <DropdownMenuContent class="w-60">
+                    <DropdownMenuGroup>
+                      <DropdownMenuGroupLabel>
+                        Feed settings
+                      </DropdownMenuGroupLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuCheckboxItem
+                        checked={hideReblogs()}
+                        onChange={() => toggleHideReblogs()}
+                      >
+                        Hide reblogs
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={hideRepeatingImages()}
+                        onChange={() => toggleHideRepeatingImages()}
+                        title="BDSMLR sometimes repeats the same images in many posts, such as on the Rectrix blog. This hides images shared by the three most recent image posts."
+                      >
+                        Hide repeating images
+                      </DropdownMenuCheckboxItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
+              </DropdownMenu>
+            </div>
+            <div class="ml-auto">
+              <ViewDropdown
+                value={view()}
+                onChange={(v) => {
+                  trackEvent("view-change", { surface: "profile", view: v });
+                  setView(v);
+                  saveFeedView(v);
+                }}
+              />
+            </div>
           </div>
-          <button type="submit">Search</button>
-          <SearchHelp onFill={runSearch} />
-          <div class="settings-dropdown" ref={settingsRef}>
-            <button
-              type="button"
-              class="settings-btn"
-              onClick={() => setShowSettings(!showSettings())}
-              aria-label="Settings"
-              aria-expanded={showSettings()}
-            >
-              <GearIcon />
-            </button>
-            <Show when={showSettings()}>
-              <div class="settings-dropdown-menu">
-                <label class="settings-dropdown-item">
-                  <input
-                    type="checkbox"
-                    checked={hideReblogs()}
-                    onChange={toggleHideReblogs}
-                  />
-                  Hide reblogs
-                </label>
-                <label
-                  class="settings-dropdown-item"
-                  title="BDSMLR sometimes repeats the same images in many posts, such as on the Rectrix blog. This hides images shared by the three most recent image posts."
-                >
-                  <input
-                    type="checkbox"
-                    checked={hideRepeatingImages()}
-                    onChange={toggleHideRepeatingImages}
-                  />
-                  Hide repeating images
-                </label>
-              </div>
-            </Show>
-          </div>
-          <ViewDropdown
-            value={view()}
-            onChange={(v) => {
-              trackEvent("view-change", { surface: "profile", view: v });
-              setView(v);
-              saveFeedView(v);
-            }}
-          />
         </form>
+
 
         <Show when={error()}>
           <FeedErrorNotice
@@ -662,28 +732,30 @@ export default function UserFeed() {
           />
         </Show>
 
-        {loading() && <p class="loading">Loading feed…</p>}
+        <Show when={loading()}>
+          <FeedSkeleton />
+        </Show>
 
         <Show when={tagCountMismatch() && posts().length > 0}>
-          <div class="tag-count-notice">
-            <WarningIcon />
-            <p>
-              BDSMLR's tag counts are approximate. Top tags reports{" "}
-              {formatCount(activeTagCount()!)} posts for #{activeTagName()}, but
-              this blog search returned {formatCount(posts().length)}. The tag
-              index can be stale or broader than the blog search.
-            </p>
+          <div class="mb-3">
+            <div class="flex items-start gap-2.5 rounded-lg border border-amber-500/50 bg-amber-500/10 px-3 py-2.5 text-sm leading-relaxed text-amber-700 dark:text-amber-300">
+              <AlertTriangle class="mt-0.5 size-4 shrink-0" />
+              <p>
+                BDSMLR's tag counts are approximate. Top tags reports{" "}
+                {formatCount(activeTagCount()!)} posts for #{activeTagName()},
+                but this blog search returned {formatCount(posts().length)}. The
+                tag index can be stale or broader than the blog search.
+              </p>
+            </div>
           </div>
         </Show>
 
         <Show when={!loading()}>
           <Show
             when={posts().length > 0}
-            fallback={<p class="empty">{emptyMessage()}</p>}
+            fallback={<EmptyState>{emptyMessage()}</EmptyState>}
           >
-            <div
-              class={view() === "grid" ? "feed feed-grid" : "feed"}
-            >
+            <div class={feedClass()}>
               <For each={posts()}>
                 {(post) => (
                   <PostCard
@@ -691,9 +763,7 @@ export default function UserFeed() {
                     hiddenImageIdentities={repeatingImageIdentities()}
                     onTagClick={handleTagClick}
                     tagHref={tagHref}
-                    onImageClick={(url, postId) =>
-                      gallery.open(url, postId)
-                    }
+                    onImageClick={(url, postId) => gallery.open(url, postId)}
                   />
                 )}
               </For>
@@ -714,4 +784,3 @@ export default function UserFeed() {
     </>
   );
 }
-

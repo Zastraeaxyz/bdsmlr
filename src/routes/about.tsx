@@ -1,7 +1,10 @@
 import { Title } from "@solidjs/meta";
 import { For, onMount } from "solid-js";
-import Header from "~/components/Header";
+import { Page, PageHeader } from "~/components/Page";
 import { REPO_URL } from "~/lib/links";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Badge } from "~/components/ui/badge";
+import { Card } from "~/components/ui/card";
 
 interface FaqEntry {
   /** Stable anchor used for direct links to this question. */
@@ -45,6 +48,13 @@ function scrollToHash() {
   if (target) target.scrollIntoView();
 }
 
+const proseLink =
+  "font-medium text-primary underline-offset-4 hover:underline";
+
+const sectionTitle = "text-base font-semibold text-card-foreground";
+
+const prose = "flex flex-col gap-2.5 text-sm leading-relaxed text-muted-foreground";
+
 export default function AboutPage() {
   onMount(() => {
     // The browser may miss the anchor when arriving from another route, so
@@ -53,29 +63,43 @@ export default function AboutPage() {
   });
 
   return (
-    <div class="home-page about-page">
+    <Page info="About" width="lg" class="max-w-3xl">
       <Title>About - bbdsmlr</Title>
-      <Header info="About" />
-      <main>
-        <section class="about-hero">
-          <h2>What our backend does</h2>
-          <p class="about-lede">
-            Better BDSMLR is an unofficial, open source front-end for BDSMLR.
-            Your browser talks to this app, and this app talks to BDSMLR for
-            you. That round trip is all the server really is.
-          </p>
-          <div class="about-flow" aria-label="How the app connects to BDSMLR">
-            <div class="about-flow-step">Your browser</div>
-            <span class="about-flow-arrow">→</span>
-            <div class="about-flow-step">This app's server</div>
-            <span class="about-flow-arrow">→</span>
-            <div class="about-flow-step">BDSMLR</div>
-          </div>
-        </section>
+      <PageHeader
+        title="What our backend does"
+        description="Better BDSMLR is an unofficial, open source front-end for BDSMLR. Your browser talks to this app, and this app talks to BDSMLR for you. That round trip is all the server really is."
+      />
 
-        <section class="about-section">
-          <h3>Why the server is needed</h3>
-          <div class="about-copy">
+      <div
+        class="mb-7 flex flex-wrap items-center gap-2.5"
+        aria-label="How the app connects to BDSMLR"
+      >
+        <Badge
+          variant="secondary"
+          class="px-3.5 py-1.5 text-xs font-semibold"
+        >
+          Your browser
+        </Badge>
+        <span class="text-lg text-muted-foreground">→</span>
+        <Badge
+          variant="secondary"
+          class="px-3.5 py-1.5 text-xs font-semibold"
+        >
+          This app's server
+        </Badge>
+        <span class="text-lg text-muted-foreground">→</span>
+        <Badge
+          variant="secondary"
+          class="px-3.5 py-1.5 text-xs font-semibold"
+        >
+          BDSMLR
+        </Badge>
+      </div>
+
+      <div class="grid gap-4 lg:grid-cols-2">
+        <Card class="gap-3 p-5 sm:p-6">
+          <h2 class={sectionTitle}>Why the server is needed</h2>
+          <div class={prose}>
             <p>
               BDSMLR does not let other websites call its API directly, and the
               login cookie it gives you is tied to bdsmlr.com. So the server
@@ -90,11 +114,11 @@ export default function AboutPage() {
               briefly to make repeat visits feel faster.
             </p>
           </div>
-        </section>
+        </Card>
 
-        <section class="about-section">
-          <h3>What it does not do</h3>
-          <div class="about-copy">
+        <Card class="gap-3 p-5 sm:p-6">
+          <h2 class={sectionTitle}>What it does not do</h2>
+          <div class={prose}>
             <p>
               It does not host anything. Posts, images, videos, blogs,
               messages, and your account all live on BDSMLR. This app only asks
@@ -108,107 +132,121 @@ export default function AboutPage() {
               blocks, or deletes something, this app cannot get around that.
             </p>
           </div>
-        </section>
+        </Card>
+      </div>
 
-        <section class="about-section" id="open-source">
-          <h3>Open source</h3>
-          <div class="about-copy">
-            <p>
-              You do not have to take any of that on faith. The whole app, the
-              server included, is open source at{" "}
-              <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-                github.com/Zastraeaxyz/bdsmlr
-              </a>
-              . You can read exactly what runs on the server, check what it logs,
-              and run your own copy.
-            </p>
-            <p>
-              Bug reports and feature requests belong in the repository's issue
-              tracker, and pull requests are welcome. Problems with your account,
-              missing posts, or anything that also fails on bdsmlr.com needs to
-              go to BDSMLR instead, since this project cannot change what their
-              API returns.
-            </p>
-          </div>
-        </section>
+      <Card id="open-source" class="mt-4 scroll-mt-20 gap-3 p-5 sm:p-6">
+        <h2 class={sectionTitle}>Open source</h2>
+        <div class={prose}>
+          <p>
+            You do not have to take any of that on faith. The whole app, the
+            server included, is open source at{" "}
+            <a
+              class={proseLink}
+              href={REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              github.com/Zastraeaxyz/bdsmlr
+            </a>
+            . You can read exactly what runs on the server, check what it logs,
+            and run your own copy.
+          </p>
+          <p>
+            Bug reports and feature requests belong in the repository's issue
+            tracker, and pull requests are welcome. Problems with your account,
+            missing posts, or anything that also fails on bdsmlr.com needs to
+            go to BDSMLR instead, since this project cannot change what their
+            API returns.
+          </p>
+        </div>
+      </Card>
 
-        <section class="about-section">
-          <h3>Analytics</h3>
-          <div class="about-copy">
-            <p>
-              Better BDSMLR uses Umami, a cookieless analytics tool. It tells us
-              which parts of the app get used, so we know where to spend time
-              and what to fix.
-            </p>
-            <p>
-              We record page views, approximate location such as country, and
-              coarse actions. That includes likes and unlikes, reblogs and their
-              mode, comments by length only, that a search happened, follows,
-              sign-ins, sort and view changes, and similar feature use. Profile
-              page views are recorded so we can see which profiles are popular.
-              None of this is linked to your account.
-            </p>
-          </div>
-          <div class="about-callout">
-            <p>
-              Analytics does not collect your account or blog identity, post
-              content, comment text, messages, search terms, tag names, email
-              addresses, or passwords. There is no session recording, no
-              advertising pixel, no cross-site tracking, and we do not sell
-              data.
-            </p>
-          </div>
-          <div class="about-copy">
-            <p>
-              Umami does not use cookies. The tracker honors Do Not Track, so if
-              your browser sends it, nothing is recorded. The goal is to
-              understand the app, not the people using it.
-            </p>
-          </div>
-        </section>
+      <Card class="mt-4 gap-3 p-5 sm:p-6">
+        <h2 class={sectionTitle}>Analytics</h2>
+        <div class={prose}>
+          <p>
+            Better BDSMLR uses Umami, a cookieless analytics tool. It tells us
+            which parts of the app get used, so we know where to spend time
+            and what to fix.
+          </p>
+          <p>
+            We record page views, approximate location such as country, and
+            coarse actions. That includes likes and unlikes, reblogs and their
+            mode, comments by length only, that a search happened, follows,
+            sign-ins, sort and view changes, and similar feature use. Profile
+            page views are recorded so we can see which profiles are popular.
+            None of this is linked to your account.
+          </p>
+        </div>
+        <Alert class="border-primary/35 bg-primary/10">
+          <AlertDescription class="text-foreground">
+            Analytics does not collect your account or blog identity, post
+            content, comment text, messages, search terms, tag names, email
+            addresses, or passwords. There is no session recording, no
+            advertising pixel, no cross-site tracking, and we do not sell
+            data.
+          </AlertDescription>
+        </Alert>
+        <div class={prose}>
+          <p>
+            Umami does not use cookies. The tracker honors Do Not Track, so if
+            your browser sends it, nothing is recorded. The goal is to
+            understand the app, not the people using it.
+          </p>
+        </div>
+      </Card>
 
-        <section class="about-section">
-          <h3>When something breaks</h3>
-          <div class="about-callout">
-            <p>
-              BDSMLR sometimes changes its API, goes down, or returns messy
-              data. When that happens, parts of this app can stumble even
-              though the app itself is fine. The server cannot fix BDSMLR's
-              data. It just passes it along.
-            </p>
-          </div>
-        </section>
+      <Card class="mt-4 gap-3 p-5 sm:p-6">
+        <h2 class={sectionTitle}>When something breaks</h2>
+        <Alert class="border-primary/35 bg-primary/10">
+          <AlertDescription class="text-foreground">
+            BDSMLR sometimes changes its API, goes down, or returns messy
+            data. When that happens, parts of this app can stumble even
+            though the app itself is fine. The server cannot fix BDSMLR's
+            data. It just passes it along.
+          </AlertDescription>
+        </Alert>
+      </Card>
 
-        <section class="about-section" id="faq">
-          <h3>Frequently asked questions</h3>
-          <div class="about-faq-list">
-            <For each={faqs}>
-              {(faq) => (
-                <article class="about-faq" id={faq.id}>
-                  <h4 class="about-faq-question">
-                    <a
-                      href={`#${faq.id}`}
-                      aria-label={`Link to "${faq.question}"`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        window.history.pushState(null, "", `#${faq.id}`);
-                        document.getElementById(faq.id)?.scrollIntoView();
-                      }}
-                    >
-                      {faq.question}
-                    </a>
-                  </h4>
-                  <div class="about-copy">
-                    <For each={faq.answer}>
-                      {(paragraph) => <p>{paragraph}</p>}
-                    </For>
-                  </div>
-                </article>
-              )}
-            </For>
-          </div>
-        </section>
-      </main>
-    </div>
+      <section id="faq" class="mt-8 scroll-mt-20">
+        <h2 class="mb-3 text-lg font-bold tracking-tight">
+          Frequently asked questions
+        </h2>
+        <div class="flex flex-col gap-3">
+          <For each={faqs}>
+            {(faq) => (
+              <Card
+                id={faq.id}
+                class="gap-3 p-4 scroll-mt-20 target:border-primary/50 sm:p-5"
+              >
+                <h3 class="text-base font-semibold">
+                  <a
+                    href={`#${faq.id}`}
+                    aria-label={`Link to "${faq.question}"`}
+                    class="text-card-foreground underline-offset-4 hover:underline"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      window.history.pushState(null, "", `#${faq.id}`);
+                      document.getElementById(faq.id)?.scrollIntoView();
+                    }}
+                  >
+                    <span class="mr-2 font-normal text-muted-foreground">
+                      #
+                    </span>
+                    {faq.question}
+                  </a>
+                </h3>
+                <div class={prose}>
+                  <For each={faq.answer}>
+                    {(paragraph) => <p>{paragraph}</p>}
+                  </For>
+                </div>
+              </Card>
+            )}
+          </For>
+        </div>
+      </section>
+    </Page>
   );
 }

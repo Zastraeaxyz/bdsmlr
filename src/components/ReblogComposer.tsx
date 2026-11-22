@@ -3,6 +3,23 @@ import type { Post } from "~/lib/api";
 import { startReblogJob } from "~/lib/reblogJobs";
 import { postTypeName } from "~/lib/postTypes";
 import { surfaceForPath, trackEvent } from "~/lib/analytics";
+import { sheetDialogClass } from "~/lib/ui";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "./ui/dialog";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldLabel,
+  TextFieldTextArea,
+} from "./ui/text-field";
 
 export function ReblogComposer(props: {
   post: Post;
@@ -14,26 +31,28 @@ export function ReblogComposer(props: {
   let submitted = false;
 
   const tagList = () =>
-    [...new Set(
-      tags()
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-    )];
+    [
+      ...new Set(
+        tags()
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      ),
+    ];
 
-  const submit = (mode: "live" | "queue", e?: Event) => {
-    e?.preventDefault();
+  const submit = (mode: "live" | "queue", event?: Event) => {
+    event?.preventDefault();
     if (submitted) return;
     submitted = true;
 
     const comment = note().trim() || undefined;
-    const tags = tagList();
+    const tagValues = tagList();
 
     startReblogJob({
       post: props.post,
       mode,
       comment,
-      tags,
+      tags: tagValues,
     });
     trackEvent("reblog", {
       surface:
@@ -43,56 +62,47 @@ export function ReblogComposer(props: {
       postType: postTypeName(props.post.type),
       mode,
       hasNote: !!comment,
-      tagCount: tags.length,
+      tagCount: tagValues.length,
     });
     props.onDone?.(mode);
     props.onClose();
   };
 
   return (
-    <div class="tag-modal-backdrop" onClick={props.onClose}>
-      <form
-        class="tag-modal reblog-modal"
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={(e) => submit("live", e)}
-      >
-        <button
-          type="button"
-          class="tag-modal-close"
-          onClick={props.onClose}
-          aria-label="Close reblog"
-        >
-          ×
-        </button>
-        <h3>Reblog post</h3>
-        <label class="reblog-field">
-          <span>Note (optional)</span>
-          <textarea
-            rows={3}
-            placeholder="Add a note…"
-            value={note()}
-            onInput={(e) => setNote(e.currentTarget.value)}
-          />
-        </label>
-        <label class="reblog-field">
-          <span>Tags (optional)</span>
-          <input
-            type="text"
-            placeholder="tag one, tag two"
-            value={tags()}
-            onInput={(e) => setTags(e.currentTarget.value)}
-          />
-        </label>
-        <div class="reblog-actions">
-          <button type="button" class="btn-ghost" onClick={props.onClose}>
-            Cancel
-          </button>
-          <button type="button" class="btn-ghost" onClick={() => submit("queue")}>
-            Queue
-          </button>
-          <button type="submit">Reblog</button>
-        </div>
-      </form>
-    </div>
+    <Dialog open onOpenChange={(open) => !open && props.onClose()}>
+      <DialogPortal>
+        <DialogContent class={sheetDialogClass}>
+          <DialogHeader>
+            <DialogTitle>Reblog post</DialogTitle>
+            <DialogDescription>
+              Share this post on your blog, with an optional note and tags.
+            </DialogDescription>
+          </DialogHeader>
+          <form class="flex flex-col gap-4" onSubmit={(event) => submit("live", event)}>
+            <TextField value={note()} onChange={setNote}>
+              <TextFieldLabel>Note (optional)</TextFieldLabel>
+              <TextFieldTextArea
+                rows={3}
+                placeholder="Add a note…"
+                class="min-h-20"
+              />
+            </TextField>
+            <TextField value={tags()} onChange={setTags}>
+              <TextFieldLabel>Tags (optional)</TextFieldLabel>
+              <TextFieldInput placeholder="tag one, tag two" />
+            </TextField>
+            <DialogFooter class="gap-2">
+              <Button type="button" variant="ghost" onClick={props.onClose}>
+                Cancel
+              </Button>
+              <Button type="button" variant="outline" onClick={() => submit("queue")}>
+                Queue
+              </Button>
+              <Button type="submit">Reblog</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </DialogPortal>
+    </Dialog>
   );
 }

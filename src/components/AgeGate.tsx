@@ -1,10 +1,21 @@
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import { confirmAge, hasConfirmedAge } from "~/lib/ageGate";
 import { trackEvent } from "~/lib/analytics";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPortal,
+  DialogTitle,
+} from "./ui/dialog";
 
 export function AgeGate() {
   const [visible, setVisible] = createSignal(false);
   let previousOverflow = "";
+  let confirmButton: HTMLButtonElement | undefined;
 
   const unlockScroll = () => {
     if (typeof document !== "undefined") {
@@ -17,6 +28,7 @@ export function AgeGate() {
     previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     setVisible(true);
+    queueMicrotask(() => confirmButton?.focus());
     onCleanup(unlockScroll);
   });
 
@@ -33,31 +45,52 @@ export function AgeGate() {
 
   return (
     <Show when={visible()}>
-      <div
-        class="age-gate"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="age-gate-title"
-        aria-describedby="age-gate-description"
-      >
-        <div class="age-gate-card">
-          <span class="age-gate-badge">18+</span>
-          <h2 id="age-gate-title">This site contains adult content</h2>
-          <p id="age-gate-description">
-            Better BDSMLR is a browser for BDSMLR, which hosts adult material.
-            Confirm that you are at least 18 years old to continue.
-          </p>
-          <div class="age-gate-actions">
-            <button type="button" class="age-gate-confirm" onClick={accept} autofocus>
-              I am 18 or older
-            </button>
-            <a class="age-gate-leave" href="https://www.google.com" onClick={leave}>
-              Leave
-            </a>
-          </div>
-          <p class="age-gate-note">Your answer is stored only in this browser.</p>
-        </div>
-      </div>
+      <Dialog open modal>
+        <DialogPortal>
+          <DialogContent
+            showCloseButton={false}
+            class="max-w-md"
+            onEscapeKeyDown={(event) => event.preventDefault()}
+            onPointerDownOutside={(event) => event.preventDefault()}
+          >
+            <DialogHeader>
+              <span class="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/15 text-lg font-bold text-primary">
+                18+
+              </span>
+              <DialogTitle class="text-center text-xl">
+                This site contains adult content
+              </DialogTitle>
+              <DialogDescription class="text-center">
+                Better BDSMLR is a browser for BDSMLR, which hosts adult
+                material. Confirm that you are at least 18 years old to
+                continue.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter class="flex-col gap-2 sm:flex-col">
+              <Button
+                ref={confirmButton}
+                type="button"
+                class="h-11 w-full"
+                onClick={accept}
+              >
+                I am 18 or older
+              </Button>
+              <Button
+                as="a"
+                href="https://www.google.com"
+                variant="ghost"
+                class="h-11 w-full"
+                onClick={leave}
+              >
+                Leave
+              </Button>
+            </DialogFooter>
+            <p class="text-center text-xs text-muted-foreground">
+              Your answer is stored only in this browser.
+            </p>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
     </Show>
   );
 }

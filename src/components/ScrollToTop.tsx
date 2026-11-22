@@ -1,7 +1,8 @@
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { useLocation } from "@solidjs/router";
+import { ArrowUp } from "lucide-solid";
+import { Button } from "./ui/button";
 
-const FEED_SELECTOR = ".feed, .blog-card-grid";
 const SHOW_AFTER = 400;
 
 export function ScrollToTop() {
@@ -10,21 +11,13 @@ export function ScrollToTop() {
 
   const update = () => {
     if (typeof window === "undefined") return;
-    setVisible(
-      window.scrollY > SHOW_AFTER &&
-        document.querySelector(FEED_SELECTOR) !== null,
-    );
+    setVisible(window.scrollY > SHOW_AFTER);
   };
 
   onMount(() => {
     update();
     window.addEventListener("scroll", update, { passive: true });
-    const observer = new MutationObserver(update);
-    observer.observe(document.body, { childList: true, subtree: true });
-    onCleanup(() => {
-      window.removeEventListener("scroll", update);
-      observer.disconnect();
-    });
+    onCleanup(() => window.removeEventListener("scroll", update));
   });
 
   createEffect(() => {
@@ -34,28 +27,17 @@ export function ScrollToTop() {
 
   return (
     <Show when={visible()}>
-      <button
+      <Button
         type="button"
-        class="scroll-to-top"
+        variant="secondary"
+        size="icon"
+        class="fixed bottom-20 right-4 z-30 size-11 rounded-full shadow-lg md:bottom-6"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Scroll back to top"
         title="Back to top"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width={2}
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M4.5 15.75 12 8.25l7.5 7.5"
-          />
-        </svg>
-      </button>
+        <ArrowUp class="size-5" />
+      </Button>
     </Show>
   );
 }

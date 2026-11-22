@@ -1,7 +1,21 @@
 import { A, useNavigate } from "@solidjs/router";
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { Title } from "@solidjs/meta";
-import Header from "~/components/Header";
+import { Page, PageHeader } from "~/components/Page";
+import { Alert, AlertDescription } from "~/components/ui/alert";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import { Separator } from "~/components/ui/separator";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldLabel,
+} from "~/components/ui/text-field";
 import { useAuth } from "~/lib/useAuth";
 import { features } from "~/lib/features";
 import {
@@ -11,6 +25,9 @@ import {
   LegacyError,
 } from "~/lib/legacy";
 import { trackEvent } from "~/lib/analytics";
+
+const linkRowClass =
+  "flex min-h-11 items-center rounded-md px-3 text-sm font-medium outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -85,169 +102,197 @@ export default function SettingsPage() {
 
   return (
     <Show when={!loading() && user()} fallback={null}>
-      <Title>Settings - bbdsmlr</Title>
-      <div class="home-page">
-        <Header info="Settings" />
-        <main>
-          <section class="settings-section">
-            <h2 class="social-list-title">Account</h2>
-            <div class="settings-facts">
-              <div>
-                <span>Username</span>
-                <strong>@{user()!.username || user()!.blog_name}</strong>
+      <Page info="Settings">
+        <Title>Settings - bbdsmlr</Title>
+        <PageHeader
+          title="Settings"
+          description="Your account details and the tools that live on BDSMLR."
+        />
+
+        <Card class="mb-3 gap-4">
+          <CardHeader>
+            <CardTitle>Account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl class="grid gap-2 text-sm">
+              <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <dt class="text-muted-foreground">Username</dt>
+                <dd class="min-w-0 break-all font-medium">
+                  @{user()!.username || user()!.blog_name}
+                </dd>
               </div>
               <Show when={user()!.email}>
-                <div>
-                  <span>Email</span>
-                  <strong>{user()!.email}</strong>
+                <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <dt class="text-muted-foreground">Email</dt>
+                  <dd class="min-w-0 break-all font-medium">{user()!.email}</dd>
                 </div>
               </Show>
-              <div>
-                <span>Active blog</span>
-                <strong>@{activeBlog()?.name ?? user()!.blog_name}</strong>
+              <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <dt class="text-muted-foreground">Active blog</dt>
+                <dd class="min-w-0 break-all font-medium">
+                  @{activeBlog()?.name ?? user()!.blog_name}
+                </dd>
               </div>
-            </div>
-          </section>
+            </dl>
+          </CardContent>
+        </Card>
 
-          <Show when={features.legacyAccountSettings}>
-            <section class="settings-section">
-              <h2 class="social-list-title">Account changes</h2>
-            <Show when={error()}>
-              <p class="error">{error()}</p>
-            </Show>
-            <Show when={notice()}>
-              <p class="action-notice">{notice()}</p>
-            </Show>
-            <form class="settings-form" onSubmit={submitEmail}>
-              <label>
-                <span>Change email</span>
-                <input
-                  type="email"
-                  placeholder={user()!.email || "new@example.com"}
-                  value={newEmail()}
-                  onInput={(e) => setNewEmail(e.currentTarget.value)}
-                />
-              </label>
-              <button type="submit" disabled={!newEmail().trim() || busy() !== ""}>
-                {busy() === "email" ? "Saving…" : "Change email"}
-              </button>
-            </form>
-            <form class="settings-form" onSubmit={submitPassword}>
-              <label>
-                <span>New password</span>
-                <input
-                  type="password"
-                  value={newPassword()}
-                  onInput={(e) => setNewPassword(e.currentTarget.value)}
-                />
-              </label>
-              <label>
-                <span>Confirm password</span>
-                <input
-                  type="password"
-                  value={confirmPassword()}
-                  onInput={(e) => setConfirmPassword(e.currentTarget.value)}
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={!newPassword() || !confirmPassword() || busy() !== ""}
-              >
-                {busy() === "password" ? "Saving…" : "Change password"}
-              </button>
-            </form>
-            <form class="settings-form" onSubmit={submitBlogName}>
-              <label>
-                <span>Change blog name</span>
-                <input
-                  type="text"
-                  placeholder={activeBlog()?.name || "blogname"}
-                  value={newBlogName()}
-                  onInput={(e) => setNewBlogName(e.currentTarget.value)}
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={!newBlogName().trim() || busy() !== ""}
-              >
-                {busy() === "blogname" ? "Saving…" : "Change blog name"}
-              </button>
+        <Show when={features.legacyAccountSettings}>
+          <Card class="mb-3 gap-4">
+            <CardHeader>
+              <CardTitle>Account changes</CardTitle>
+            </CardHeader>
+            <CardContent class="flex flex-col gap-4">
+              <Show when={error()}>
+                <Alert variant="destructive">
+                  <AlertDescription>{error()}</AlertDescription>
+                </Alert>
+              </Show>
+              <Show when={notice()}>
+                <Alert>
+                  <AlertDescription>{notice()}</AlertDescription>
+                </Alert>
+              </Show>
+
+              <form class="flex flex-col gap-3" onSubmit={submitEmail}>
+                <TextField value={newEmail()} onChange={setNewEmail}>
+                  <TextFieldLabel>Change email</TextFieldLabel>
+                  <TextFieldInput
+                    type="email"
+                    class="h-11 md:h-9"
+                    placeholder={user()!.email || "new@example.com"}
+                  />
+                </TextField>
+                <Button
+                  type="submit"
+                  class="h-11 md:h-9 w-full sm:w-auto sm:self-start"
+                  disabled={!newEmail().trim() || busy() !== ""}
+                >
+                  {busy() === "email" ? "Saving…" : "Change email"}
+                </Button>
               </form>
-            </section>
-          </Show>
 
-          <section class="settings-section">
-            <h2 class="social-list-title">Your blogs</h2>
-            <div class="settings-links">
-              <For each={blogs()}>
-                {(blog) => (
-                  <A href={`/${blog.name}`} class="settings-link">
-                    @{blog.name}
-                  </A>
-                )}
-              </For>
-            </div>
-          </section>
+              <Separator />
 
-          <section class="settings-section">
-            <h2 class="social-list-title">More</h2>
-            <div class="settings-links">
-              <Show when={features.legacyBlogCustomization}>
-                <A href="/customize" class="settings-link">
-                  Customize blog
+              <form class="flex flex-col gap-3" onSubmit={submitPassword}>
+                <TextField value={newPassword()} onChange={setNewPassword}>
+                  <TextFieldLabel>New password</TextFieldLabel>
+                  <TextFieldInput type="password" class="h-11 md:h-9" />
+                </TextField>
+                <TextField
+                  value={confirmPassword()}
+                  onChange={setConfirmPassword}
+                >
+                  <TextFieldLabel>Confirm password</TextFieldLabel>
+                  <TextFieldInput type="password" class="h-11 md:h-9" />
+                </TextField>
+                <Button
+                  type="submit"
+                  class="h-11 md:h-9 w-full sm:w-auto sm:self-start"
+                  disabled={!newPassword() || !confirmPassword() || busy() !== ""}
+                >
+                  {busy() === "password" ? "Saving…" : "Change password"}
+                </Button>
+              </form>
+
+              <Separator />
+
+              <form class="flex flex-col gap-3" onSubmit={submitBlogName}>
+                <TextField value={newBlogName()} onChange={setNewBlogName}>
+                  <TextFieldLabel>Change blog name</TextFieldLabel>
+                  <TextFieldInput
+                    type="text"
+                    class="h-11 md:h-9"
+                    placeholder={activeBlog()?.name || "blogname"}
+                  />
+                </TextField>
+                <Button
+                  type="submit"
+                  class="h-11 md:h-9 w-full sm:w-auto sm:self-start"
+                  disabled={!newBlogName().trim() || busy() !== ""}
+                >
+                  {busy() === "blogname" ? "Saving…" : "Change blog name"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </Show>
+
+        <Card class="mb-3 gap-4">
+          <CardHeader>
+            <CardTitle>Your blogs</CardTitle>
+          </CardHeader>
+          <CardContent class="flex flex-col gap-1">
+            <For each={blogs()}>
+              {(blog) => (
+                <A href={`/${blog.name}`} class={linkRowClass}>
+                  @{blog.name}
                 </A>
-              </Show>
-              <A href="/blocked" class="settings-link">
-                Blocked blogs
-              </A>
-              <A href="/compose" class="settings-link">
-                Compose post
-              </A>
-              <Show when={features.legacyAdvancedSettings}>
-                <a
-                  href="https://bdsmlr.com/settings"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="settings-link"
-                >
-                  BDSMLR settings
-                </a>
-              </Show>
-              <A href="/queue" class="settings-link">
-                Queue
-              </A>
-              <A href="/drafts" class="settings-link">
-                Drafts
-              </A>
-              <Show when={features.legacyAsks}>
-                <a
-                  href="https://bdsmlr.com/asks"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="settings-link"
-                >
-                  BDSMLR asks
-                </a>
-              </Show>
-              <Show when={features.legacySubmissions}>
-                <a
-                  href="https://bdsmlr.com/submissions"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="settings-link"
-                >
-                  BDSMLR submissions
-                </a>
-              </Show>
-            </div>
-          </section>
+              )}
+            </For>
+          </CardContent>
+        </Card>
 
-          <p class="compose-note">
-            Account changes, customization, drafts, and other legacy tools are
-            hidden until their BDSMLR backend behavior is verified.
-          </p>
-        </main>
-      </div>
+        <Card class="mb-3 gap-4">
+          <CardHeader>
+            <CardTitle>More</CardTitle>
+          </CardHeader>
+          <CardContent class="flex flex-col gap-1">
+            <Show when={features.legacyBlogCustomization}>
+              <A href="/customize" class={linkRowClass}>
+                Customize blog
+              </A>
+            </Show>
+            <A href="/blocked" class={linkRowClass}>
+              Blocked blogs
+            </A>
+            <A href="/compose" class={linkRowClass}>
+              Compose post
+            </A>
+            <Show when={features.legacyAdvancedSettings}>
+              <a
+                href="https://bdsmlr.com/settings"
+                target="_blank"
+                rel="noopener noreferrer"
+                class={linkRowClass}
+              >
+                BDSMLR settings
+              </a>
+            </Show>
+            <A href="/queue" class={linkRowClass}>
+              Queue
+            </A>
+            <A href="/drafts" class={linkRowClass}>
+              Drafts
+            </A>
+            <Show when={features.legacyAsks}>
+              <a
+                href="https://bdsmlr.com/asks"
+                target="_blank"
+                rel="noopener noreferrer"
+                class={linkRowClass}
+              >
+                BDSMLR asks
+              </a>
+            </Show>
+            <Show when={features.legacySubmissions}>
+              <a
+                href="https://bdsmlr.com/submissions"
+                target="_blank"
+                rel="noopener noreferrer"
+                class={linkRowClass}
+              >
+                BDSMLR submissions
+              </a>
+            </Show>
+          </CardContent>
+        </Card>
+
+        <p class="mt-1 px-1 text-xs leading-relaxed text-muted-foreground">
+          Account changes, customization, drafts, and other legacy tools are
+          hidden until their BDSMLR backend behavior is verified.
+        </p>
+      </Page>
     </Show>
   );
 }
