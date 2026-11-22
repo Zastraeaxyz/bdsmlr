@@ -20,6 +20,7 @@ export default createHandler(() => (
         <html
           lang="en"
           data-kb-theme="dark"
+          data-preview={preview ? "true" : undefined}
           data-authed={authed ? "true" : undefined}
         >
           <head>
@@ -34,7 +35,6 @@ export default createHandler(() => (
             </Show>
             <Show when={preview}>
               <meta name="robots" content="noindex, nofollow" />
-              <script innerHTML="window.__PREVIEW__=true" />
             </Show>
             <Show when={!preview}>
               <script

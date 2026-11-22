@@ -6,4 +6,4 @@ run = 'railway up --project 66106beb-5688-48a1-8ace-49c8ab2fc0b5 --service bbdms
 
 [tasks.deploy-preview]
 description = "Deploy the current branch to the Railway preview environment"
-run = 'railway up --project 66106beb-5688-48a1-8ace-49c8ab2fc0b5 --service bbdmslr --environment preview -m "$(git log -1 --pretty=%s)"'
+run = 'railway up --project 66106beb-5688-48a1-8ace-49c8ab2fc0b5 --service bbdmslr-preview --environment preview -m "$(git log -1 --pretty=%s)"'

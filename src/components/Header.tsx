@@ -81,9 +81,11 @@ export default function Header(props: HeaderProps) {
   const [navOpen, setNavOpen] = createSignal(false);
   const [menuOpen, setMenuOpen] = createSignal(false);
   const avatarUrl = useBlogAvatar(() => activeBlogId());
-  const isPreview = () =>
-    typeof window !== "undefined" &&
-    (window as unknown as { __PREVIEW__?: boolean }).__PREVIEW__ === true;
+  const [isPreview, setIsPreview] = createSignal(false);
+
+  onMount(() => {
+    setIsPreview(document.documentElement.dataset.preview === "true");
+  });
 
   const profileHref = () =>
     user() ? `/${activeBlog()?.name ?? user()!.blog_name}` : "/login";
