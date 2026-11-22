@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
@@ -85,7 +86,7 @@ export default function BlockedPage() {
       <Header info="Blocked blogs" />
       <main>
         <h2 class="social-list-title">Blocked blogs</h2>
-        {error() && <p class="error">{error()}</p>}
+        {error() && <FeedErrorNotice message={error()} />}
         {loading() && <p class="loading">Loading blocked blogs…</p>}
         <Show when={!loading()}>
           <Show

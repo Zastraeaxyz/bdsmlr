@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A } from "@solidjs/router";
 import {
   listPostLikes,
@@ -129,7 +130,7 @@ export function EngagementModal(props: {
           ×
         </button>
         <h3>Likes and reblogs</h3>
-        {error() && <p class="error">{error()}</p>}
+        {error() && <FeedErrorNotice message={error()} />}
         {loading() && <p class="loading">Loading…</p>}
         <Show when={!loading()}>
           <Show

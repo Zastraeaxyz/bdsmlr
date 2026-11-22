@@ -68,7 +68,7 @@ async function tokenResponse(event: APIEvent): Promise<Response> {
     return json({ error: "Sign in again to use the legacy composer" }, 401);
   }
   if (page.status === 429) {
-    return json({ error: "BDSMLR temporarily blocked the request. Try again shortly." }, 429);
+    return json({ error: "BDSMLR is rate limiting requests right now. This usually clears in a minute or two." }, 429);
   }
   const html = await page.text();
   const token = composerToken(html);
@@ -117,7 +117,7 @@ async function proxy(event: APIEvent): Promise<Response> {
     return json({ error: "Sign in again to use the legacy composer" }, 401);
   }
   if (upstream.status === 429) {
-    return json({ error: "BDSMLR temporarily blocked the request. Try again shortly." }, 429);
+    return json({ error: "BDSMLR is rate limiting requests right now. This usually clears in a minute or two." }, 429);
   }
   if (upstream.status === 419) {
     return json({ error: "The BDSMLR security token expired. Try again." }, 419);

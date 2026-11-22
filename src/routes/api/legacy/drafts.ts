@@ -50,7 +50,7 @@ export async function GET(event: APIEvent) {
       return json({ error: "Sign in again to edit drafts" }, 401);
     }
     if (editorPage.status === 429) {
-      return json({ error: "BDSMLR temporarily blocked the request. Try again shortly." }, 429);
+      return json({ error: "BDSMLR is rate limiting requests right now. This usually clears in a minute or two." }, 429);
     }
     const editor = parseEditablePost(await editorPage.text());
     if (!editor) return json({ error: "Could not load the draft" }, 502);
@@ -70,7 +70,7 @@ export async function GET(event: APIEvent) {
     return json({ error: "Sign in again to manage drafts" }, 401);
   }
   if (page.status === 429) {
-    return json({ error: "BDSMLR temporarily blocked the request. Try again shortly." }, 429);
+    return json({ error: "BDSMLR is rate limiting requests right now. This usually clears in a minute or two." }, 429);
   }
 
   return json({ drafts: parseDrafts(await page.text()) }, 200);

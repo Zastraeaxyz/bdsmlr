@@ -6,6 +6,7 @@ import { trackEvent } from "~/lib/analytics";
 import { DiscordIcon, GitHubIcon } from "~/components/Icons";
 import { AgeGate } from "~/components/AgeGate";
 import OutageBanner from "~/components/OutageBanner";
+import RateLimitBanner from "~/components/RateLimitBanner";
 import { DISCORD_URL, REPO_URL } from "~/lib/links";
 
 const FEATURES = [
@@ -113,6 +114,7 @@ export default function LandingPage() {
       </header>
 
       <OutageBanner />
+      <RateLimitBanner />
 
       <main class="landing-main">
         <section class="landing-hero">

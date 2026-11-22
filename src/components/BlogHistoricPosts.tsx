@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { useNavigate } from "@solidjs/router";
 import {
   listBlogActivity,
@@ -176,7 +177,7 @@ export function BlogHistoricPosts(props: {
 
   return (
     <>
-      {error() && <p class="error">{error()}</p>}
+      {error() && <FeedErrorNotice message={error()} />}
       {loading() && <p class="loading">Loading older posts…</p>}
       <Show when={!loading()}>
         <Show

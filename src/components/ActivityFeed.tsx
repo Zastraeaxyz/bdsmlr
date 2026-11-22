@@ -63,6 +63,7 @@ export function ActivityFeed(props: { blogName: string }) {
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [error, setError] = createSignal("");
   let nextPageToken: string | null = null;
+  let loadedKey = "";
 
   const matches = (item: TimelineItem): boolean => {
     const chosen = selected();
@@ -100,8 +101,11 @@ export function ActivityFeed(props: { blogName: string }) {
   const load = async () => {
     setLoading(true);
     setError("");
-    setItems([]);
-    nextPageToken = null;
+    const target = `${props.blogName}|${sortField()}|${sortOrder()}`;
+    if (target !== loadedKey) {
+      setItems([]);
+      nextPageToken = null;
+    }
     try {
       const resolved = await resolveIdentifier(props.blogName);
       if (!resolved.blogId) {
@@ -121,6 +125,7 @@ export function ActivityFeed(props: { blogName: string }) {
       if (data.error) throw new Error(data.error);
       const incoming = data.timelineItems ?? [];
       setItems(incoming);
+      loadedKey = target;
       markActivitySeen(resolved.blogId, incoming);
       nextPageToken = data.page?.nextPageToken ?? null;
       if (incoming.length < PAGE_SIZE) nextPageToken = null;
@@ -221,7 +226,11 @@ export function ActivityFeed(props: { blogName: string }) {
       </div>
 
       <Show when={error()}>
-        <FeedErrorNotice message={error()} blogName={props.blogName} />
+        <FeedErrorNotice
+          message={error()}
+          blogName={props.blogName}
+          onRetry={() => void load()}
+        />
       </Show>
       {loading() && <p class="loading">Loading activity…</p>}
       <Show when={!loading()}>

@@ -26,7 +26,7 @@ export async function GET(event: APIEvent) {
     return json({ error: "Sign in again to check the reblog" }, 401);
   }
   if (page.status === 429) {
-    return json({ error: "BDSMLR temporarily blocked the request. Try again shortly." }, 429);
+    return json({ error: "BDSMLR is rate limiting requests right now. This usually clears in a minute or two." }, 429);
   }
   if (!page.ok) {
     return json({ error: "Could not check the reblog" }, page.status);

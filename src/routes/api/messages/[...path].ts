@@ -69,6 +69,27 @@ async function proxy(event: APIEvent) {
   if (upstream.status === 419) {
     return json({ error: "Could not verify BDSMLR session. Sign in again." }, 401);
   }
+  if (
+    upstream.status === 429 ||
+    upstream.headers.get("cf-mitigated") === "challenge"
+  ) {
+    return new Response(
+      JSON.stringify({
+        error:
+          "BDSMLR is rate limiting requests right now. This usually clears in a minute or two.",
+        code: "UPSTREAM_RATE_LIMITED",
+        retryAfterSeconds: 60,
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+          "Retry-After": "60",
+        },
+      },
+    );
+  }
   const response = new Response(upstream.body, {
     status: upstream.status,
     statusText: upstream.statusText,

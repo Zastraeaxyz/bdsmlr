@@ -6,6 +6,7 @@ import {
   onMount,
   Show,
 } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
@@ -664,7 +665,7 @@ export default function Messages() {
         </main>
 
         <Show when={error()}>
-          <p class="error messages-error">{error()}</p>
+          <FeedErrorNotice message={error() ?? ""} />
         </Show>
         <Show when={notice()}>
           <p class="action-notice messages-notice">{notice()}</p>
@@ -761,7 +762,7 @@ export default function Messages() {
               />
             </label>
             <Show when={error()}>
-              <p class="error">{error()}</p>
+              <FeedErrorNotice message={error() ?? ""} />
             </Show>
             <button
               type="submit"

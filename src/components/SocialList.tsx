@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A } from "@solidjs/router";
 import {
   blogFollowGraph,
@@ -122,7 +123,7 @@ export function SocialList(props: { blogName: string; kind: SocialKind }) {
         {title()}
         {!loading() ? ` (${items().length})` : ""}
       </h2>
-      {error() && <p class="error">{error()}</p>}
+      {error() && <FeedErrorNotice message={error()} />}
       {loading() && <p class="loading">Loading…</p>}
       <Show when={!loading()}>
         <Show when={items().length > 0} fallback={<p class="empty">{empty()}</p>}>

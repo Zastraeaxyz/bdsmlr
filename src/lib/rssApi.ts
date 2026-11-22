@@ -38,13 +38,26 @@ async function bdRequest<T>(
     console.log(`[bd] <-- POST ${path} ${res.status} ${duration}ms ${auth}`)
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ message: res.statusText }))
-      throw new Error(err.message || err.error || `HTTP ${res.status}`)
+      if (
+        res.status === 429 ||
+        res.headers.get('cf-mitigated') === 'challenge'
+      ) {
+        throw new FetchError(
+          'BDSMLR is rate limiting requests. Try again in a minute or two.',
+          429,
+          'UPSTREAM_RATE_LIMITED',
+        )
+      }
+      const err = await res.json().catch(() => null)
+      throw new FetchError(
+        err?.message || err?.error || `BDSMLR returned HTTP ${res.status}`,
+        res.status,
+      )
     }
 
     return res.json()
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith('HTTP ')) throw e
+    if (e instanceof FetchError) throw e
     const duration = Date.now() - start
     console.log(`[bd] <-- POST ${path} FAIL ${duration}ms ${auth}`)
     throw e

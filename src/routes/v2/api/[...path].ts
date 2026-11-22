@@ -1,26 +1,9 @@
 import type { APIEvent } from "@solidjs/start/server";
-
-const CACHE_CONFIG: Record<string, string> = {
-  // Auth endpoints — never cache
-  "/v2/api/auth/login": "no-store",
-  "/v2/api/sign-url": "no-store",
-
-  // Stable lookups — long cache
-  "/v2/api/resolve-identifier": "public, max-age=86400",
-  "/v2/api/get-blog": "public, max-age=1800",
-
-  // Semi-stable — moderate cache
-  "/v2/api/blog-follow-graph": "public, max-age=300",
-  "/v2/api/list-blog-top-tags": "public, max-age=1800",
-
-  // Post detail — short cache
-  "/v2/api/get-post-detail": "public, max-age=60",
-
-  // Feed/search — never cached
-  "/v2/api/list-blog-activity": "no-store",
-  "/v2/api/search-posts-by-tag": "public, max-age=60",
-  "/v2/api/list-blogs-recent-activity": "public, max-age=60",
-};
+import {
+  UpstreamGateway,
+  cacheControlFor,
+  isUpstreamFailure,
+} from "~/server/upstreamPolicy";
 
 // Endpoints served as GET to the client (so the browser cache applies) but
 // POSTed to the upstream BDSMLR API, which only accepts POST bodies.
@@ -45,17 +28,46 @@ const GET_ENDPOINTS: Record<
   },
 };
 
-function getCacheControl(pathname: string): string {
-  return CACHE_CONFIG[pathname] ?? "public, max-age=60";
+const gateway = new UpstreamGateway({ origin: "https://api-prod.bdsmlr.com" });
+
+/** Headers that must not be copied from the browser request or the answer. */
+const SKIPPED_REQUEST_HEADERS = new Set([
+  "accept-encoding",
+  "connection",
+  "content-length",
+  "host",
+  "keep-alive",
+  "proxy-connection",
+  "te",
+  "transfer-encoding",
+  "upgrade",
+]);
+
+const SKIPPED_RESPONSE_HEADERS = new Set([
+  "connection",
+  "content-encoding",
+  "content-length",
+  "keep-alive",
+  "proxy-connection",
+  "te",
+  "transfer-encoding",
+  "upgrade",
+]);
+
+function upstreamHeaders(source: Headers): Headers {
+  const headers = new Headers();
+  for (const [key, value] of source) {
+    if (SKIPPED_REQUEST_HEADERS.has(key.toLowerCase())) continue;
+    headers.append(key, value);
+  }
+  return headers;
 }
 
 async function proxy(event: APIEvent) {
   const url = new URL(event.request.url);
-  const target = `https://api-prod.bdsmlr.com${url.pathname}${url.search}`;
 
   let method = event.request.method;
   let body: string | undefined;
-  const headers = new Headers(event.request.headers);
 
   if (method === "GET" && GET_ENDPOINTS[url.pathname]) {
     const endpoint = GET_ENDPOINTS[url.pathname];
@@ -67,41 +79,63 @@ async function proxy(event: APIEvent) {
     }
     method = "POST";
     body = JSON.stringify(payload);
-    headers.set("Content-Type", "application/json");
   } else if (method !== "GET" && method !== "HEAD") {
     body = await event.request.text();
   }
 
-  const upstream = await fetch(target, {
+  const headers = upstreamHeaders(event.request.headers);
+  if (body !== undefined && method === "POST" && !headers.has("content-type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const outcome = await gateway.request({
     method,
-    headers,
+    pathname: url.pathname,
+    search: url.search,
     body,
+    headers,
   });
 
-  const clean = new Response(upstream.body, {
-    status: upstream.status,
-    statusText: upstream.statusText,
+  if (isUpstreamFailure(outcome)) {
+    // Never relay Cloudflare's HTML challenge: the client can classify a JSON
+    // 429 and tell the user that BDSMLR is limiting us.
+    return new Response(
+      JSON.stringify({
+        error: outcome.failure.message,
+        code: outcome.failure.code,
+        retryAfterSeconds: outcome.failure.retryAfterSeconds,
+      }),
+      {
+        status: outcome.failure.status,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+          "Retry-After": String(outcome.failure.retryAfterSeconds),
+        },
+      },
+    );
+  }
+
+  const response = new Response(outcome.body, {
+    status: outcome.status,
+    statusText: outcome.statusText,
   });
 
-  for (const [key, value] of upstream.headers) {
-    const lower = key.toLowerCase();
-    if (
-      lower !== "content-encoding" &&
-      lower !== "content-length" &&
-      lower !== "transfer-encoding"
-    ) {
-      if (lower === "set-cookie") {
-        const cleaned = value.replace(/;\s*domain=[^;]*/gi, "");
-        clean.headers.append(key, cleaned);
-      } else {
-        clean.headers.set(key, value);
-      }
+  for (const [key, value] of outcome.headers) {
+    if (SKIPPED_RESPONSE_HEADERS.has(key.toLowerCase())) continue;
+    if (key.toLowerCase() === "set-cookie") {
+      response.headers.append(key, value.replace(/;\s*domain=[^;]*/gi, ""));
+    } else {
+      response.headers.set(key, value);
     }
   }
 
-  clean.headers.set("Cache-Control", getCacheControl(url.pathname));
+  response.headers.set(
+    "Cache-Control",
+    cacheControlFor(url.pathname, outcome.status),
+  );
 
-  return clean;
+  return response;
 }
 
 export const GET = proxy;

@@ -1,4 +1,5 @@
 import { createSignal, createEffect, For, Show, untrack } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { useLocation, useNavigate, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import {
@@ -72,6 +73,7 @@ export default function HomeFeed() {
   const [sortOrder, setSortOrder] = createSignal(SortOrder.Descending);
   const [view, setView] = createSignal<FeedView>(loadFeedView());
   let nextPageToken: string | null = searchParams.page_token || null;
+  let loadedKey = "";
   let searchPage = 1;
   let searchSession: string | null = null;
   let followedBlogIds: number[] = [];
@@ -116,10 +118,12 @@ export default function HomeFeed() {
       setLoading(false);
       return;
     }
+    const loadKey = `${activeBlogId() ?? ""}|${activeQuery()}|${targetPage}`;
+    const previousPosts = posts();
     setLoading(true);
     setLoadingMore(false);
     setError("");
-    setPosts([]);
+    if (loadKey !== loadedKey) setPosts([]);
     setHasMore(true);
 
     try {
@@ -181,7 +185,11 @@ export default function HomeFeed() {
         nextPageToken = data.page?.nextPageToken ?? null;
         if (!nextPageToken) setHasMore(false);
       }
+      loadedKey = loadKey;
     } catch (err: unknown) {
+      // Keep the posts that were already on screen when a refresh fails, so a
+      // rate limit does not wipe a feed the user is reading.
+      if (loadKey === loadedKey) setPosts(previousPosts);
       setError((err as Error)?.message || "Failed to load feed");
     } finally {
       setLoading(false);
@@ -363,7 +371,12 @@ export default function HomeFeed() {
             />
           </form>
 
-          {error() && <p class="error">{error()}</p>}
+          {error() && (
+            <FeedErrorNotice
+              message={error()}
+              onRetry={() => void fetchFeed(currentUrlPage())}
+            />
+          )}
 
           {loading() && <p class="loading">Loading feed…</p>}
 

@@ -66,7 +66,7 @@ export default function DraftsPage() {
     } catch (err: unknown) {
       setError(
         err instanceof LegacyError && err.status === 429
-          ? "BDSMLR temporarily blocked the request. Wait a moment and try again."
+          ? "BDSMLR is rate limiting requests right now. This usually clears in a minute or two."
           : err instanceof LegacyError && err.status === 500
             ? "BDSMLR returned a server error for this draft action. Try again later."
             : (err as Error)?.message || "Draft action failed",

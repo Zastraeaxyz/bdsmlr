@@ -130,7 +130,7 @@ export default function CustomizePage() {
     } catch (err: unknown) {
       setError(
         err instanceof LegacyError && err.status === 429
-          ? "BDSMLR temporarily blocked the request. Wait a moment and try again."
+          ? "BDSMLR is rate limiting requests right now. This usually clears in a minute or two."
           : (err as Error)?.message || "Could not save customization",
       );
     } finally {

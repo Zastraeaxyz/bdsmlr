@@ -1,4 +1,5 @@
 import { createSignal, createEffect, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A, useNavigate } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { getPostDetail, getBlog, deletePost, PostType, type Post } from "~/lib/api";
@@ -128,7 +129,7 @@ export default function PostDetail(props: {
           ? `${post()!.blogName}'s Post — bbdsmlr`
           : "Post — bbdsmlr"}
       </Title>
-      {error() && <p class="error">{error()}</p>}
+      {error() && <FeedErrorNotice message={error()} />}
       {loading() && <p class="loading">Loading post…</p>}
       <Show when={blogGone()}>
         <p class="post-detail-gone">

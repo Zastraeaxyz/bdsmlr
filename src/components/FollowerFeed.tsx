@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { useNavigate } from "@solidjs/router";
 import {
   listBlogsRecentActivity,
@@ -82,7 +83,7 @@ export function FollowerFeed(props: { blogName: string }) {
 
   return (
     <div>
-      {error() && <p class="error">{error()}</p>}
+      {error() && <FeedErrorNotice message={error()} />}
       {loading() && <p class="loading">Loading follower feed…</p>}
       <Show when={!loading()}>
         <Show

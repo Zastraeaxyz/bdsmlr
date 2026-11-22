@@ -1,4 +1,5 @@
 import { createSignal, createEffect, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import {
@@ -140,7 +141,7 @@ export default function LikedPosts() {
           />
         </div>
 
-        {error() && <p class="error">{error()}</p>}
+        {error() && <FeedErrorNotice message={error()} />}
 
         {loading() && <p class="loading">Loading liked posts…</p>}
 

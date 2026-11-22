@@ -1,3 +1,5 @@
+import { noteUpstreamRateLimit, noteUpstreamSuccess } from "./upstreamLimit";
+
 export type LegacyPostType = "text" | "quote" | "link" | "chat" | "photo" | "video" | "audio";
 export type LegacyPostMode = "live" | "queue" | "draft";
 
@@ -23,11 +25,14 @@ export class LegacyError extends Error {
 async function legacyResponse(res: Response): Promise<Response> {
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    throw new LegacyError(
-      data?.error || data?.message || `BDSMLR returned HTTP ${res.status}`,
-      res.status,
-    );
+    const message =
+      data?.error || data?.message || `BDSMLR returned HTTP ${res.status}`;
+    if (res.status === 429 || data?.code === "UPSTREAM_RATE_LIMITED") {
+      noteUpstreamRateLimit(Number(data?.retryAfterSeconds) || undefined);
+    }
+    throw new LegacyError(message, res.status);
   }
+  noteUpstreamSuccess();
   return res;
 }
 

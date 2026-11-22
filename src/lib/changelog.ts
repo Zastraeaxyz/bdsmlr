@@ -33,6 +33,26 @@ export interface ChangelogDay {
  */
 export const changelog: ChangelogDay[] = [
   {
+    date: "2026-11-22",
+    changes: [
+      {
+        kind: "Fixed",
+        title: "Rate limits now say so instead of looking like a broken blog",
+        body: "When BDSMLR starts refusing requests, the app used to show a bare \"Too Many Requests\" or a generic failure, which made it look like this site, or the blog you were reading, was broken. Failed sections now explain that BDSMLR is limiting requests, that nothing is wrong with the blog, and that waiting a minute or two fixes it. A banner at the top of the page counts down while the limit is active.",
+      },
+      {
+        kind: "Fixed",
+        title: "Failed requests are no longer cached",
+        body: "A single rate limit or server hiccup could be cached by the browser and keep failing for that page for up to a day. Failed responses are never cached now, and existing stale entries are skipped so they heal immediately.",
+      },
+      {
+        kind: "Improved",
+        title: "Fewer requests to BDSMLR when browsing",
+        body: "Repeated feed requests from the same page are combined, and identical feed requests made within a few seconds reuse the same answer. This makes it much less likely that BDSMLR starts limiting you in the first place.",
+      },
+    ],
+  },
+  {
     date: "2026-11-21",
     changes: [
       {

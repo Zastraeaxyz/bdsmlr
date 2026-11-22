@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A, useSearchParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import Header from "~/components/Header";
@@ -146,7 +147,7 @@ export default function BlogSearchPage() {
           <p class="empty">Enter a query to search blogs.</p>
         </Show>
 
-        {error() && <p class="error">{error()}</p>}
+        {error() && <FeedErrorNotice message={error()} />}
         {loading() && <p class="loading">Searching blogs…</p>}
         <Show when={activeQuery() && !loading()}>
           <Show

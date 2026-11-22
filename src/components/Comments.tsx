@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { A } from "@solidjs/router";
 import {
   commentPost,
@@ -170,7 +171,7 @@ export function Comments(props: CommentsProps) {
         </form>
       </Show>
 
-      {error() && <p class="error">{error()}</p>}
+      {error() && <FeedErrorNotice message={error()} />}
       {loading() && <p class="loading">Loading comments…</p>}
 
       <Show when={!loading()}>

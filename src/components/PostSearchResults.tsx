@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { FeedErrorNotice } from "~/components/FeedErrorNotice";
 import { useNavigate } from "@solidjs/router";
 import {
   searchPostsByTag,
@@ -129,7 +130,7 @@ export function PostSearchResults(props: {
 
   return (
     <div>
-      {error() && <p class="error">{error()}</p>}
+      {error() && <FeedErrorNotice message={error()} />}
       {loading() && <p class="loading">Searching…</p>}
       <Show when={!loading()}>
         <Show

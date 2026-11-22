@@ -1,4 +1,5 @@
 import { unwrapMediaUrl } from './sanitize'
+import { noteUpstreamRateLimit, noteUpstreamSuccess } from './upstreamLimit'
 
 const API_BASE = '/v2/api'
 const AUTH_BASE = '/v2/api/auth'
@@ -109,29 +110,104 @@ function responseErrorMessage(err: unknown, fallback: string): string {
 
 export class FetchError extends Error {
   status: number
-  constructor(message: string, status: number) {
+  code?: string
+  constructor(message: string, status: number, code?: string) {
     super(message)
     this.status = status
+    this.code = code
   }
 }
 
-async function request<T>(base: string, path: string, body: unknown, v2session?: string): Promise<T> {
+export const NETWORK_ERROR_CODE = 'NETWORK_UNREACHABLE'
+
+/**
+ * Bump this whenever an error response may have been cached under the old
+ * cache rules. It changes the URL, so browsers fetch fresh instead of serving
+ * a stale 429 or 500 until its max-age runs out.
+ */
+const GET_CACHE_VERSION = '2'
+
+/** Read-only endpoints that are safe to share between concurrent callers. */
+const READ_PATHS = new Set([
+  '/for-you',
+  '/list-blog-activity',
+  '/list-blogs-recent-activity',
+  '/list-post-comments',
+  '/list-post-likes',
+  '/list-post-reblogs',
+  '/related-posts',
+  '/search-blogs',
+  '/search-posts-by-tag',
+])
+
+async function throwForResponse(res: Response): Promise<void> {
+  if (res.ok) {
+    noteUpstreamSuccess()
+    return
+  }
+
+  const payload = await res.json().catch(() => null)
+  const record =
+    payload && typeof payload === 'object'
+      ? (payload as Record<string, unknown>)
+      : null
+  const code = typeof record?.code === 'string' ? record.code : undefined
+  const message = responseErrorMessage(
+    payload ?? res.statusText,
+    `BDSMLR returned HTTP ${res.status}`,
+  )
+
+  if (res.status === 429 || code === 'UPSTREAM_RATE_LIMITED') {
+    const retryAfter =
+      Number(record?.retryAfterSeconds) ||
+      Number(res.headers.get('retry-after')) ||
+      undefined
+    noteUpstreamRateLimit(retryAfter)
+  }
+
+  throw new FetchError(message, res.status, code)
+}
+
+async function sendRequest<T>(base: string, path: string, body: unknown, v2session?: string): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (v2session) headers['Cookie'] = `v2_session=${v2session}`
 
-  const res = await fetch(`${base}${path}`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-    credentials: v2session ? 'omit' : 'include',
-  })
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }))
-    throw new Error(responseErrorMessage(err, `HTTP ${res.status}`))
+  let res: Response
+  try {
+    res = await fetch(`${base}${path}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      credentials: v2session ? 'omit' : 'include',
+    })
+  } catch {
+    throw new FetchError('Could not reach BDSMLR.', 0, NETWORK_ERROR_CODE)
   }
 
-  return res.json()
+  await throwForResponse(res)
+  return res.json().catch(() => {
+    throw new FetchError('BDSMLR returned an unreadable response.', res.status)
+  })
+}
+
+const inflightRead = new Map<string, Promise<unknown>>()
+
+async function request<T>(base: string, path: string, body: unknown, v2session?: string): Promise<T> {
+  if (v2session || !READ_PATHS.has(path)) {
+    return sendRequest<T>(base, path, body, v2session)
+  }
+
+  // Profile pages ask for the same feed from several components at once, and
+  // every extra request is another chance to be rate limited.
+  const key = `${path}\u0000${JSON.stringify(body)}`
+  const running = inflightRead.get(key)
+  if (running) return running as Promise<T>
+
+  const promise = sendRequest<T>(base, path, body).finally(() =>
+    inflightRead.delete(key),
+  )
+  inflightRead.set(key, promise)
+  return promise
 }
 
 const inflightGet = new Map<string, Promise<unknown>>()
@@ -141,23 +217,27 @@ async function requestGet<T>(base: string, path: string, params: Record<string, 
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null) qs.set(key, String(value))
   }
+  qs.set('v', GET_CACHE_VERSION)
   const url = `${base}${path}?${qs.toString()}`
 
   const cached = inflightGet.get(url)
   if (cached) return cached as Promise<T>
 
-  const promise = fetch(url, {
-    method: 'GET',
-    credentials: 'include',
-  })
-    .then(async (res) => {
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: res.statusText }))
-        throw new Error(responseErrorMessage(err, `HTTP ${res.status}`))
-      }
-      return res.json()
+  const promise = (async () => {
+    let res: Response
+    try {
+      res = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+      })
+    } catch {
+      throw new FetchError('Could not reach BDSMLR.', 0, NETWORK_ERROR_CODE)
+    }
+    await throwForResponse(res)
+    return res.json().catch(() => {
+      throw new FetchError('BDSMLR returned an unreadable response.', res.status)
     })
-    .finally(() => inflightGet.delete(url))
+  })().finally(() => inflightGet.delete(url))
 
   inflightGet.set(url, promise)
   return promise as Promise<T>

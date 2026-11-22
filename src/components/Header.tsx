@@ -10,6 +10,7 @@ import { changelogUnseenCount, refreshChangelogSeen } from '../lib/changelogSeen
 import { features } from '../lib/features'
 import { trackEvent } from '../lib/analytics'
 import OutageBanner from './OutageBanner'
+import RateLimitBanner from './RateLimitBanner'
 
 interface HeaderProps {
   info?: string
@@ -362,6 +363,7 @@ export default function Header(props: HeaderProps) {
       </Show>
       </header>
       <OutageBanner />
+      <RateLimitBanner />
     </>
   )
 }

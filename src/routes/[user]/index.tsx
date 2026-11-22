@@ -655,7 +655,11 @@ export default function UserFeed() {
         </form>
 
         <Show when={error()}>
-          <FeedErrorNotice message={error()} blogName={slug()} />
+          <FeedErrorNotice
+            message={error()}
+            blogName={slug()}
+            onRetry={() => void fetchFeed(searchPage)}
+          />
         </Show>
 
         {loading() && <p class="loading">Loading feed…</p>}
