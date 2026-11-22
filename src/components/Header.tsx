@@ -150,11 +150,11 @@ export default function Header(props: HeaderProps) {
       ? [{ href: "/for-you", label: "For you", icon: Bookmark }]
       : []),
     { href: "/search", label: "Search", icon: Search },
-    { href: "/activity", label: "Activity", icon: Activity, badge: activityUnreadCount() },
+    { href: "/messages", label: "Messages", icon: Mail, badge: unreadCount() },
   ];
 
   const accountNav = () => [
-    { href: "/messages", label: "Messages", icon: Mail, badge: unreadCount() },
+    { href: "/activity", label: "Activity", icon: Activity, badge: activityUnreadCount() },
     { href: "/queue", label: "Queue", icon: ListChecks },
     { href: "/drafts", label: "Drafts", icon: FileText },
     { href: "/invitations", label: "Invitations", icon: MessageSquare },
@@ -385,21 +385,19 @@ export default function Header(props: HeaderProps) {
             </For>
           </nav>
 
-          <Show when={user()}>
-            <Button
-              as={A}
-              href="/messages"
-              variant="ghost"
-              size="icon"
-              class="relative shrink-0"
-              aria-label="Messages"
-            >
-              <Mail class="size-5" />
-              <span class="absolute -right-1 -top-1">
-                <UnreadBadge count={unreadCount()} />
-              </span>
-            </Button>
-          </Show>
+          <Button
+            as="a"
+            href={DISCORD_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="ghost"
+            size="sm"
+            class="shrink-0 gap-2 px-2"
+            aria-label="Discord"
+          >
+            <DiscordIcon class="size-4" />
+            <span class="hidden lg:inline">Discord</span>
+          </Button>
 
           <DropdownMenu open={menuOpen()} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger<typeof Button>
@@ -554,14 +552,14 @@ export default function Header(props: HeaderProps) {
             </span>
           </A>
           <A
-            href="/activity"
+            href="/messages"
             class="relative flex h-full flex-col items-center justify-center gap-1 text-muted-foreground"
-            classList={{ "text-primary": isActive("/activity") }}
+            classList={{ "text-primary": isActive("/messages") }}
           >
-            <Activity class="size-5" />
-            <span class="text-[10px]">Activity</span>
+            <Mail class="size-5" />
+            <span class="text-[10px]">Messages</span>
             <span class="absolute right-3 top-1">
-              <UnreadBadge count={activityUnreadCount()} />
+              <UnreadBadge count={unreadCount()} />
             </span>
           </A>
           <A

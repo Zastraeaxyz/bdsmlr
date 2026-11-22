@@ -62,6 +62,26 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Improved",
+        title: "Feed settings open with a tap",
+        body: "The gear in a profile feed now opens a small settings panel on a normal tap, and the checkboxes stay open while you turn reblogs or repeating images on and off. No more long press."
+      },
+      {
+        kind: "Improved",
+        title: "Messages in the main navigation",
+        body: "Messages now sits in the top navigation on desktop and replaces Activity in the bottom bar on phones, with its unread badge. Activity is still available from the menu. The Discord link is back in the top header on both."
+      },
+      {
+        kind: "Improved",
+        title: "Bigger media viewer",
+        body: "The full-screen image viewer now fits each image to the screen without clipping it, using all the space around the close button and gallery controls."
+      },
+      {
+        kind: "Fixed",
+        title: "Reblog credit is easier to read",
+        body: "The \"reblogged from\" line on posts is larger and has breathing room below it before the post content."
+      },
+      {
+        kind: "Improved",
         title: "A phone-first navigation bar",
         body: "On phones, Home, Search, New post, Activity and your profile now live in a bar at the bottom of the screen, with unread badges for messages and activity. The full menu opens from the left, and every control is sized for touch."
       },

@@ -4,8 +4,6 @@ import {
   createMemo,
   For,
   Show,
-  onCleanup,
-  onMount,
   untrack,
 } from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
@@ -47,15 +45,17 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuGroupLabel,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
+  Checkbox,
+  CheckboxControl,
+  CheckboxInput,
+  CheckboxLabel,
+} from "~/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverPortal,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 import { TextField, TextFieldInput } from "~/components/ui/text-field";
 import {
   loadFeedView,
@@ -117,9 +117,6 @@ export default function UserFeed() {
     hideRepeatingImages,
     setHideRepeatingImages,
   } = useFeedSettings();
-  const [showSettings, setShowSettings] = createSignal(false);
-  let settingsRef: HTMLDivElement | undefined;
-
   const historyKey = () => `bdsmlr:searchHistory:profile:${slug()}`;
   const [history, setHistory] = createSignal<string[]>([]);
 
@@ -128,15 +125,12 @@ export default function UserFeed() {
   });
 
   const toggleHideReblogs = () => {
-    const name = slug();
-    if (!name) return;
+    if (!slug()) return;
     setHideReblogs((prev) => !prev);
-    setShowSettings(false);
   };
 
   const toggleHideRepeatingImages = () => {
     setHideRepeatingImages((prev) => !prev);
-    setShowSettings(false);
   };
 
   const repeatingImageIdentities = createMemo(() =>
@@ -186,35 +180,6 @@ export default function UserFeed() {
     }
     return "No results found.";
   };
-
-  const handleClickOutside = (e: MouseEvent) => {
-    const target = e.target as Node | null;
-    if (!target) return;
-    // The menu renders in a portal, so treat clicks inside it as inside.
-    const element = target as Element;
-    if (element.closest?.('[data-slot="dropdown-menu-content"]')) return;
-    if (settingsRef && !settingsRef.contains(target)) {
-      setShowSettings(false);
-    }
-  };
-
-  const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setShowSettings(false);
-    }
-  };
-
-  onMount(() => {
-    if (typeof document === "undefined") return;
-    document.addEventListener("click", handleClickOutside);
-    document.addEventListener("keydown", handleKeydown);
-  });
-
-  onCleanup(() => {
-    if (typeof document === "undefined") return;
-    document.removeEventListener("click", handleClickOutside);
-    document.removeEventListener("keydown", handleKeydown);
-  });
 
   let resolvedId: number | null = null;
   let nextPageToken: string | null = null;
@@ -666,50 +631,52 @@ export default function UserFeed() {
               }
             />
             <SearchHelp onFill={runSearch} />
-            <div ref={settingsRef}>
-              <DropdownMenu
-                open={showSettings()}
-                onOpenChange={setShowSettings}
-              >
-                <DropdownMenuTrigger<typeof Button>
-                  as={(triggerProps) => (
-                    <Button
-                      {...triggerProps}
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      class={SETTINGS_TRIGGER_CLASS}
-                      aria-label="Settings"
+            <Popover>
+              <PopoverTrigger<typeof Button>
+                as={(triggerProps) => (
+                  <Button
+                    {...triggerProps}
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    class={SETTINGS_TRIGGER_CLASS}
+                    aria-label="Feed settings"
+                  >
+                    <Settings class="size-4" />
+                  </Button>
+                )}
+              />
+              <PopoverPortal>
+                <PopoverContent class="w-60 p-3">
+                  <p class="mb-1 text-sm font-semibold">Feed settings</p>
+                  <div class="flex flex-col gap-1">
+                    <Checkbox
+                      checked={hideReblogs()}
+                      onChange={() => toggleHideReblogs()}
+                      class="flex min-h-11 items-center gap-2 rounded-md px-1 hover:bg-accent"
                     >
-                      <Settings class="size-4" />
-                    </Button>
-                  )}
-                />
-                <DropdownMenuPortal>
-                  <DropdownMenuContent class="w-60">
-                    <DropdownMenuGroup>
-                      <DropdownMenuGroupLabel>
-                        Feed settings
-                      </DropdownMenuGroupLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuCheckboxItem
-                        checked={hideReblogs()}
-                        onChange={() => toggleHideReblogs()}
-                      >
+                      <CheckboxInput />
+                      <CheckboxControl />
+                      <CheckboxLabel class="text-sm font-normal">
                         Hide reblogs
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem
-                        checked={hideRepeatingImages()}
-                        onChange={() => toggleHideRepeatingImages()}
-                        title="BDSMLR sometimes repeats the same images in many posts, such as on the Rectrix blog. This hides images shared by the three most recent image posts."
-                      >
+                      </CheckboxLabel>
+                    </Checkbox>
+                    <Checkbox
+                      checked={hideRepeatingImages()}
+                      onChange={() => toggleHideRepeatingImages()}
+                      class="flex min-h-11 items-center gap-2 rounded-md px-1 hover:bg-accent"
+                      title="BDSMLR sometimes repeats the same images in many posts, such as on the Rectrix blog. This hides images shared by the three most recent image posts."
+                    >
+                      <CheckboxInput />
+                      <CheckboxControl />
+                      <CheckboxLabel class="text-sm font-normal">
                         Hide repeating images
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenuPortal>
-              </DropdownMenu>
-            </div>
+                      </CheckboxLabel>
+                    </Checkbox>
+                  </div>
+                </PopoverContent>
+              </PopoverPortal>
+            </Popover>
             <div class="ml-auto">
               <ViewDropdown
                 value={view()}

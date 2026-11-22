@@ -1,4 +1,5 @@
 import { createEffect, createSignal, onCleanup, onMount, Show } from 'solid-js'
+import { cx } from '~/lib/cva'
 import { Play } from 'lucide-solid'
 
 interface AutoLoopVideoProps {
@@ -6,6 +7,7 @@ interface AutoLoopVideoProps {
   onError?: (event: Event) => void
   /** Always show the native player controls, even for short clips. */
   forceControls?: boolean
+  class?: string
 }
 
 const SHORT_VIDEO_THRESHOLD_SECONDS = 20
@@ -75,7 +77,7 @@ export function AutoLoopVideo(props: AutoLoopVideoProps) {
   }
 
   return (
-    <div class="relative w-full">
+    <div class={cx("relative w-full", props.class)}>
       <video
         ref={video}
         src={props.src}

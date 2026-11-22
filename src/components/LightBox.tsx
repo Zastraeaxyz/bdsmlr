@@ -154,7 +154,7 @@ export function LightBox(props: LightBoxProps) {
   return (
     <Show when={isOpen()}>
       <div
-        class="fixed inset-0 z-[60] flex flex-col bg-black/95"
+        class="fixed inset-0 z-[60] bg-black/95"
         role="dialog"
         aria-modal="true"
         aria-label="Media viewer"
@@ -162,80 +162,78 @@ export function LightBox(props: LightBoxProps) {
           if (event.target === event.currentTarget) close();
         }}
       >
-        <div class="safe-top flex items-center justify-between p-2">
-          <Show when={hasGallery()}>
-            <span class="px-3 text-sm text-white/80" aria-live="polite">
-              {props.gallery!.itemIndex() + 1} / {props.gallery!.itemCount()}
-            </span>
-          </Show>
-          <Button
-            ref={closeButton}
-            type="button"
-            variant="secondary"
-            size="icon"
-            class="ml-auto size-11 rounded-full"
-            onClick={close}
-            aria-label="Close media viewer"
-          >
-            <X class="size-5" />
-          </Button>
-        </div>
-
         <div
-          class="flex min-h-0 flex-1 items-center justify-center px-2 pb-4"
+          class="absolute inset-0 flex items-center justify-center p-2 sm:p-4"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) close();
+          }}
         >
-          <Show when={hasGallery()}>
-            <Button
-              type="button"
-              variant="secondary"
-              size="icon"
-              class="absolute left-2 top-1/2 z-10 size-11 -translate-y-1/2 rounded-full opacity-90"
-              aria-label="Previous media"
-              onClick={() => props.gallery!.prevItem()}
-            >
-              <ChevronLeft class="size-5" />
-            </Button>
-          </Show>
-
           <Show when={candidate()} keyed>
             {(current) => (
               <Show
                 when={current.type === "image"}
                 fallback={
-                  <div class="w-full [&_video]:mx-auto [&_video]:max-h-[80dvh] [&_video]:max-w-full">
-                    <AutoLoopVideo
-                      src={current.url}
-                      onError={nextCandidate}
-                      forceControls
-                    />
-                  </div>
+                  <AutoLoopVideo
+                    src={current.url}
+                    onError={nextCandidate}
+                    forceControls
+                    class="flex max-h-full max-w-full items-center justify-center [&_video]:mx-auto [&_video]:max-h-full [&_video]:w-auto [&_video]:max-w-full"
+                  />
                 }
               >
                 <img
                   src={current.url}
                   alt=""
-                  class="max-h-[80dvh] max-w-full object-contain"
+                  class="max-h-full max-w-full object-contain"
                   onError={nextCandidate}
                 />
               </Show>
             )}
           </Show>
-
-          <Show when={hasGallery()}>
-            <Button
-              type="button"
-              variant="secondary"
-              size="icon"
-              class="absolute right-2 top-1/2 z-10 size-11 -translate-y-1/2 rounded-full opacity-90"
-              aria-label="Next media"
-              onClick={() => props.gallery!.nextItem()}
-            >
-              <ChevronRight class="size-5" />
-            </Button>
-          </Show>
         </div>
+
+        <Button
+          ref={closeButton}
+          type="button"
+          variant="secondary"
+          size="icon"
+          class="safe-top absolute right-3 top-2 z-20 size-11 rounded-full opacity-90"
+          onClick={close}
+          aria-label="Close media viewer"
+        >
+          <X class="size-5" />
+        </Button>
+
+        <Show when={hasGallery()}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            class="absolute left-2 top-1/2 z-20 size-11 -translate-y-1/2 rounded-full opacity-90"
+            aria-label="Previous media"
+            onClick={() => props.gallery!.prevItem()}
+          >
+            <ChevronLeft class="size-5" />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            class="absolute right-2 top-1/2 z-20 size-11 -translate-y-1/2 rounded-full opacity-90"
+            aria-label="Next media"
+            onClick={() => props.gallery!.nextItem()}
+          >
+            <ChevronRight class="size-5" />
+          </Button>
+          <span
+            class="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-sm text-white"
+            aria-live="polite"
+          >
+            {props.gallery!.itemIndex() + 1} / {props.gallery!.itemCount()}
+          </span>
+        </Show>
       </div>
     </Show>
   );

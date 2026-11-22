@@ -317,7 +317,7 @@ export default function HomeFeed() {
         <Header info="Following feed" />
 
         <main class="mx-auto flex w-full max-w-2xl flex-1 flex-col">
-          <div class="sticky top-14 z-30 space-y-2 border-b border-border bg-background/95 p-3 backdrop-blur">
+          <div class="space-y-2 border-b border-border p-3">
             <form class="flex items-center gap-2" onSubmit={doSearch}>
               <div class="relative flex min-w-0 flex-1 items-center rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/40">
                 <Search class="pointer-events-none absolute left-2.5 size-4 text-muted-foreground" />
