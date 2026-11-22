@@ -36,6 +36,11 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-22",
     changes: [
       {
+        kind: "Added",
+        title: "Install it like an app",
+        body: "On Android, Chrome can now install Better BDSMLR with its own icon on your home screen. It opens in its own window, without the browser bars. Settings shows an Install app button when your browser offers one, and on iPhone Safari you can add it from the Share menu. It still needs a connection, since posts and images come from BDSMLR.",
+      },
+      {
         kind: "Improved",
         title: "A cleaner interface for small screens",
         body: "Buttons, cards, dialogs, menus, and forms now look and behave the same across the app. Post pages, feeds, messages, the composer, and account screens were rebuilt for phones, with larger tap targets, clearer spacing, and dialogs that slide up from the bottom.",

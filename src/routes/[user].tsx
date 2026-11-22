@@ -81,7 +81,7 @@ import {
   TooltipTrigger,
 } from '~/components/ui/tooltip'
 
-const DEFAULT_FAVICON = '/favicon.ico'
+const DEFAULT_FAVICON = '/favicon.svg'
 
 const RSS_TOKEN_TITLE =
   'This feed includes your session token because the blog is private. Do not share it with others or they can potentially steal your account. Saving it in an RSS reader you trust is fine, and using it with the imaglr importer tool is also fine.'

@@ -25,6 +25,12 @@ import {
   LegacyError,
 } from "~/lib/legacy";
 import { trackEvent } from "~/lib/analytics";
+import {
+  canInstall,
+  installHelpText,
+  isInstalled,
+  promptInstall,
+} from "~/lib/pwaInstall";
 
 const linkRowClass =
   "flex min-h-11 items-center rounded-md px-3 text-sm font-medium outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50";
@@ -37,6 +43,7 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [newBlogName, setNewBlogName] = createSignal("");
   const [busy, setBusy] = createSignal("");
+  const [installing, setInstalling] = createSignal(false);
   const [error, setError] = createSignal("");
   const [notice, setNotice] = createSignal("");
 
@@ -100,6 +107,15 @@ export default function SettingsPage() {
     );
   };
 
+  const install = () => {
+    if (installing()) return;
+    setInstalling(true);
+    void promptInstall().then((outcome) => {
+      trackEvent("pwa-install", { state: outcome });
+      setInstalling(false);
+    });
+  };
+
   return (
     <Show when={!loading() && user()} fallback={null}>
       <Page info="Settings">
@@ -134,6 +150,46 @@ export default function SettingsPage() {
                 </dd>
               </div>
             </dl>
+          </CardContent>
+        </Card>
+
+        <Card class="mb-3 gap-4">
+          <CardHeader>
+            <CardTitle>App</CardTitle>
+          </CardHeader>
+          <CardContent class="text-sm">
+            <Show
+              when={isInstalled()}
+              fallback={
+                <div class="flex flex-col gap-3">
+                  <p class="leading-relaxed text-muted-foreground">
+                    Install Better BDSMLR to get an icon on your home screen.
+                    It opens in its own window, without the browser bars.
+                  </p>
+                  <Show
+                    when={canInstall() || installing()}
+                    fallback={
+                      <p class="leading-relaxed text-muted-foreground">
+                        {installHelpText()}
+                      </p>
+                    }
+                  >
+                    <Button
+                      class="h-11 w-full sm:h-9 sm:w-auto sm:self-start"
+                      disabled={installing()}
+                      onClick={install}
+                    >
+                      {installing() ? "Opening install…" : "Install app"}
+                    </Button>
+                  </Show>
+                </div>
+              }
+            >
+              <p class="leading-relaxed text-muted-foreground">
+                This is the installed app. Open it from your home screen like
+                any other app.
+              </p>
+            </Show>
           </CardContent>
         </Card>
 

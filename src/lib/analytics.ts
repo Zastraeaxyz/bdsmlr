@@ -59,6 +59,7 @@ export const ANALYTICS_EVENTS = {
   "draft-action": ["action"],
   "queue-action": ["action"],
   "settings-save": ["field"],
+  "pwa-install": ["state"],
   "engagement-open": ["kind"],
   "profile-tab": ["tab"],
   "activity-filter": ["filter"],
