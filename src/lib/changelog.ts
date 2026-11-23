@@ -37,6 +37,11 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Improved",
+        title: "Originals button on profile feeds",
+        body: "The Hide reblogs setting is gone. A new Originals button in the profile feed settings puts `blog:<username>` into the search field and reloads the feed with that blog's original posts, which avoids the empty feeds the old filter sometimes produced. If the search already has that blog, the button does nothing.",
+      },
+      {
+        kind: "Improved",
         title: "Reblog sources link to the author",
         body: "Clicking \"reblogged from\" now opens the original post at the author's own address instead of a post-only link. If the original post has been deleted, you still land on the author's blog rather than a dead end. Older post-only links keep working.",
       },

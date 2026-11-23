@@ -18,7 +18,6 @@ import {
   listBlogTopTags,
   searchPostsByTag,
   searchResultPosts,
-  PostVariant,
   SortField,
   SortOrder,
   type Post,
@@ -90,6 +89,10 @@ function formatCount(value: number): string {
   return new Intl.NumberFormat().format(value);
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export default function UserFeed() {
   const params = useParams();
   const slug = () => params.user;
@@ -108,15 +111,11 @@ export default function UserFeed() {
     (searchParams.tag_name as string) || "",
   );
   const [showAllTags, setShowAllTags] = createSignal(false);
+  const [showSettings, setShowSettings] = createSignal(false);
   const [sortField, setSortField] = createSignal<number>(SortField.Date);
   const [sortOrder, setSortOrder] = createSignal<number>(SortOrder.Descending);
   const [view, setView] = createSignal<FeedView>(loadFeedView());
-  const {
-    hideReblogs,
-    setHideReblogs,
-    hideRepeatingImages,
-    setHideRepeatingImages,
-  } = useFeedSettings();
+  const { hideRepeatingImages, setHideRepeatingImages } = useFeedSettings();
   const historyKey = () => `bdsmlr:searchHistory:profile:${slug()}`;
   const [history, setHistory] = createSignal<string[]>([]);
 
@@ -124,13 +123,26 @@ export default function UserFeed() {
     setHistory(loadSearchHistory(historyKey()));
   });
 
-  const toggleHideReblogs = () => {
-    if (!slug()) return;
-    setHideReblogs((prev) => !prev);
-  };
-
   const toggleHideRepeatingImages = () => {
     setHideRepeatingImages((prev) => !prev);
+  };
+
+  const blogScopePattern = (name: string) =>
+    new RegExp(`(^|\\s)blog:${escapeRegExp(name)}(?=\\s|$)`, "i");
+
+  const hasBlogScope = (q: string, name: string) =>
+    blogScopePattern(name).test(q);
+
+  const originalsActive = () => {
+    const name = slug();
+    return !!name && hasBlogScope(activeQuery(), name);
+  };
+
+  const showOriginals = () => {
+    const name = slug();
+    if (!name || originalsActive()) return;
+    trackEvent("search", { surface: "profile", mode: "originals" });
+    runSearch(`blog:${name} `);
   };
 
   const repeatingImageIdentities = createMemo(() =>
@@ -193,9 +205,13 @@ export default function UserFeed() {
     q: string,
     page: number,
     session: string | null,
-  ) =>
-    searchPostsByTag({
-      tag_name: `blog:${name} ${q}`,
+  ) => {
+    const trimmed = q.trim();
+    const scoped = hasBlogScope(trimmed, name)
+      ? trimmed
+      : `blog:${name} ${trimmed}`;
+    return searchPostsByTag({
+      tag_name: scoped,
       sort_field: sortField(),
       order: sortOrder(),
       post_types: [1, 2, 3, 4, 5, 6, 7],
@@ -204,6 +220,7 @@ export default function UserFeed() {
       ...(session ? { session } : {}),
       page_size: PAGE_SIZE,
     });
+  };
 
   let loadingPage = false;
 
@@ -242,11 +259,7 @@ export default function UserFeed() {
         return 0;
       }
       for (const post of fresh) loadedIds.add(post.id);
-      let incoming = fresh;
-      if (hideReblogs()) {
-        incoming = incoming.filter((p) => p.variant !== PostVariant.Reblog);
-      }
-      setPosts((prev) => [...prev, ...incoming]);
+      setPosts((prev) => [...prev, ...fresh]);
       nextPageToken = data.page?.nextPageToken ?? null;
       // The server keeps echoing a token after the last page, so also stop when
       // a page returns fewer posts than requested.
@@ -338,7 +351,7 @@ export default function UserFeed() {
     } catch (err: unknown) {
       setError((err as Error)?.message || "Failed to load feed");
     } finally {
-      if (resolvedId && !activeQuery() && !hideReblogs()) {
+      if (resolvedId && !activeQuery()) {
         prunePendingReblogs(posts());
         const pending = pendingReblogsFor(resolvedId).filter(
           (post) => !loadedIds.has(post.id),
@@ -631,7 +644,7 @@ export default function UserFeed() {
               }
             />
             <SearchHelp onFill={runSearch} />
-            <Popover>
+            <Popover open={showSettings()} onOpenChange={setShowSettings}>
               <PopoverTrigger<typeof Button>
                 as={(triggerProps) => (
                   <Button
@@ -650,17 +663,19 @@ export default function UserFeed() {
                 <PopoverContent class="w-60 p-3">
                   <p class="mb-1 text-sm font-semibold">Feed settings</p>
                   <div class="flex flex-col gap-1">
-                    <Checkbox
-                      checked={hideReblogs()}
-                      onChange={() => toggleHideReblogs()}
-                      class="flex min-h-11 items-center gap-2 rounded-md px-1 hover:bg-accent"
+                    <Button
+                      type="button"
+                      variant={originalsActive() ? "secondary" : "outline"}
+                      class="h-11 w-full justify-start px-3 text-sm font-normal sm:h-9"
+                      aria-pressed={originalsActive()}
+                      title="Search for this blog's original posts instead of its activity feed."
+                      onClick={() => {
+                        showOriginals();
+                        setShowSettings(false);
+                      }}
                     >
-                      <CheckboxInput />
-                      <CheckboxControl />
-                      <CheckboxLabel class="text-sm font-normal">
-                        Hide reblogs
-                      </CheckboxLabel>
-                    </Checkbox>
+                      Originals
+                    </Button>
                     <Checkbox
                       checked={hideRepeatingImages()}
                       onChange={() => toggleHideRepeatingImages()}
