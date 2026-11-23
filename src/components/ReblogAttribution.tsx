@@ -23,7 +23,7 @@ export function ReblogAttribution(props: ReblogAttributionProps) {
         <span>reblogged from</span>
         <A
           class="font-medium text-foreground underline-offset-4 hover:underline"
-          href={`/post/${props.originPostId}`}
+          href={`/${props.originBlogName}/post/${props.originPostId}`}
         >
           {props.originBlogName}'s post
         </A>

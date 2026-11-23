@@ -33,6 +33,16 @@ export interface ChangelogDay {
  */
 export const changelog: ChangelogDay[] = [
   {
+    date: "2026-11-23",
+    changes: [
+      {
+        kind: "Improved",
+        title: "Reblog sources link to the author",
+        body: "Clicking \"reblogged from\" now opens the original post at the author's own address instead of a post-only link. If the original post has been deleted, you still land on the author's blog rather than a dead end. Older post-only links keep working.",
+      },
+    ],
+  },
+  {
     date: "2026-11-22",
     changes: [
       {
