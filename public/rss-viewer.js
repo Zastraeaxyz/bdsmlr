@@ -161,14 +161,14 @@
           content: 'width=device-width, initial-scale=1',
         }),
         el('title', { text: title }),
-        el('link', { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' }),
+        el('link', { rel: 'icon', href: '/favicon.png', type: 'image/png' }),
         el('style', { text: CSS }),
       ]),
       el('body', null, [
         el('main', { className: 'wrap' }, [
           el('div', { className: 'brand' }, [
             el('a', { href: '/', className: 'brand-link' }, [
-              el('img', { src: '/favicon.svg', alt: '', width: '20', height: '20' }),
+              el('img', { src: '/favicon.png', alt: '', width: '20', height: '20' }),
               el('span', { text: 'bbdsmlr' }),
             ]),
             el('span', { className: 'brand-tag', text: 'RSS feed' }),

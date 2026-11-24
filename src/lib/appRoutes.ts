@@ -37,7 +37,7 @@ export const RESERVED_TOP_LEVEL = new Set([
   "customize",
   "drafts",
   "favicon.ico",
-  "favicon.svg",
+  "favicon.png",
   "following",
   "for-you",
   "home",

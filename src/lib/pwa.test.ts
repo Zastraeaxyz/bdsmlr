@@ -95,4 +95,10 @@ describe("web app manifest", () => {
     expect(existsSync(path)).toBe(true);
     expect(pngSize(readFileSync(path))).toEqual({ width: 180, height: 180 });
   });
+
+  it("ships a png favicon at the size the head declares", () => {
+    const path = publicFile("/favicon.png");
+    expect(existsSync(path)).toBe(true);
+    expect(pngSize(readFileSync(path))).toEqual({ width: 64, height: 64 });
+  });
 });

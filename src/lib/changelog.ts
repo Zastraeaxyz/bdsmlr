@@ -33,6 +33,16 @@ export interface ChangelogDay {
  */
 export const changelog: ChangelogDay[] = [
   {
+    date: "2026-11-24",
+    changes: [
+      {
+        kind: "Improved",
+        title: "New app icon",
+        body: "The app icon, home screen icon, and browser tab icon are now a pair of steel handcuffs instead of the purple bolt.",
+      },
+    ],
+  },
+  {
     date: "2026-11-23",
     changes: [
       {
