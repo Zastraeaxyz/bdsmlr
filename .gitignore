@@ -37,3 +37,7 @@ drizzle/data/
 *.sqlite
 *.sqlite3
 har
+
+# Local secrets and deploy notification state
+.mise.local.toml
+.discord-notified.json

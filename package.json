@@ -23,6 +23,7 @@
     "swagger:update": "npm run swagger:fetch && npm run swagger:generate",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
+    "notify:changelog": "tsx scripts/notify-changelog.ts",
     "test": "vitest run",
     "prestart": "pnpm db:migrate"
   },

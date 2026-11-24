@@ -1,8 +1,11 @@
 # mise tasks for this repository. Run `mise tasks` to list them.
 
 [tasks.deploy]
-description = "Deploy latest version to railway"
-run = 'railway up --project 66106beb-5688-48a1-8ace-49c8ab2fc0b5 --service bbdmslr --environment production -m "$(git log -1 --pretty=%s)"'
+description = "Deploy latest version to railway and announce new changelog entries on Discord"
+run = [
+  'railway up --ci --project 66106beb-5688-48a1-8ace-49c8ab2fc0b5 --service bbdmslr --environment production -m "$(git log -1 --pretty=%s)"',
+  'pnpm notify:changelog',
+]
 
 [tasks.deploy-preview]
 description = "Deploy the current branch to the Railway preview environment"

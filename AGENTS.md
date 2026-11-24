@@ -3,6 +3,7 @@
 - Use conventional commits (`feat:`, `fix:`, `chore:`, ...) and commit in small, frequent increments.
 - never leave uncommitted changes
 - After committing deploy the bot with `mise deploy`
+- `mise deploy` waits for the Railway build and then posts the unannounced entries from `src/lib/changelog.ts` to the project Discord webhook. Preview the payload with `pnpm notify:changelog -- --dry-run`. The webhook lives in the gitignored `.mise.local.toml` as `DISCORD_CHANGELOG_WEBHOOK`, and posted entry ids are tracked in the gitignored `.discord-notified.json`.
 - Always commit as `Author: zastraeaxyz <zastraea@proton.me>`
 - At the end of plans, include a tldr section
 - Every commit that introduces a user-facing change must add an entry to `src/lib/changelog.ts` before committing, at the top of today's day group, creating today's `{ date: "YYYY-MM-DD", changes: [...] }` group if it does not exist yet. Days run newest first and entries within a day run newest first, and `kind` is one of `Added`, `Improved`, `Fixed`, or `Removed`. That file is the project's only changelog and it powers the in-app `/changelog` page; do not add a standalone `CHANGELOG.md`. Write entries for people using the app, not developers: say what they can now do, see, or experience. For fixes you may explain why at a more technical level when it helps the reader. Keep entries concise. Use existing entries in the file as examples.
