@@ -37,6 +37,16 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Improved",
+        title: "Post links stay in the app",
+        body: "Blog, post, and tag links inside post descriptions now open here instead of bdsmlr.com. A credit like `https://kingnothing55.bdsmlr.com/` becomes `bdsmlr.zastraea.xyz/kingnothing55`, and the link text updates with it. The BDSMLR button in the post header still takes you to the original post.",
+      },
+      {
+        kind: "Fixed",
+        title: "Escaped post descriptions render cleanly",
+        body: "Some blogs, like john-mirror-captions, save their description as escaped HTML. Those posts now show their text and links normally instead of raw backslashes and broken markup.",
+      },
+      {
+        kind: "Improved",
         title: "Originals button on profile feeds",
         body: "The Hide reblogs setting is gone. A new Originals button in the profile feed settings puts `blog:<username>` into the search field and reloads the feed with that blog's original posts, which avoids the empty feeds the old filter sometimes produced. If the search already has that blog, the button does nothing.",
       },

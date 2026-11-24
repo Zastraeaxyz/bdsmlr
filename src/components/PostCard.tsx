@@ -13,6 +13,7 @@ import {
   getPostMediaUrls,
   getPostMediaItems,
 } from "~/lib/sanitize";
+import { rewriteBdsmlrLinks } from "~/lib/contentLinks";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
 import { BdsmlrIcon } from "~/components/Icons";
@@ -129,9 +130,11 @@ export function PostCard(props: PostCardProps) {
       post.type === PostType.Text
         ? processContentHtml(c.html, getPostMediaUrls(post))
         : c.html;
-    return stripRepeatingImagesFromHtml(
-      sanitizeHtml(processed),
-      hiddenImageIdentities(),
+    return rewriteBdsmlrLinks(
+      stripRepeatingImagesFromHtml(
+        sanitizeHtml(processed),
+        hiddenImageIdentities(),
+      ),
     );
   };
 

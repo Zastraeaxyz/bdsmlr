@@ -68,11 +68,45 @@ export function upgradeToLightbox(url: string): string {
   );
 }
 
+const JSON_STRING_RE = /^"[\s\S]*"$/
+
+/**
+ * Some blogs store post HTML as a JSON string literal, so the value arrives as
+ * `"<p>See <a href=\"https:\/\/example.bdsmlr.com\/\">..."`. Rendered as is,
+ * the browser shows the backslashes and reads the escaped attributes as junk,
+ * so decode the literal first. Ordinary HTML passes through untouched.
+ */
+export function decodeEscapedHtml(html: string): string {
+  if (!html) return html
+
+  const trimmed = html.trim()
+  if (JSON_STRING_RE.test(trimmed)) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed)
+      if (typeof parsed === "string") return parsed
+    } catch {
+      // Not valid JSON, fall through to the light unescape below.
+    }
+  }
+
+  if (!html.includes("\\/") && !html.includes('\\"')) return html
+
+  return html
+    .replace(/\\"/g, '"')
+    .replace(/\\\//g, "/")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "")
+    .replace(/\\t/g, "\t")
+}
+
 export function sanitizeHtml(html: string): string {
-  const cleaned = html.replace(/<[a-z][a-z0-9]*\b[^>]*>/gi, (tag) => {
-    if (/^<p\b/i.test(tag)) return "<p>";
-    return tag.replace(/\sstyle\s*=\s*["'][^"']*["']/gi, "");
-  });
+  const cleaned = decodeEscapedHtml(html).replace(
+    /<[a-z][a-z0-9]*\b[^>]*>/gi,
+    (tag) => {
+      if (/^<p\b/i.test(tag)) return "<p>";
+      return tag.replace(/\sstyle\s*=\s*["'][^"']*["']/gi, "");
+    },
+  );
   // Skip empty paragraph content (e.g. <p><br></p>)
   if (/^\s*<p>\s*<br\b[^>]*>\s*<\/p>\s*$/i.test(cleaned)) return "";
   return cleaned;
@@ -167,6 +201,7 @@ export function processContentHtml(
   html: string,
   urls?: string[],
 ): string {
+  html = decodeEscapedHtml(html);
   if (!urls || urls.length === 0) return html;
 
   const fileMap = new Map<string, string>();

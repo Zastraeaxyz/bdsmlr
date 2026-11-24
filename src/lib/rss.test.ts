@@ -16,6 +16,17 @@ const textOnlyPost: Post = {
   content: { text: 'Just a few words' },
 }
 
+/** Post 858018067 stores its HTML as a JSON string literal. */
+const escapedLinkPost: Post = {
+  id: 900000004,
+  blogName: 'Thecagestore',
+  content: {
+    html: JSON.stringify(
+      '<p>gifs from <a href="https://kingnothing55.bdsmlr.com/">https://kingnothing55.bdsmlr.com/</a></p>',
+    ).replace(/\//g, '\\/'),
+  },
+}
+
 const videoOnlyPost: Post = {
   id: 900000002,
   blogName: 'Thecagestore',
@@ -151,6 +162,27 @@ describe('generateRss', () => {
     )
     expect(xml).not.toContain('https://bdsmlr.com/blog/')
     expect(xml).not.toContain('https://bdsmlr.com/tagged/')
+  })
+
+  it('points post body links at the mirror when asked', () => {
+    const feedUrl = 'https://bbdsmlr.vercel.app/Thecagestore/rss'
+    const defaultXml = generateRss({
+      blog,
+      posts: [escapedLinkPost],
+      feedUrl,
+    })
+    const mirrorXml = generateRss({
+      blog,
+      posts: [escapedLinkPost],
+      feedUrl,
+      links: ZASTRAEA_LINKS,
+    })
+
+    expect(defaultXml).toContain('https://kingnothing55.bdsmlr.com/')
+    expect(defaultXml).not.toContain('bdsmlr.zastraea.xyz/kingnothing55')
+    expect(mirrorXml).toContain('https://bdsmlr.zastraea.xyz/kingnothing55')
+    expect(mirrorXml).not.toContain('kingnothing55.bdsmlr.com')
+    expect(mirrorXml).not.toContain('\\/')
   })
 
   it('keeps the guid on bdsmlr.com in both modes', () => {

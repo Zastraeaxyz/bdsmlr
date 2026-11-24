@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  decodeEscapedHtml,
   getMediaType,
   getPostMediaItems,
   getPostMediaUrls,
+  sanitizeHtml,
   transformMediaUrl,
   unwrapMediaUrl,
   upgradeToLightbox,
@@ -174,5 +176,40 @@ describe('upgradeToLightbox', () => {
     expect(
       upgradeToLightbox('https://media.bdsmlr.com/masonry/s3://ocdn/x.jpg'),
     ).toBe('https://media.bdsmlr.com/lightbox/s3://ocdn/x.jpg')
+  })
+})
+
+describe('decodeEscapedHtml', () => {
+  const html =
+    '<p>got the gifs from <a href="https://kingnothing55.bdsmlr.com/">https://kingnothing55.bdsmlr.com/</a></p>'
+
+  it('decodes a JSON string literal stored as post HTML', () => {
+    const escaped = JSON.stringify(html).replace(/\//g, '\\/')
+    expect(decodeEscapedHtml(escaped)).toBe(html)
+  })
+
+  it('unescapes slashes and quotes without wrapping quotes', () => {
+    expect(decodeEscapedHtml('<a href=\\"https:\\/\\/a.bdsmlr.com\\/">x<\\/a>')).toBe(
+      '<a href="https://a.bdsmlr.com/">x</a>',
+    )
+  })
+
+  it('leaves ordinary HTML alone', () => {
+    expect(decodeEscapedHtml(html)).toBe(html)
+    expect(decodeEscapedHtml('')).toBe('')
+  })
+
+  it('is idempotent', () => {
+    const escaped = JSON.stringify(html).replace(/\//g, '\\/')
+    expect(decodeEscapedHtml(decodeEscapedHtml(escaped))).toBe(html)
+  })
+
+  it('decodes before sanitizing', () => {
+    const escaped = JSON.stringify(
+      '<p style="color:red">See <a href="https://bdsmlr.com/blog/x">x</a></p>',
+    ).replace(/\//g, '\\/')
+    expect(sanitizeHtml(escaped)).toBe(
+      '<p>See <a href="https://bdsmlr.com/blog/x">x</a></p>',
+    )
   })
 })

@@ -1,7 +1,8 @@
 import RSS from 'rss'
 import type { Blog, Post } from './api'
-import { getPostMediaItems } from './sanitize'
-import { tagSearchHref } from './tagLinks'
+import { decodeEscapedHtml, getPostMediaItems } from './sanitize'
+import { rewriteBdsmlrLinks } from './contentLinks'
+import { mirrorBlogUrl, mirrorPostUrl, mirrorTagUrl } from './mirrorLinks'
 
 /** Builds the page links a feed points at. */
 export interface RssLinks {
@@ -20,16 +21,14 @@ export const BDSMLR_LINKS: RssLinks = {
   tag: (tag) => `https://bdsmlr.com/tagged/${encodeURIComponent(tag)}`,
 }
 
-const ZASTRAEA_ORIGIN = 'https://bdsmlr.zastraea.xyz'
-
 /**
  * Links into this app at bdsmlr.zastraea.xyz. The mirror serves the app's own
  * routes, so posts live under `/<blog>/post/<id>` and tags under `/home`.
  */
 export const ZASTRAEA_LINKS: RssLinks = {
-  blog: (name) => `${ZASTRAEA_ORIGIN}/${name}`,
-  post: (name, id) => `${ZASTRAEA_ORIGIN}/${name}/post/${id}`,
-  tag: (tag) => `${ZASTRAEA_ORIGIN}${tagSearchHref(tag)}`,
+  blog: (name) => mirrorBlogUrl(name),
+  post: (name, id) => mirrorPostUrl(name, id),
+  tag: (tag) => mirrorTagUrl(tag),
 }
 
 /**
@@ -104,18 +103,18 @@ function postDescription(post: Post, links: RssLinks): string {
   const parts: string[] = []
 
   const html = post.content?.html
-    ? post.content.html.replace(/<(?:img|video)\b[^>]*>/gi, '')
+    ? decodeEscapedHtml(post.content.html).replace(/<(?:img|video)\b[^>]*>/gi, '')
     : undefined
 
   if (html) {
     parts.push(html)
   } else if (post.content?.text) {
-    parts.push(`<p>${post.content.text}</p>`)
+    parts.push(`<p>${decodeEscapedHtml(post.content.text)}</p>`)
   }
 
   const text = post.body
   if (text && !html) {
-    parts.push(`<p>${text}</p>`)
+    parts.push(`<p>${decodeEscapedHtml(text)}</p>`)
   }
 
   if (post.variant === 2 && post.originBlogName) {
@@ -132,14 +131,19 @@ function postDescription(post: Post, links: RssLinks): string {
     )
   }
 
-  return parts.join('\n')
+  const description = parts.join('\n')
+  // The mirror feed should not send readers back to bdsmlr.com from a post body.
+  return links === ZASTRAEA_LINKS
+    ? rewriteBdsmlrLinks(description)
+    : description
 }
 
 function postTitle(post: Post): string {
   if (post.title) return post.title
   const text = post.content?.text || post.body
   if (text) {
-    return text.length > 80 ? text.substring(0, 80) + '...' : text
+    const clean = decodeEscapedHtml(text)
+    return clean.length > 80 ? clean.substring(0, 80) + '...' : clean
   }
   return `Post ${post.id}`
 }

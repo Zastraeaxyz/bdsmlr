@@ -25,6 +25,7 @@ import {
   getPostMediaUrls,
   getPostMediaItems,
 } from "~/lib/sanitize";
+import { rewriteBdsmlrLinks } from "~/lib/contentLinks";
 import { createMediaGallery } from "~/lib/mediaGallery";
 import { ReblogAttribution } from "~/components/ReblogAttribution";
 import { BlogAvatar } from "~/components/BlogAvatar";
@@ -280,7 +281,7 @@ function PostDetailView(props: {
       props.post.type === PostType.Text
         ? processContentHtml(c.html, getPostMediaUrls(props.post))
         : c.html;
-    return sanitizeHtml(processed);
+    return rewriteBdsmlrLinks(sanitizeHtml(processed));
   };
 
   const handleLike = () => {
