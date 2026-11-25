@@ -38,6 +38,7 @@ import {
   addCachedFollowingId,
   removeCachedFollowingId,
 } from '~/lib/following'
+import { rememberBlogAvatar } from '~/lib/blogAvatar'
 import { trackEvent } from '~/lib/analytics'
 import { cx } from '~/lib/cva'
 import { sheetDialogClass } from '~/lib/ui'
@@ -216,6 +217,7 @@ export default function UserLayout(props: ParentProps) {
       }
       getBlog(resolved.blogId).then((res) => {
         setBlog(res.blog ?? null)
+        rememberBlogAvatar(resolved.blogId, res.blog?.avatarUrl)
         const rawCount = res.blog?.followersCount
         const count = rawCount != null ? Number(rawCount) : null
         setFollowersCount(count != null && Number.isFinite(count) ? count : null)

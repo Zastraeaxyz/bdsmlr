@@ -117,7 +117,9 @@ export default function Header(props: HeaderProps) {
     if (typeof window === "undefined") return;
     if (!user()) return;
     void refreshMessageUnread();
-    const timer = setInterval(() => void refreshMessageUnread(), 60000);
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") void refreshMessageUnread();
+    }, 120000);
     const handleFocus = () => void refreshMessageUnread();
     window.addEventListener("focus", handleFocus);
     onCleanup(() => {
@@ -131,10 +133,11 @@ export default function Header(props: HeaderProps) {
     const blog = activeBlog();
     if (!user() || !blog) return;
     void refreshActivityUnread(blog.id, blog.name);
-    const timer = setInterval(
-      () => void refreshActivityUnread(blog.id, blog.name),
-      120000,
-    );
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void refreshActivityUnread(blog.id, blog.name);
+      }
+    }, 300000);
     const handleFocus = () => void refreshActivityUnread(blog.id, blog.name);
     window.addEventListener("focus", handleFocus);
     onCleanup(() => {

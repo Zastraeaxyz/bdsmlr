@@ -48,6 +48,10 @@ const READ_PATHS = new Set([
 const MICRO_CACHE_TTL_MS: Record<string, number> = {
   "/v2/api/list-blog-activity": 15_000,
   "/v2/api/list-blogs-recent-activity": 15_000,
+  // Avatars are looked up one blog at a time, so the same popular blog shows
+  // up many times across visitors. A short shared cache keeps that from
+  // becoming one upstream call per avatar.
+  "/v2/api/get-blog": 60_000,
 };
 
 const MAX_CACHE_ENTRIES = 200;

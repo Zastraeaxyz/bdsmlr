@@ -604,13 +604,40 @@ export function unfollowBlog(actingBlogId: number, targetBlogId: number) {
   })
 }
 
+/**
+ * Every profile visit asks for the block list to decide whether to show
+ * Block or Unblock. The list changes only when this session blocks someone,
+ * so keep it for a few minutes instead of paying for it on each profile.
+ */
+const blockedCache = new Map<
+  number,
+  { expiresAt: number; result: Promise<BlockedResponse> }
+>()
+const BLOCKED_CACHE_TTL_MS = 5 * 60 * 1000
+
+export function clearBlockedCache(): void {
+  blockedCache.clear()
+}
+
 export function getBlocked(userId: number) {
-  return request<BlockedResponse>(API_BASE, '/get-blocked', {
+  const cached = blockedCache.get(userId)
+  if (cached && cached.expiresAt > Date.now()) return cached.result
+  const result = request<BlockedResponse>(API_BASE, '/get-blocked', {
     user_id: userId,
   })
+  blockedCache.set(userId, {
+    expiresAt: Date.now() + BLOCKED_CACHE_TTL_MS,
+    result,
+  })
+  result.catch(() => {
+    const hit = blockedCache.get(userId)
+    if (hit?.result === result) blockedCache.delete(userId)
+  })
+  return result
 }
 
 export function blockBlog(actingBlogId: number, targetBlogId: number) {
+  clearBlockedCache()
   return request<BlogWriteResponse>(API_BASE, '/internal-write/block', {
     actingBlogId,
     targetBlogId,
@@ -618,6 +645,7 @@ export function blockBlog(actingBlogId: number, targetBlogId: number) {
 }
 
 export function unblockBlog(actingBlogId: number, targetBlogId: number) {
+  clearBlockedCache()
   return request<BlogWriteResponse>(API_BASE, '/internal-write/unblock', {
     actingBlogId,
     targetBlogId,

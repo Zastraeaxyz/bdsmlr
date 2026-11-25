@@ -40,6 +40,16 @@ export const changelog: ChangelogDay[] = [
         title: "New app icon",
         body: "The app icon, home screen icon, and browser tab icon are now a pair of steel handcuffs instead of the purple bolt.",
       },
+      {
+        kind: "Fixed",
+        title: "Post pages stop flooding BDSMLR with requests",
+        body: "Related posts used to render every post the API sent, sometimes more than 200 at once, and each card asked BDSMLR for its author's profile just to draw an avatar. Pages now show a normal batch, load more when you ask for it, and fetch an avatar only when it is about to appear on screen.",
+      },
+      {
+        kind: "Improved",
+        title: "Fewer background refreshes",
+        body: "The header no longer refetches the message and activity badges every time you move between pages or refocus the tab, and the block list is reused for a few minutes. That leaves more of BDSMLR's request budget for the page you are actually reading.",
+      },
     ],
   },
   {

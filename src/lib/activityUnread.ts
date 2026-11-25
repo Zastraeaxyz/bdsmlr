@@ -8,7 +8,14 @@ interface TimelineItem {
 }
 
 const [activityUnreadCount, setActivityUnreadCount] = createSignal(0);
-let inflight: Promise<void> | null = null;
+const inflight = new Map<number, Promise<void>>();
+const lastAttempt = new Map<number, number>();
+
+/**
+ * This endpoint answers with the full activity timeline (hundreds of
+ * kilobytes), so do not run it on every header mount.
+ */
+const MIN_REFRESH_MS = 3 * 60_000;
 
 export { activityUnreadCount };
 
@@ -54,9 +61,15 @@ export function markActivitySeen(blogId: number, items: TimelineItem[]): void {
 export function refreshActivityUnread(
   blogId: number,
   blogName: string,
+  force = false,
 ): Promise<void> {
-  if (inflight) return inflight;
-  inflight = listBlogActivity({
+  const running = inflight.get(blogId);
+  if (running) return running;
+  const now = Date.now();
+  const last = lastAttempt.get(blogId) ?? 0;
+  if (!force && now - last < MIN_REFRESH_MS) return Promise.resolve();
+  lastAttempt.set(blogId, now);
+  const promise = listBlogActivity({
     blog_id: blogId,
     blog_name: blogName,
     sort_field: 1,
@@ -80,9 +93,10 @@ export function refreshActivityUnread(
     })
     .catch(() => {})
     .finally(() => {
-      inflight = null;
+      inflight.delete(blogId);
     });
-  return inflight;
+  inflight.set(blogId, promise);
+  return promise;
 }
 
 export function clearActivityUnread(): void {
