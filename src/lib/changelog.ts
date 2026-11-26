@@ -33,6 +33,16 @@ export interface ChangelogDay {
  */
 export const changelog: ChangelogDay[] = [
   {
+    date: "2026-11-25",
+    changes: [
+      {
+        kind: "Fixed",
+        title: "Image drafts open in the editor",
+        body: "Editing a draft with an image now loads its caption, tags, and post type instead of showing \"Could not load the draft\". Text drafts were already working; image drafts use a different editor layout that the app did not recognise.",
+      },
+    ],
+  },
+  {
     date: "2026-11-24",
     changes: [
       {

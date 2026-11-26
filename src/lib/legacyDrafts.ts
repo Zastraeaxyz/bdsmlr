@@ -62,19 +62,40 @@ export function parseDrafts(html: string): LegacyDraft[] {
   return drafts;
 }
 
-export function parseEditablePost(html: string): LegacyEditablePost | null {
+function openingTagWithClass(html: string, className: string): string {
+  return (
+    html.match(
+      new RegExp(
+        `<[^>]*class=["'][^"']*\\b${className}\\b[^"']*["'][^>]*>`,
+        "i",
+      ),
+    )?.[0] ?? ""
+  );
+}
+
+function attribute(tag: string, name: string): string {
+  return tag.match(new RegExp(`\\b${name}=["']([^"']*)["']`, "i"))?.[1] ?? "";
+}
+
+export function parseEditablePost(
+  html: string,
+  fallbackId = "",
+): LegacyEditablePost | null {
+  // Text drafts have a .thisedit marker, while image drafts only have the
+  // reblog-style .reblogpost element. Attribute order also differs between
+  // the two layouts, so read the attributes from the opening tag itself.
+  const thiseditTag = openingTagWithClass(html, "thisedit");
+  const reblogTag = openingTagWithClass(html, "reblogpost");
   const postId =
-    html.match(/class=["']thisedit["'][^>]*data-postid=["']([^"']*)["']/i)?.[1] ??
-    html.match(/data-postid=["']([^"']*)["'][^>]*class=["']thisedit["']/i)?.[1] ??
-    html.match(/class=["']reblogpost["'][^>]*id=["']([^"']*)["']/i)?.[1] ??
-    "";
+    attribute(thiseditTag, "data-postid") ||
+    attribute(reblogTag, "id") ||
+    fallbackId;
   if (!postId) return null;
 
   const tagsBlock =
     html.match(/<ul[^>]*id=["']Tags["'][^>]*>([\s\S]*?)<\/ul>/i)?.[1] ?? "";
-  const blogMatch = html.match(
-    /class=["']blogID["'][^>]*data-blog=["']([^"']*)["']/i,
-  );
+  const blogTag = openingTagWithClass(html, "blogID");
+  const typeTag = openingTagWithClass(html, "type");
   const blogName =
     stripHtml(
       html.match(
@@ -85,15 +106,10 @@ export function parseEditablePost(html: string): LegacyEditablePost | null {
   return {
     id: postId,
     postId,
-    comment:
-      html.match(
-        /class=["']thisedit["'][^>]*data-comment=["']([^"']*)["']/i,
-      )?.[1] ?? "",
-    blogId: blogMatch?.[1] ?? "",
+    comment: attribute(thiseditTag, "data-comment"),
+    blogId: attribute(blogTag, "data-blog"),
     blogName,
-    type:
-      html.match(/class=["']type["'][^>]*data-type=["']([^"']*)["']/i)?.[1] ??
-      "text",
+    type: attribute(typeTag, "data-type") || "text",
     title: stripHtml(
       html.match(/id=["']titleedit["'][^>]*>([\s\S]*?)<\/div>/i)?.[1] ?? "",
     ),

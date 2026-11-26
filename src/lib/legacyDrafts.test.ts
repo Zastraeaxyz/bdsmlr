@@ -18,16 +18,49 @@ const draftsHtml = `
   </div>
 </div>`;
 
+// Trimmed from the real /editdraft response for a text draft.
 const editorHtml = `
-<div class="image_content">
-  <div contenteditable="true" id="titleedit" class="titletext">test draft</div>
-  <textarea id="editthis" class="textcontent comment" name="content">&lt;p&gt;test draft from Better BDSMLR&lt;/p&gt;</textarea>
+<div style="text-align:left;" class="image_content">
+  <div contenteditable="true" id="titleedit" class="titletext">
+    test draft
+  </div>
+  <div style="background: #f1f1f1;padding: 10px;text-align:left;">
+    <form action="newcommentsubmit" class="newcommentsubmit" id="commentreblog" method="POST">
+      <textarea style="" id="editthis" class="textcontent comment" name="content">&lt;p&gt;test draft from Better BDSMLR&lt;/p&gt;</textarea>
+    </form>
+  </div>
 </div>
-<div class="type" data-type="text"></div>
-<div data-postid="15613284" data-comment="" class="thisedit"></div>
+<div class="type" data-type="text" style="display:none;"></div>
+<div data-postid="15613284" data-comment="" class="thisedit" style="color:#000!important;" id="editdiv"></div>
 <ul id="Tags"><i class="fa fa-tags"></i><li>test</li><li>second</li></ul>
-<div class="blogID" data-blog="123456"></div>
-<div class="reblogpost" id="15613284"></div>`;
+<div class="buttonsreblog">
+  <div class="reblogbholder">
+    <div tabindex="1" id="15613284" class="reblogpost" style="background:transparent"></div>
+  </div>
+</div>
+<div class="blogID" style="display:none;" data-blog="123456"></div>`;
+
+// Trimmed from the real /editdraft response for an image draft. These have no
+// .thisedit element and put id before class on .reblogpost.
+const imageDraftEditorHtml = `
+<div class="reblogimage">
+  <div class="reblogimage">
+    <img src="https://ocdn012.bdsmlr.com/uploads/photos/2026/11/x.png"/>
+  </div>
+</div>
+<div class="type" data-type="image" style="display:none;"></div>
+<div style="background: #f1f1f1;padding: 10px;text-align:left;">
+  <form action="newcommentsubmit" class="newcommentsubmit" id="commentreblog" method="POST">
+    <textarea style="" id="editthis" class="textcontent comment" name="content">&lt;p&gt;Hello draft my old friend&lt;/p&gt;</textarea>
+  </form>
+</div>
+<ul id="Tags"><i class="fa fa-tags" aria-hidden="true"></i><li></li></ul>
+<div class="buttonsreblog">
+  <div class="reblogbholder">
+    <div tabindex="1" id="15613592" class="reblogpost" style="background:transparent"></div>
+  </div>
+</div>
+<div class="blogID" style="display:none;" data-blog="10864856"></div>`;
 
 describe("parseDrafts", () => {
   it("parses text and image drafts", () => {
@@ -60,6 +93,32 @@ describe("parseEditablePost", () => {
       body: "<p>test draft from Better BDSMLR</p>",
       tags: ["test", "second"],
       earlier: "1",
+    });
+  });
+
+  it("parses an image draft without a thisedit marker", () => {
+    expect(parseEditablePost(imageDraftEditorHtml)).toMatchObject({
+      id: "15613592",
+      postId: "15613592",
+      comment: "",
+      blogId: "10864856",
+      type: "image",
+      title: "",
+      body: "<p>Hello draft my old friend</p>",
+      tags: [],
+      earlier: "1",
+    });
+  });
+
+  it("falls back to the requested draft id", () => {
+    const htmlWithoutMarkers =
+      '<div class="type" data-type="text"></div>' +
+      '<textarea id="editthis">body</textarea>';
+    expect(parseEditablePost(htmlWithoutMarkers, "15613302")).toMatchObject({
+      id: "15613302",
+      postId: "15613302",
+      type: "text",
+      body: "body",
     });
   });
 });

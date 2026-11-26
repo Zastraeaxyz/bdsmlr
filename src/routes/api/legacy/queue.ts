@@ -66,7 +66,7 @@ export async function GET(event: APIEvent) {
     return json({ error: "BDSMLR is rate limiting requests right now. This usually clears in a minute or two." }, 429);
   }
 
-  const editor = parseEditablePost(await editorPage.text());
+  const editor = parseEditablePost(await editorPage.text(), id);
   if (!editor) return json({ error: "Could not load the queue post" }, 502);
   const item = queue.items.find((entry) => entry.id === id);
   if (item) editor.blogName = item.blogName;

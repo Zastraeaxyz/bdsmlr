@@ -52,7 +52,7 @@ export async function GET(event: APIEvent) {
     if (editorPage.status === 429) {
       return json({ error: "BDSMLR is rate limiting requests right now. This usually clears in a minute or two." }, 429);
     }
-    const editor = parseEditablePost(await editorPage.text());
+    const editor = parseEditablePost(await editorPage.text(), id);
     if (!editor) return json({ error: "Could not load the draft" }, 502);
     return json({ editor }, 200);
   }
