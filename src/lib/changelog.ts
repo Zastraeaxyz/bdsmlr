@@ -36,6 +36,11 @@ export const changelog: ChangelogDay[] = [
     date: "2026-11-27",
     changes: [
       {
+        kind: "Fixed",
+        title: "Sorting a profile no longer claims the feed is empty",
+        body: "Changing the sort order cleared the feed and showed \"No posts in feed\" while the new order was still loading. You now see the loading placeholders until the sorted posts arrive, and switching sort quickly can no longer leave posts in the old order.",
+      },
+      {
         kind: "Improved",
         title: "Less jumping while images load",
         body: "Post images and videos now hold a placeholder height until they have loaded, so the feed and post pages no longer shove everything below them down mid-scroll. Lazy loading is unchanged, it just shows a grey block instead of an empty gap.",

@@ -199,6 +199,10 @@ export default function UserFeed() {
   let searchSession: string | null = null;
   let loadedIds = new Set<number>();
   let lastFeedKey: string | undefined;
+  // Bumped whenever the feed is reloaded from the top (sort change, search
+  // change). Responses from an older generation are dropped so a slow request
+  // cannot append posts in the wrong order.
+  let feedGeneration = 0;
 
   const requestSearch = (
     name: string,
@@ -222,11 +226,16 @@ export default function UserFeed() {
     });
   };
 
-  let loadingPage = false;
+  let loadingGeneration = -1;
 
-  const loadPage = async (name: string, token?: string): Promise<number> => {
-    if (loadingPage || !resolvedId) return 0;
-    loadingPage = true;
+  const loadPage = async (
+    name: string,
+    token?: string,
+    generation = feedGeneration,
+  ): Promise<number> => {
+    if (!resolvedId || generation !== feedGeneration) return 0;
+    if (loadingGeneration === generation) return 0;
+    loadingGeneration = generation;
     try {
       const data = await listBlogActivity({
         blog_id: resolvedId,
@@ -242,6 +251,7 @@ export default function UserFeed() {
           : { page_size: PAGE_SIZE },
         page_size: PAGE_SIZE,
       });
+      if (generation !== feedGeneration) return 0;
       if (data.error) {
         const msg =
           data.error === "blog not found" ? "Blog was banned" : data.error;
@@ -266,7 +276,7 @@ export default function UserFeed() {
       if (!nextPageToken || timelinePosts.length < PAGE_SIZE) setHasMore(false);
       return fresh.length;
     } finally {
-      loadingPage = false;
+      if (loadingGeneration === generation) loadingGeneration = -1;
     }
   };
 
@@ -286,6 +296,7 @@ export default function UserFeed() {
       setError("No user specified");
       return;
     }
+    const generation = ++feedGeneration;
     setLoading(true);
     setLoadingMore(false);
     setError("");
@@ -298,6 +309,7 @@ export default function UserFeed() {
     loadedIds = new Set();
     try {
       const resolved = await resolveIdentifier(name);
+      if (generation !== feedGeneration) return;
       if (!resolved.blogId) {
         setError(resolved.error || "User not found");
         return;
@@ -321,6 +333,7 @@ export default function UserFeed() {
           await new Promise((resolve) => setTimeout(resolve, 250));
           data = await requestSearch(name, q, 1, null);
         }
+        if (generation !== feedGeneration) return;
         const incoming = searchResultPosts(data);
         setPosts(incoming);
         if (targetPage === 1) {
@@ -347,21 +360,52 @@ export default function UserFeed() {
       }
 
       const tagsRes = await listBlogTopTags(name);
+      if (generation !== feedGeneration) return;
       setTopTags(tagsRes.tags ?? []);
     } catch (err: unknown) {
-      setError((err as Error)?.message || "Failed to load feed");
+      if (generation === feedGeneration)
+        setError((err as Error)?.message || "Failed to load feed");
     } finally {
-      if (resolvedId && !activeQuery()) {
-        prunePendingReblogs(posts());
-        const pending = pendingReblogsFor(resolvedId).filter(
-          (post) => !loadedIds.has(post.id),
-        );
-        if (pending.length > 0) {
-          for (const post of pending) loadedIds.add(post.id);
-          setPosts((prev) => [...pending, ...prev]);
+      if (generation === feedGeneration) {
+        if (resolvedId && !activeQuery()) {
+          prunePendingReblogs(posts());
+          const pending = pendingReblogsFor(resolvedId).filter(
+            (post) => !loadedIds.has(post.id),
+          );
+          if (pending.length > 0) {
+            for (const post of pending) loadedIds.add(post.id);
+            setPosts((prev) => [...pending, ...prev]);
+          }
         }
+        setLoading(false);
       }
-      setLoading(false);
+    }
+  };
+
+  // Reload the plain profile feed from the top after a sort change. Sets the
+  // loading state so the empty message does not show while the first page is
+  // still on its way, and starts a new generation so a slower earlier request
+  // cannot append posts in the old order.
+  const reloadFeed = async (name: string) => {
+    if (!resolvedId) {
+      await fetchFeed(1);
+      return;
+    }
+    const generation = ++feedGeneration;
+    setLoading(true);
+    setLoadingMore(false);
+    setError("");
+    setPosts([]);
+    setHasMore(true);
+    nextPageToken = null;
+    loadedIds = new Set();
+    try {
+      await loadPage(name, undefined, generation);
+    } catch (err: unknown) {
+      if (generation === feedGeneration)
+        setError((err as Error)?.message || "Failed to load feed");
+    } finally {
+      if (generation === feedGeneration) setLoading(false);
     }
   };
 
@@ -615,15 +659,13 @@ export default function UserFeed() {
                 nextPageToken = null;
                 searchPage = 1;
                 searchSession = null;
-                setPosts([]);
-                setHasMore(true);
                 if (activeQuery()) {
                   setSearchParams({ page: undefined, session: undefined });
                   fetchFeed(1);
                   return;
                 }
                 const name = slug();
-                if (name) loadPage(name);
+                if (name) void reloadFeed(name);
               }}
               options={{
                 newest: true,
