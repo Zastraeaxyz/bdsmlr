@@ -457,14 +457,16 @@ export default function HomeFeed() {
               </Show>
             </Show>
 
-            <AutoLoadMore
-              onLoad={() => {
-                trackEvent("load-more", { surface: "following" });
-                void loadMore();
-              }}
-              loading={loadingMore()}
-              ready={!loading()}
-            />
+            <Show when={hasMore() && posts().length > 0}>
+              <AutoLoadMore
+                onLoad={() => {
+                  trackEvent("load-more", { surface: "following" });
+                  void loadMore();
+                }}
+                loading={loadingMore()}
+                ready={!loading()}
+              />
+            </Show>
           </div>
         </main>
       </div>

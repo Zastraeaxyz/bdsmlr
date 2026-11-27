@@ -170,14 +170,16 @@ export default function LikedPosts() {
         </Show>
       </Show>
 
-      <AutoLoadMore
-        onLoad={() => {
-          trackEvent("load-more", { surface: "liked" });
-          void loadMore();
-        }}
-        loading={loadingMore()}
-        ready={!loading()}
-      />
+      <Show when={hasMore() && posts().length > 0}>
+        <AutoLoadMore
+          onLoad={() => {
+            trackEvent("load-more", { surface: "liked" });
+            void loadMore();
+          }}
+          loading={loadingMore()}
+          ready={!loading()}
+        />
+      </Show>
       <LightBox gallery={gallery} />
     </Page>
   );

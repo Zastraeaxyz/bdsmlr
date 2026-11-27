@@ -37,6 +37,11 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Fixed",
+        title: "The load more button goes away at the end of a feed",
+        body: "The following, profile, and liked feeds kept showing a load more button after the last page, and clicking it did nothing. It now disappears once there is nothing older to fetch, and if a page fails to load it can be clicked again to retry instead of staying dead until you reload.",
+      },
+      {
+        kind: "Fixed",
         title: "Clearer notice on private blogs",
         body: "When you are signed in and a blog is private, the page no longer tells you to follow it first. Private blogs stay hidden until the owner adds you, so the notice now just says the blog is not visible to you.",
       },

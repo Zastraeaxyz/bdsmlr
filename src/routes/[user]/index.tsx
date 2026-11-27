@@ -460,7 +460,13 @@ export default function UserFeed() {
       if (!nextPageToken) return;
       const token = nextPageToken;
       nextPageToken = null;
-      await loadPage(name, token);
+      try {
+        await loadPage(name, token);
+      } catch (err: unknown) {
+        // Put the token back so the load-more button can retry this page.
+        nextPageToken = token;
+        throw err;
+      }
     } catch (err: unknown) {
       setError((err as Error)?.message || "Failed to load more");
     } finally {
@@ -795,14 +801,16 @@ export default function UserFeed() {
           </Show>
         </Show>
 
-        <AutoLoadMore
-          onLoad={() => {
-            trackEvent("load-more", { surface: "profile" });
-            void loadMore();
-          }}
-          loading={loadingMore()}
-          ready={!loading()}
-        />
+        <Show when={hasMore() && posts().length > 0}>
+          <AutoLoadMore
+            onLoad={() => {
+              trackEvent("load-more", { surface: "profile" });
+              void loadMore();
+            }}
+            loading={loadingMore()}
+            ready={!loading()}
+          />
+        </Show>
       </main>
       <LightBox gallery={gallery} />
     </>
