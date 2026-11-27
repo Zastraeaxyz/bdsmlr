@@ -37,6 +37,11 @@ export const changelog: ChangelogDay[] = [
     changes: [
       {
         kind: "Fixed",
+        title: "Clearer notice on private blogs",
+        body: "When you are signed in and a blog is private, the page no longer tells you to follow it first. Private blogs stay hidden until the owner adds you, so the notice now just says the blog is not visible to you.",
+      },
+      {
+        kind: "Fixed",
         title: "Sorting a profile no longer claims the feed is empty",
         body: "Changing the sort order cleared the feed and showed \"No posts in feed\" while the new order was still loading. You now see the loading placeholders until the sorted posts arrive, and switching sort quickly can no longer leave posts in the old order.",
       },

@@ -33,7 +33,7 @@ export function FeedErrorNotice(props: {
             <AlertDescription class="flex flex-col items-start gap-3">
               <span>
                 {user()
-                  ? "You are signed in, but this blog still is not visible to you. You may need to follow it on BDSMLR first."
+                  ? "You are signed in, but this blog still is not visible to you."
                   : `Sign in to your BDSMLR account to view${
                       props.blogName ? ` @${props.blogName}` : " this blog"
                     }.`}
