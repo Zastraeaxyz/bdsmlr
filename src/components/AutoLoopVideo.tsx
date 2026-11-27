@@ -5,6 +5,8 @@ import { Play } from 'lucide-solid'
 interface AutoLoopVideoProps {
   src: string
   onError?: (event: Event) => void
+  /** Called once the element has its dimensions (loaded metadata). */
+  onReady?: () => void
   /** Always show the native player controls, even for short clips. */
   forceControls?: boolean
   class?: string
@@ -101,6 +103,7 @@ export function AutoLoopVideo(props: AutoLoopVideoProps) {
               ? 'short'
               : 'long',
           )
+          props.onReady?.()
         }}
       />
       <Show when={!playing()}>

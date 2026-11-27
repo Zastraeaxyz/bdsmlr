@@ -33,6 +33,16 @@ export interface ChangelogDay {
  */
 export const changelog: ChangelogDay[] = [
   {
+    date: "2026-11-27",
+    changes: [
+      {
+        kind: "Improved",
+        title: "Less jumping while images load",
+        body: "Post images and videos now hold a placeholder height until they have loaded, so the feed and post pages no longer shove everything below them down mid-scroll. Lazy loading is unchanged, it just shows a grey block instead of an empty gap.",
+      },
+    ],
+  },
+  {
     date: "2026-11-25",
     changes: [
       {
